@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System Documentation.md",
+                "file": "Implementation Tracker.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "System Documentation"
+              "title": "Implementation Tracker"
             }
           }
         ]
@@ -188,10 +188,16 @@
       "bases:Create new base": false
     }
   },
-  "active": "e6694d7d4f4e0ff2",
+  "active": "04b0d618fde01fdd",
   "lastOpenFiles": [
-    "Wireframe & Flows",
     "System Documentation.md",
+    "Implementation Tracker.md",
+    "Wireframe & Flows.md",
+    "reference_docs/implementation_tracker.md",
+    "reference_docs/wireframe_flows.md",
+    "reference_docs/system_docs.md",
+    "reference_docs",
+    "Wireframe & Flows",
     "Welcome.md"
   ]
 }
