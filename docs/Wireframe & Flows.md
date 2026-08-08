@@ -42,16 +42,16 @@ See [[System Documentation]] for business rules.
 
 ---
 
-## Public — Candidates Page
+## Public — Candidates Page (Last na 'to: Wala pang contestants)
 
 ### 1. View Candidates
 
 **Flow**
 
 - User visits `/candidates` — no login required
-- Page loads all contestants from database
-- Photos served from `/public/candidates/{candidate_number}.jpg`
-- If no photo file found for a candidate → placeholder image shown
+- Contestant data (number, name, gender, team) is hardcoded in the frontend — no backend API call at all
+- Photos are loaded from frontend's own `public/candidates/{candidate_number}.jpg`
+- If no photo file exists for a candidate number → placeholder image shown (handled entirely on frontend)
 - User clicks gender filter → grid re-renders with filtered results
 - Page is read-only — no add, edit, or delete
 

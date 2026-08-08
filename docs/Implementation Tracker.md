@@ -34,15 +34,16 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Contestants list API — public, no auth, supports filter by gender (`male` / `female` / all)
-- [ ] Static file serving for candidate photos (`/public/candidates/{number}.jpg`)
+- N/A — page is fully static, no backend involvement
 
 ### Frontend
 
 - [ ] Candidates page — responsive grid layout, vertical scroll
+- [ ] Hardcode contestant data (number, name, gender, team name, team color) directly in frontend
 - [ ] Gender filter (All · Male · Female) — re-renders grid on change
 - [ ] Candidate card — number, full name, team name, team color, photo
-- [ ] Placeholder image when photo file not found
+- [ ] Image loaded from `public/candidates/{candidate_number}.jpg`
+- [ ] Placeholder image when photo file not found (handled client-side)
 
 ---
 

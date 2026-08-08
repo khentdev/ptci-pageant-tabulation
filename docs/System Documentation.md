@@ -52,7 +52,7 @@ Product-level documentation only. API contracts, request/response shapes, and im
 
 ---
 
-## 1. Public Candidates Page
+## 1. Public Candidates Page (Last na 'to: Wala pang contestants)
 
 **Features**
 
@@ -65,10 +65,11 @@ Product-level documentation only. API contracts, request/response shapes, and im
 **Business Rules**
 
 - No authentication required to view this page
-- Candidate data (number, name, gender, team name) is stored in the database and managed through Admin Setup
-- Each candidate card displays: candidate number, full name, team name, team color, and photo
-- Candidate photos are served from a static folder (`/public/candidates/`), named by candidate number (e.g., `1.jpg`, `2.jpg`)
+- Contestant data (number, name, gender, team name, team color) is hardcoded directly in the frontend — no backend API call
+- Candidate photos are placed manually in the frontend's `public/candidates/` folder, named by candidate number (e.g., `1.jpg`, `2.jpg`)
+- The frontend maps each hardcoded contestant's number to its image path (`/candidates/{candidate_number}.jpg`) entirely client-side
 - If a candidate has no image file, a placeholder is shown
+- This page is fully static — no backend involvement at all
 - This page is read-only — no add, edit, or delete actions available here
 
 ---
