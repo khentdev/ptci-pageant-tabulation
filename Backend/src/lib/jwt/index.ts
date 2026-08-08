@@ -11,7 +11,7 @@ import type { Role } from '../../features/auth/types.js';
 //Token generation context
 export type TokenPayload = {
     deviceHash: string
-    sub: string | number
+    sub: number
     role: Role
     iss: string
     exp: number

@@ -15,6 +15,7 @@ export type Role = "ADMIN" | "JUDGE"
 export type LoginDTO = {
     user: {
         id: number
+        name: string
         username: string
         role: Role
     }

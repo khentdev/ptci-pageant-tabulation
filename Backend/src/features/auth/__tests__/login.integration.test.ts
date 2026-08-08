@@ -58,6 +58,7 @@ describe("Login Integration Test", () => {
                 },
                 select: {
                     id: true,
+                    name: true,
                     username: true,
                     role: true,
                 },
@@ -73,6 +74,7 @@ describe("Login Integration Test", () => {
             expect(json.message).toBe("Logged in successfully")
             expect(json.data.user).toEqual({
                 id: user.id,
+                name: user.name,
                 username: user.username,
                 role: user.role,
             })

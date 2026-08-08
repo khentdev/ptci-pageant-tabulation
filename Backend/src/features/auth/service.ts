@@ -14,6 +14,7 @@ export async function loginService({ username, password, deviceId }: LoginInput)
         },
         select: {
             id: true,
+            name: true,
             username: true,
             role: true,
             hashedPassword: true,
@@ -43,6 +44,7 @@ export async function loginService({ username, password, deviceId }: LoginInput)
         csrfToken,
         user: {
             id: user.id,
+            name: user.name,
             username: user.username,
             role: user.role
         }
