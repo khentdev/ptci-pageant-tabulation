@@ -5,6 +5,10 @@ export const env = {
     PORT: 3004,
     DATABASE_URL: loadEnvVar("DATABASE_URL"),
 
+
+    ADMIN_USERNAME: loadEnvVar("ADMIN_USERNAME"),
+    ADMIN_PASSWORD: loadEnvVar("ADMIN_PASSWORD"),
+    
     DOMAIN_NAME: loadEnvVar("DOMAIN_NAME", "localhost"),
     FRONTEND_PROD_URL: loadEnvVar("FRONTEND_URL", "http://localhost:4173"),
     FRONTEND_DEV_URL: loadEnvVar("FRONTEND_DEV_URL", "http://localhost:5173"),
