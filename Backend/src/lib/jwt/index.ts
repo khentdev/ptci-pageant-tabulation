@@ -6,13 +6,13 @@ import type {
     JwtTokenNotBefore,
     JwtTokenSignatureMismatched,
 } from 'hono/utils/jwt/types';
+import type { Role } from '../../features/auth/types.js';
 
 //Token generation context
 export type TokenPayload = {
     deviceHash: string
-    sub: string
-    tenantId: string
-    role: "ADMIN" | "STAFF"
+    sub: string | number
+    role: Role
     iss: string
     exp: number
 }

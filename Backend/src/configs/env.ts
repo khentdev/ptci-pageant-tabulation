@@ -15,7 +15,9 @@ export const env = {
 
     HASH_SECRET: loadEnvVar("HASH_SECRET", "your-256-secret-length"),
     COOKIE_SECRET: loadEnvVar("COOKIE_SECRET", "your-256-secret-length"),
+
     JWT_ISSUER: loadEnvVar("JWT_ISSUER", "your-domain"),
     JWT_SECRET: loadEnvVar("JWT_SECRET", "your-512-secret-length"),
+    JWT_REFRESH_TOKEN_EXPIRES_IN: loadEnvVar("JWT_REFRESH_TOKEN_EXPIRES_IN", "2592000"),
 } as const
 export type Env = typeof env
