@@ -92,10 +92,15 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 **Business Rules**
 
 - A round must have a unique `phase_order` (1, 2, 3, etc.)
-- `phase_order` determines the sequence of competition; Round with the lowest phase order is the first round
+- `phase_order` determines the sequence of competition
+- **Exactly one round must have `phase_order = 1`** — this is the Preliminary round; creating a second round with phase_order = 1 is rejected
+- Creating a round with `phase_order > 1` is rejected if no round with `phase_order = 1` exists yet — admin must create the Preliminary round first
+- The first round (phase_order = 1) always shows all contestants — no `RoundContestant` rows needed
 - First round (phase_order = 1) has contestant limit = `null` (unlimited — all contestants participate)
 - Subsequent rounds (Top 10, Top 5, Top 3, etc.) have a defined `contestant_limit`
 - The `contestant_limit` of a round determines how many contestants are advanced into it from the previous round
+- **Next round** = the round with the lowest `phase_order` that is greater than the current round's `phase_order` (gaps in phase_order are allowed — e.g. 1, 5, 10 works the same as 1, 2, 3)
+- **Final round** = the round with the highest `phase_order` — shows "Declare Winners" instead of "Advance"
 - Cannot delete a round that already has categories or scoring data
 - Phase order must be unique across all rounds
 - Phase order is immutable after creation — changing it would break round sequencing, current round derivation, and advancement logic
