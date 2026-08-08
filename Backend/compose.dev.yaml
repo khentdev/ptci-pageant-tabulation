@@ -63,6 +63,7 @@ services:
       - .env
     environment:
       NODE_ENV: development
+      DATABASE_URL: postgresql://ptci-pageant-tabulation-user:ptci-pageant-tabulation-password@project-db:5432/ptci-pageant-tabulation-db?schema=public
     volumes:
       - ./prisma:/usr/src/app/prisma
       - ./prisma.config.ts:/usr/src/app/prisma.config.ts
