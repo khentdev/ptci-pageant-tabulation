@@ -17,7 +17,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 - [x] Seed admin account into database (single admin, username + hashed password — done once before event)
 - [x] Login (username + password, role check, JWT set in HTTP-only cookie)
-- [ ] Session check on app load (`GET /session/me` — returns role + user info)
+- [x] Session check on app load (`GET /session/me` — returns role + user info)
 - [ ] Logout (clear JWT cookie)
 
 ### Frontend
