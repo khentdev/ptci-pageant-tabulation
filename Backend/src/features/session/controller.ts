@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import type { AppContext } from "../../types/context.js";
-import { setNormalCookie, setSessionCookie } from '../../lib/cookies.js';
+import { deleteAuthCookie, deleteNormalCookie, setNormalCookie, setSessionCookie } from '../../lib/cookies.js';
 import { tokenExpiry } from '../../lib/jwt/tokens.js';
 import { getSessionService } from './service.js';
 
@@ -13,4 +13,10 @@ export async function getSessionController(c: Context<AppContext>) {
         setNormalCookie(c, "csrfToken", res.tokens.csrfToken, tokenExpiry().sessionTokenMaxAge)
     }
     return c.json({ user: res.user })
+}
+
+export async function logoutUserController(c: Context) {
+    deleteAuthCookie(c, "sid")
+    deleteNormalCookie(c, "csrfToken")
+    return c.json({ message: "Logged out successfully." })
 }

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "api-contracts/auth-session.md",
+                "file": "Implementation Tracker.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "auth-session"
+              "title": "Implementation Tracker"
             }
           }
         ]
@@ -190,12 +190,13 @@
   },
   "active": "04b0d618fde01fdd",
   "lastOpenFiles": [
-    "api-contracts/auth-login.md",
+    "System Documentation.md",
     "api-contracts/auth-session.md",
     "Implementation Tracker.md",
     "Wireframe & Flows.md",
+    "api-contracts/auth-logout.md",
+    "api-contracts/auth-login.md",
     "api-contracts",
-    "System Documentation.md",
     "reference_docs/implementation_tracker.md",
     "reference_docs/wireframe_flows.md",
     "reference_docs/system_docs.md",
