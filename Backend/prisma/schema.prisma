@@ -8,11 +8,100 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  JUDGE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model User {
-  id             String    @id @default(uuid()) @db.Uuid()
+  id             Int       @id @default(autoincrement())
+  name           String
   username       String    @unique
   hashedPassword String
+  role           Role      @default(JUDGE)
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  deletedAt      DateTime?
+
+  scores Score[]
+}
+
+model Round {
+  id                Int       @id @default(autoincrement())
+  name              String
+  phaseOrder        Int       @unique // immutable after creation
+  contestantLimit   Int? // null = unlimited (Prelims)
+  winnersDeclaredAt DateTime? // This thingy locks in the round winners, no changes after this
+  createdAt         DateTime  @default(now())
+
+  categories       Category[]
+  roundContestants RoundContestant[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  roundId   Int
+  name      String
+  createdAt DateTime @default(now())
+
+  round Round @relation(fields: [roundId], references: [id])
+
+  criteriaFields CriteriaField[]
+  scores         Score[]
+}
+
+model CriteriaField {
+  id         Int     @id @default(autoincrement())
+  categoryId Int
+  name       String
+  maxValue   Decimal @db.Decimal(5, 2) // must sum to 100 across all fields in a category
+
+  createdAt DateTime @default(now())
+
+  category Category @relation(fields: [categoryId], references: [id])
+  scores   Score[]
+}
+
+model Contestant {
+  id              Int      @id @default(autoincrement())
+  candidateNumber Int      @unique
+  name            String
+  gender          Gender
+  teamName        String
+  teamColor       String
+  createdAt       DateTime @default(now())
+
+  roundContestants RoundContestant[]
+  scores           Score[]
+}
+
+model RoundContestant {
+  roundId      Int
+  contestantId Int
+  advancedAt   DateTime @default(now())
+
+  round      Round      @relation(fields: [roundId], references: [id])
+  contestant Contestant @relation(fields: [contestantId], references: [id])
+
+  @@id([roundId, contestantId])
+}
+
+model Score {
+  id              Int      @id @default(autoincrement())
+  judgeId         Int
+  contestantId    Int
+  categoryId      Int
+  criteriaFieldId Int
+  value           Decimal  @db.Decimal(5, 2)
+  submittedAt     DateTime @default(now())
+
+  judge         User          @relation(fields: [judgeId], references: [id])
+  contestant    Contestant    @relation(fields: [contestantId], references: [id])
+  category      Category      @relation(fields: [categoryId], references: [id])
+  criteriaField CriteriaField @relation(fields: [criteriaFieldId], references: [id])
+
+  @@unique([judgeId, contestantId, criteriaFieldId])
 }
