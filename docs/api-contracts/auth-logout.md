@@ -4,14 +4,19 @@
 
 ## Request
 
-**Headers**
+**Headers** *(frontend sets explicitly)*
 
-| Header | Required | Value |
+| Header          | Required | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `X-CSRF-Token`  | Yes      | Value from `csrfToken` cookie                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `X-Fingerprint` | Yes      | JSON string, non-empty object e.g. `{"X-Fingerprint":"{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"}` |
+
+**Cookies** *(auto-sent by browser with `credentials: 'include'`)*
+
+| Cookie | Required | Notes |
 |--------|----------|-------|
-| `Cookie` | Yes | `sid` session cookie |
-| `Cookie` | Yes | `csrfToken` cookie |
-| `X-CSRF-Token` | Yes | Must match `csrfToken` cookie value |
-| `X-Fingerprint` | Yes | JSON string, non-empty object e.g. `{"visitorId":"abc123"}` |
+| `sid` | Yes | Session cookie — browser sends automatically |
+| `csrfToken` | Yes | Browser sends automatically; frontend reads value for `X-CSRF-Token` header |
 
 ## Response
 
@@ -23,7 +28,12 @@
 }
 ```
 
-Clears cookies: `sid`, `csrfToken`
+Clears cookies:
+
+| Cookie | Notes |
+|--------|-------|
+| `sid` | Removed from browser |
+| `csrfToken` | Removed from browser |
 
 ## Errors
 
