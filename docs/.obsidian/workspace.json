@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System Documentation.md",
+                "file": "api-contracts/rounds/rounds-add.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "System Documentation"
+              "title": "rounds-add"
             }
           },
           {
@@ -219,12 +219,15 @@
   },
   "active": "8d4a74a02c81f6de",
   "lastOpenFiles": [
-    "Implementation Tracker.md",
+    "api-contracts/auth/auth-session.md",
+    "api-contracts/rounds/rounds-add.md",
+    "api-contracts/rounds",
+    "api-contracts/auth",
     "System Documentation.md",
     "Wireframe & Flows.md",
-    "api-contracts/auth-login.md",
-    "api-contracts/auth-logout.md",
-    "api-contracts/auth-session.md",
+    "Implementation Tracker.md",
+    "api-contracts/auth/auth-login.md",
+    "api-contracts/auth/auth-logout.md",
     "api-contracts",
     "reference_docs/implementation_tracker.md",
     "reference_docs/wireframe_flows.md",

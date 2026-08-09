@@ -53,7 +53,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create round (name, phase order, contestant limit)
+- [x] Create round (name, phase order, contestant limit)
 - [ ] List rounds (ordered by phase order)
 - [ ] Edit round name (always allowed)
 - [ ] Edit contestant limit (guard: reject if round already has contestants in `round_contestants`)

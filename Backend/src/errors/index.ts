@@ -1,6 +1,7 @@
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { AUTH_ERROR_CODES, AUTH_ERROR_DEF } from "../features/auth/errors.js";
-import { SESSION_ERROR_CODES, SESSION_ERROR_DEF } from "../features/session/errors.js";
+import { AUTH_ERROR_CODES, AUTH_ERROR_DEF } from '../features/auth/errors.js';
+import { ROUND_ERROR_CODES, ROUND_ERROR_DEF } from '../features/rounds_management/error.js';
+import { SESSION_ERROR_CODES, SESSION_ERROR_DEF } from '../features/session/errors.js';
 
 export type ErrorDefinitions = {
     code: ErrorCodes,
@@ -19,10 +20,12 @@ export const FEATURE_ERROR_CODES = {
     // Spread Error Codes here from features
     ...AUTH_ERROR_CODES,
     ...SESSION_ERROR_CODES,
+    ...ROUND_ERROR_CODES,
     SERVER_ERROR: "SERVER_ERROR",
     TOKEN_INVALID: "TOKEN_INVALID",
     TOKEN_EXPIRED: "TOKEN_EXPIRED",
     USER_NOT_FOUND: "USER_NOT_FOUND",
+    FORBIDDEN: "FORBIDDEN"
 } as const
 
 export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
@@ -31,6 +34,7 @@ export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
      */
     ...AUTH_ERROR_DEF,
     ...SESSION_ERROR_DEF,
+    ...ROUND_ERROR_DEF,
     TOKEN_INVALID: {
         code: "TOKEN_INVALID",
         status: 401,
@@ -51,6 +55,11 @@ export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
         message: "Your session is invalid or has expired. Please log in again.",
         status: 404,
     },
+    FORBIDDEN: {
+        code: "FORBIDDEN",
+        message: "You do not have permission to perform this action.",
+        status: 403
+    }
 }
 
 export type ErrorCodes = (typeof FEATURE_ERROR_CODES)[keyof typeof FEATURE_ERROR_CODES]
