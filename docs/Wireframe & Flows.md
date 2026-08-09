@@ -126,11 +126,13 @@ See [[System Documentation]] for business rules.
 
 **Edit Round Flow**
 
-- Admin clicks [ Edit ] on a round row → edit form opens prefilled
+- Admin clicks [ Edit ] on a round row → fetch `GET /rounds/:id` to get current values + lock state
+- Form renders based on `isLimitLocked` from response:
+  - `isLimitLocked = false` → contestant limit field is editable
+  - `isLimitLocked = true` → contestant limit field is read-only with ⚠ warning
 - Name → always editable
-- Phase Order → read-only (displayed but cannot be changed)
-- Contestant Limit → editable only if round has no contestants yet; shown as read-only with a note if locked
-- On success → list updates inline
+- Phase Order → always read-only (displayed but cannot be changed)
+- Admin saves → on success → list updates inline
 
 **Wireframe — Rounds List**
 
@@ -211,9 +213,12 @@ See [[System Documentation]] for business rules.
 
 **Edit Category Flow**
 
-- Admin clicks [ Edit ] on a category row → edit form opens prefilled with current name
-- Name → editable if no scores exist; read-only with note if locked
-- On success → list updates
+- Admin clicks [ Edit ] on a category row → fetch `GET /categories/:id` to get current values + lock state
+- Form renders based on `isLocked` from response:
+  - `isLocked = false` → name field is editable
+  - `isLocked = true` → name field is read-only with ⚠ warning
+- Round → always read-only (category cannot be moved to a different round)
+- Admin saves → on success → list updates
 
 **Wireframe — Categories List**
 
