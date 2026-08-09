@@ -57,8 +57,8 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [x] List rounds (ordered by phase order)
 - [x] Edit round name (always allowed)
 - [x] Edit contestant limit (guard: reject if round already has contestants in `round_contestants`)
-- [ ] Delete round (guard: reject if round has categories or any score data; allowed if round is empty)
-- [ ] Phase order unique constraint enforced
+- [x] Delete round (guard: reject if round has categories or any score data; allowed if round is empty)
+- [x] Phase order unique constraint enforced
 
 ### Frontend
 
