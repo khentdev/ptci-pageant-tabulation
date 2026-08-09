@@ -186,7 +186,10 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 ### Frontend
 
 - [ ] Judge shell layout — sidebar + content area
+- [ ] Route: `/judge/scoring/:categoryId?` — categoryId optional; no categoryId redirects to first available category
+- [ ] On page load: read categoryId from URL → fetch and display that category automatically (survives refresh)
 - [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand
+- [ ] Active category highlighted in sidebar based on current URL categoryId
 - [ ] Rounds without contestants show "No contestants yet" when expanded
 - [ ] Category scoring grid — contestants as rows, fields as columns with max label
 - [ ] All inputs freely editable before Submit All — no per-contestant locking

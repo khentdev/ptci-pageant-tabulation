@@ -482,6 +482,9 @@ See [[System Documentation]] for business rules.
 - Rounds with contestants show interactive categories; rounds without contestants show "No contestants yet" when expanded
 - Judge naturally knows which round is current by which categories are scoreable
 - Sidebar polling refreshes every 10 seconds to detect newly advanced rounds
+- Active category is highlighted in the sidebar based on the current URL `categoryId` param
+- On page refresh, the `categoryId` in the URL is read on load and the correct category is fetched and highlighted automatically
+- `/judge/scoring` with no categoryId redirects to or loads the first available category by default
 
 ---
 
@@ -609,7 +612,8 @@ See [[System Documentation]] for business rules.
 | `/admin/setup/contestants`    | Admin    | Add and manage contestants               |
 | `/admin/setup/judges`         | Admin    | Add and manage judge accounts            |
 | `/admin/live/results/:roundId`| Admin    | Round results, advancement, tie resolution |
-| `/judge/scoring`              | Judge    | Scoring interface with sidebar and grid  |
+| `/judge/scoring`              | Judge    | Scoring interface — redirects to first available category |
+| `/judge/scoring/:categoryId`  | Judge    | Scoring grid for a specific category; categoryId in URL persists on refresh |
 
 ---
 
