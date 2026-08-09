@@ -58,10 +58,10 @@ Sets cookies:
 }
 ```
 
-| Status | Code                  | Message                                                              |     |
-| ------ | --------------------- | -------------------------------------------------------------------- | --- |
-| `400`  | `INVALID_DEVICE_ID`   | Unable to verify your device. Please refresh the page and try again. |     |
-| `400`  | `INVALID_USERNAME`    | Username is required.                                                |     |
-| `400`  | `INVALID_PASSWORD`    | Password is required.                                                |     |
-| `401`  | `INVALID_CREDENTIALS` | Invalid username or password. Please try again.                      |     |
-| `500`  | `SERVER_ERROR`        | Something went wrong on our end. Please try again later.             |     |
+See [[global/errors]] for shared error codes handled by the axios interceptor (`INVALID_DEVICE_ID`, `SERVER_ERROR`).
+
+| Status | Code | Message |
+|--------|------|---------|
+| `400` | `INVALID_USERNAME` | Username is required. |
+| `400` | `INVALID_PASSWORD` | Password is required. |
+| `401` | `INVALID_CREDENTIALS` | Invalid username or password. Please try again. |

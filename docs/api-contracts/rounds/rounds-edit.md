@@ -85,17 +85,13 @@ Used when the admin clicks **Edit** on a round row.
 }
 ```
 
+See [[global/errors]] for shared error codes handled by the axios interceptor.
+
 | Status | Code | Message |
 |--------|------|---------|
 | `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. |
-| `400` | `INVALID_DEVICE_ID` | Unable to verify your device. Please refresh the page and try again. |
-| `401` | `SESSION_UNAUTHORIZED` | Your session is invalid or has expired. Please log in again. |
-| `401` | `TOKEN_EXPIRED` | Token has expired. |
-| `401` | `TOKEN_INVALID` | Invalid or malformed token. |
-| `403` | `FORBIDDEN` | You do not have permission to perform this action. |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. |
 | `500` | `ROUND_PHASE_GET_BY_ID_ERROR` | Unable to get round phase. Please try again later. |
-| `500` | `SERVER_ERROR` | Something went wrong on our end. Please try again later. |
 
 ---
 
@@ -171,6 +167,8 @@ Phase order is immutable after creation and is not accepted in the request body.
 }
 ```
 
+See [[global/errors]] for shared error codes handled by the axios interceptor.
+
 | Status | Code | Message |
 |--------|------|---------|
 | `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. |
@@ -178,11 +176,5 @@ Phase order is immutable after creation and is not accepted in the request body.
 | `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. |
 | `400` | `ROUND_CONTESTANT_LIMIT_LOCKED` | Contestant limit cannot be changed after contestants have advanced into this round |
 | `400` | `ROUND_PRELIMINARY_LIMIT_LOCKED` | Preliminary round contestant limit is always unlimited. |
-| `400` | `INVALID_DEVICE_ID` | Unable to verify your device. Please refresh the page and try again. |
-| `401` | `SESSION_UNAUTHORIZED` | Your session is invalid or has expired. Please log in again. |
-| `401` | `TOKEN_EXPIRED` | Token has expired. |
-| `401` | `TOKEN_INVALID` | Invalid or malformed token. |
-| `403` | `FORBIDDEN` | You do not have permission to perform this action. |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. |
 | `500` | `ROUND_PHASE_EDIT_ERROR` | Unable to edit round phase. Please try again later. |
-| `500` | `SERVER_ERROR` | Something went wrong on our end. Please try again later. |
