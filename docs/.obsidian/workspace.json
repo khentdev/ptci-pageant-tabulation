@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Wireframe & Flows.md",
+                "file": "Implementation Tracker.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Wireframe & Flows"
+              "title": "Implementation Tracker"
             }
           },
           {
@@ -219,8 +219,8 @@
   },
   "active": "e24abb75a8542841",
   "lastOpenFiles": [
-    "System Documentation.md",
     "Wireframe & Flows.md",
+    "System Documentation.md",
     "Implementation Tracker.md",
     "api-contracts/rounds/rounds-list.md",
     "api-contracts/rounds/rounds-add.md",
