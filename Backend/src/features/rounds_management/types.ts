@@ -63,3 +63,13 @@ export type GetRoundByIdResponse = {
     message: string
 }
 
+// Delete round
+export type DeleteRoundPhaseInput = {
+    id: number
+}
+export type DeleteRoundPhaseInputVariables = {
+    deleteRoundPhaseInput: DeleteRoundPhaseInput
+}
+export type DeleteRoundPhaseResponse = {
+    message: string
+}

@@ -1,9 +1,9 @@
 import { AppError } from '../../errors/appError.js';
 import logger from '../../infra/logger.js';
 import { Prisma, prisma } from '../../infra/prisma.js';
-import { addRound, editRound, getRoundById, getRoundsList } from './data.js';
+import { addRound, deleteRoundPhase, editRound, getRoundById, getRoundsList } from './data.js';
 
-import type { AddRoundInput, EditRoundInput, GetRoundByIdInput } from "./types.js";
+import type { AddRoundInput, DeleteRoundPhaseInput, EditRoundInput, GetRoundByIdInput } from "./types.js";
 
 export async function addRoundService({ name, phaseOrder, contestantLimit }: AddRoundInput) {
     if (phaseOrder > 1) {
@@ -95,5 +95,24 @@ export async function editRoundService({ id, name, contestantLimit }: EditRoundI
     } catch (err) {
         logger.error({ err }, "Error editing round")
         throw new AppError("ROUND_PHASE_EDIT_ERROR")
+    }
+}
+
+export async function deleteRoundPhaseService({ id }: DeleteRoundPhaseInput) {
+
+    const existingRound = await prisma.round.findUnique({ where: { id }, select: { id: true } })
+    if (!existingRound) throw new AppError("ROUND_PHASE_NOT_FOUND")
+
+    const hasCategories = await prisma.category.count({ where: { roundId: id } })
+    if (hasCategories > 0) throw new AppError("ROUND_PHASE_CATEGORY_LOCKED")
+
+    const hasContestants = await prisma.roundContestant.count({ where: { roundId: id } })
+    if (hasContestants > 0) throw new AppError("ROUND_PHASE_HAS_CONTESTANTS")
+
+    try {
+        await deleteRoundPhase({ id })
+    } catch (err) {
+        logger.error({ err, id }, "Error deleting round phase")
+        throw new AppError("ROUND_PHASE_DELETE_ERROR")
     }
 }

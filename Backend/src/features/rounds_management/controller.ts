@@ -1,8 +1,11 @@
 import type { Context } from "hono";
-import { addRoundService, editRoundService, getRoundByIdService, getRoundsListService } from './service.js';
+import {
+    addRoundService, deleteRoundPhaseService, editRoundService, getRoundByIdService,
+    getRoundsListService
+} from './service.js';
 
 import type { AppContext } from "../../types/context.js";
-import type { AddRoundInputVariables, AddRoundResponse, EditRoundInputVariables, EditRoundResponse, GetRoundByIdInputVariables, GetRoundByIdResponse, GetRoundsListResponse } from "./types.js";
+import type { AddRoundInputVariables, AddRoundResponse, DeleteRoundPhaseInputVariables, DeleteRoundPhaseResponse, EditRoundInputVariables, EditRoundResponse, GetRoundByIdInputVariables, GetRoundByIdResponse, GetRoundsListResponse } from "./types.js";
 
 export async function addRoundController(c: Context<AppContext<AddRoundInputVariables>>) {
     const { name, phaseOrder, contestantLimit } = c.var.roundInput
@@ -31,5 +34,13 @@ export async function editRoundController(c: Context<AppContext<EditRoundInputVa
     await editRoundService({ id, name, contestantLimit })
     return c.json<EditRoundResponse>({
         message: "Round edited successfully",
+    }, 200)
+}
+
+export async function deleteRoundPhaseController(c: Context<AppContext<DeleteRoundPhaseInputVariables>>) {
+    const { id } = c.var.deleteRoundPhaseInput
+    await deleteRoundPhaseService({ id })
+    return c.json<DeleteRoundPhaseResponse>({
+        message: "Round phase deleted successfully",
     }, 200)
 }

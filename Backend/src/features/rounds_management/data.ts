@@ -1,5 +1,5 @@
 import { prisma } from "../../infra/prisma.js";
-import type { AddRoundInput, EditRoundInput } from "./types.js";
+import type { AddRoundInput, DeleteRoundPhaseInput, EditRoundInput } from "./types.js";
 
 export async function addRound({ name, phaseOrder, contestantLimit }: AddRoundInput) {
     await prisma.round.create({
@@ -61,4 +61,10 @@ export async function getRoundById(id: number) {
         ...roundData,
         isLimitLocked: _count.roundContestants > 0,
     }
+}
+
+export async function deleteRoundPhase({ id }: DeleteRoundPhaseInput) {
+    await prisma.round.delete({
+        where: { id },
+    })
 }

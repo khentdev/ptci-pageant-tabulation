@@ -49,3 +49,12 @@ export async function validateEditRoundInput(c: Context, next: Next) {
 
     await next()
 }
+
+export async function validateDeleteRoundPhaseInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) throw new AppError("ROUND_ID_INVALID", { field: "delete_round_phase_input_id" })
+
+    c.set("deleteRoundPhaseInput", { id: parsedId })
+    await next()
+}

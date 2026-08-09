@@ -16,6 +16,9 @@ export const ROUND_ERROR_CODES = {
     ROUND_PHASE_NOT_FOUND: "ROUND_PHASE_NOT_FOUND",
     ROUND_CONTESTANT_LIMIT_LOCKED: "ROUND_CONTESTANT_LIMIT_LOCKED",
     ROUND_PRELIMINARY_LIMIT_LOCKED: "ROUND_PRELIMINARY_LIMIT_LOCKED",
+    ROUND_PHASE_CATEGORY_LOCKED: "ROUND_PHASE_CATEGORY_LOCKED",
+    ROUND_PHASE_HAS_CONTESTANTS: "ROUND_PHASE_HAS_CONTESTANTS",
+    ROUND_PHASE_DELETE_ERROR: "ROUND_PHASE_DELETE_ERROR"
 } as const
 
 export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
@@ -94,5 +97,20 @@ export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
         message: "Preliminary round contestant limit is always unlimited.",
         status: 400,
     },
+    ROUND_PHASE_CATEGORY_LOCKED: {
+        code: "ROUND_PHASE_CATEGORY_LOCKED",
+        message: "Round phase cannot be deleted because it has categories.",
+        status: 400,
+    },
+    ROUND_PHASE_HAS_CONTESTANTS: {
+        code: "ROUND_PHASE_HAS_CONTESTANTS",
+        message: "Round phase cannot be deleted because it has contestants.",
+        status: 400,
+    },
+    ROUND_PHASE_DELETE_ERROR: {
+        code: "ROUND_PHASE_DELETE_ERROR",
+        message: "Unable to delete round phase. Please try again later.",
+        status: 500,
+    }
 }
 export type RoundErrorCodes = keyof typeof ROUND_ERROR_CODES
