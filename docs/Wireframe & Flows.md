@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 7, 2026
+**Last synced with codebase:** Aug 10, 2026
 User flows and wireframes in plain English with ASCII layouts.
 See [[System Documentation]] for business rules.
 
