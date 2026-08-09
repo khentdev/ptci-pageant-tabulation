@@ -489,19 +489,22 @@ See [[System Documentation]] for business rules.
 
 **Flow**
 
-- Judge clicks a category under the active round (e.g., "Swimwear")
+- Judge clicks a category under the current round (e.g., "Swimwear")
 - System fetches:
   1. All contestants in the current round
   2. Scoring fields for this category (with max values)
-  3. Any scores already submitted by this judge for this category
-- Contestants with existing scores → row is disabled, shows submitted values + "Submitted ✓"
-- Contestants without scores → row is editable, all fields blank, Submit button enabled
-- Judge fills in scores for a contestant → clicks Submit
-- System validates: all fields filled, values within 0 to max
-- On success → row locks, button shows "Submitted ✓"
-- On error → inline field-level error messages
+  3. Any existing scores by this judge for this category
+- If scores already exist → entire category is read-only, shows submitted values, no Submit All button
+- If no scores → all inputs editable, Submit All button visible at the bottom
+- Judge freely fills in and adjusts scores for all contestants — no per-contestant locking
+- Judge reviews all scores → clicks Submit All
+- Frontend sends one request: array of all contestant scores for this category
+- Backend validates: all fields filled, values within 0–max, not already submitted
+- Backend inserts all scores in a single transaction — all succeed or all fail
+- On success → all inputs lock, values retained read-only, Submit All button hidden
+- On error → inline error message shown, inputs remain editable for correction
 
-**Wireframe — Scoring Grid (Swimwear)**
+**Wireframe — Scoring Grid (Swimwear, not yet submitted)**
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -511,26 +514,37 @@ See [[System Documentation]] for business rules.
 │  Contestant           Stage(40)  Figure(30)  Poise(20)  Impact(10)   │
 │  ─────────────────    ─────────  ──────────  ─────────  ──────────   │
 │  Lungcay, Keanna      [  38  ]   [  27  ]    [  18  ]   [  9   ]     │
-│                                                 [ Submit ] ←enabled  │
-│                                                                       │
 │  Palay, Roldan        [  35  ]   [  27  ]    [  17  ]   [  8   ]     │
-│                                           [ Submitted ✓ ] ←read-only │
+│  Badang, Ethel        [  40  ]   [  29  ]    [  19  ]   [  9   ]     │
+│  Tenorio, Sean        [  36  ]   [  25  ]    [  16  ]   [  8   ]     │
+│  Reyes, Julian        [  33  ]   [  24  ]    [  15  ]   [  7   ]     │
 │                                                                       │
-│  Badang, Ethel        [      ]   [      ]    [      ]   [      ]     │
-│                                                 [ Submit ] ←enabled  │
+│                                          [ Submit All ]  ← enabled   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Scoring Grid (Swimwear, already submitted)**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Swimwear                                          ✓ Submitted         │
+│ Preliminary Round                                                     │
 │                                                                       │
-│  Tenorio, Sean        [      ]   [      ]    [      ]   [      ]     │
-│                                                 [ Submit ] ←enabled  │
+│  Contestant           Stage(40)  Figure(30)  Poise(20)  Impact(10)   │
+│  ─────────────────    ─────────  ──────────  ─────────  ──────────   │
+│  Lungcay, Keanna      [  38  ]   [  27  ]    [  18  ]   [  9   ]     │
+│  Palay, Roldan        [  35  ]   [  27  ]    [  17  ]   [  8   ]     │
+│  Badang, Ethel        [  40  ]   [  29  ]    [  19  ]   [  9   ]     │
+│  Tenorio, Sean        [  36  ]   [  25  ]    [  16  ]   [  8   ]     │
+│  Reyes, Julian        [  33  ]   [  24  ]    [  15  ]   [  7   ]     │
 │                                                                       │
-│  Reyes, Julian        [      ]   [      ]    [      ]   [      ]     │
-│                                                 [ Submit ] ←enabled  │
-│                                                                       │
+│  (all inputs read-only, no Submit All button)                         │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 - Field shows max score as label: `Stage(40)` means max is 40
-- Submitted rows are visually distinct (greyed out)
-- Validation error shown inline below the field if value exceeds max or is empty on submit
+- Submitted category is visually distinct — greyed out inputs, ✓ Submitted label in header
+- Validation error shown inline if any value exceeds max or is empty on Submit All
 
 ---
 

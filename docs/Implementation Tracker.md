@@ -180,8 +180,8 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Rounds + categories list API — returns all rounds with their categories (for sidebar)
 - [ ] Contestants by round API — returns contestants in `round_contestants` for a given round (or all contestants for phase_order = 1)
 - [ ] Scoring fields by category API — returns fields sorted by max_value descending
-- [ ] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state per contestant)
-- [ ] Submit score API — per contestant per category; validate all fields present, values within 0–max_value; reject if score already exists for this judge + contestant + category
+- [ ] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state: any score exists for this judge + category = fully submitted)
+- [ ] Batch submit scores API — receives array of all contestant scores for a category; validates all fields present and within 0–max_value; rejects if already submitted for this judge + category; inserts all in a single transaction
 
 ### Frontend
 
@@ -189,9 +189,10 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand
 - [ ] Rounds without contestants show "No contestants yet" when expanded
 - [ ] Category scoring grid — contestants as rows, fields as columns with max label
-- [ ] Per-contestant Submit button (enabled when all fields filled)
-- [ ] Submitted state — inputs become read-only with submitted values retained; button shows "Submitted ✓"
-- [ ] Inline field validation — value cannot exceed max_value; all fields required
+- [ ] All inputs freely editable before Submit All — no per-contestant locking
+- [ ] Submit All button (enabled only when all fields for all contestants are filled)
+- [ ] Submitted state per category — if scores exist for this judge + category → all inputs read-only, submitted values retained, Submit All hidden, ✓ Submitted shown in header
+- [ ] Inline field validation — value cannot exceed max_value; all fields required before Submit All
 - [ ] Sidebar polling every 10s — detect newly advanced rounds and update sidebar
 
 ---

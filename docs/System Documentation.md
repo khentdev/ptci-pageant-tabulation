@@ -297,21 +297,25 @@ Admin must pick exactly (N - A) from the T tied contestants
 - Sidebar shows all rounds, each expandable to reveal categories underneath
 - Clicking a category fetches and displays the scoring grid
 - Scoring grid: contestants (rows) × scoring fields (columns) with max score indicators
-- Each contestant has an individual **Submit** button
-- Once submitted for a contestant, that row is disabled and shows "Submitted ✓"
-- Cannot edit a submitted score
+- Judge fills in scores for all contestants freely — no per-contestant submit
+- One **Submit All** button per category — submits all contestant scores at once
+- Once submitted, all inputs in that category become read-only with submitted values retained
+- Cannot edit after Submit All is clicked
 
 **Business Rules**
 
-- Judge sees all rounds in the sidebar (for context), but only the currently active round's categories are interactive
-- Inactive rounds display "No data yet" when expanded — no scoring is possible
-- On category open: system fetches contestants in the current round + any existing scores by this judge to pre-determine submitted state
-- Submitted state = a score record already exists in the DB for this judge + contestant + category; no extra column needed
-- All fields are required before submit — partial submission is not allowed
+- Judge sees all rounds in the sidebar (for context), but only rounds with contestants are interactive
+- Rounds without contestants show "No contestants yet" when expanded — no scoring is possible
+- On category open: system fetches contestants in the current round + any existing scores by this judge for that category to determine submitted state
+- **Submitted state is per category** — if any score exists for this judge + category → entire category is submitted and all inputs are read-only
+- Judge can freely change any contestant's score before clicking Submit All
+- All fields for all contestants must be filled before Submit All is allowed — partial submission is not allowed
 - Each field value must be between 0 and its `max_value` (inclusive); server also validates
-- Submit is per contestant (not per category) — judge can submit contestant A before scoring contestant B
-- After submit: inputs for that contestant are disabled and **retain their submitted values** (read-only) so the judge can verify what was saved; button changes to "Submitted ✓"
-- Judge cannot re-submit or edit a submitted score under any circumstance
+- Backend receives an array of all contestant scores in one request and inserts them in a single transaction — all succeed or all fail
+- Backend rejects submission if scores already exist for this judge + category (double-submit prevention)
+- DB unique constraint `[judgeId, contestantId, criteriaFieldId]` provides a second layer of protection against duplicate scores
+- After Submit All: all inputs for that category are read-only and retain submitted values so the judge can verify; Submit All button is hidden
+- Judge cannot re-submit or edit a submitted category under any circumstance
 - Score submission immediately updates admin's judge-submission-status tracker
 
 ---
