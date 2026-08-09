@@ -11,14 +11,10 @@
             "id": "e24abb75a8542841",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "api-contracts/rounds/rounds-edit.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "rounds-edit"
+              "title": "New tab"
             }
           }
         ]
@@ -190,6 +186,7 @@
   },
   "active": "e24abb75a8542841",
   "lastOpenFiles": [
+<<<<<<< HEAD
     "api-contracts/rounds/rounds-list.md",
     "api-contracts/rounds/rounds-delete.md",
     "api-contracts/rounds/rounds-edit.md",
@@ -211,6 +208,29 @@
     "api-contracts/auth-logout.md",
     "api-contracts/auth-login.md",
     "api-contracts",
+=======
+    "api-contracts/auth/auth-logout.md",
+    "api-contracts/categories/categories-add.md",
+    "api-contracts/global/errors.md",
+    "api-contracts/rounds/rounds-list.md",
+    "api-contracts/rounds/rounds-edit.md",
+    "api-contracts/auth/auth-session.md",
+    "api-contracts/rounds/rounds-delete.md",
+    "api-contracts/rounds/rounds-add.md",
+    "api-contracts/auth/auth-login.md",
+    "api-contracts/categories",
+    "api-contracts/global",
+    "api-contracts/rounds",
+    "api-contracts/auth",
+    "api-contracts",
+    "Implementation Tracker.md",
+    "Wireframe & Flows.md",
+    "System Documentation.md",
+    "api-contracts/rounds/rounds-get-by-id.md",
+    "api-contracts/auth-session.md",
+    "api-contracts/auth-logout.md",
+    "api-contracts/auth-login.md",
+>>>>>>> origin/main
     "reference_docs/implementation_tracker.md",
     "reference_docs/wireframe_flows.md",
     "reference_docs/system_docs.md",
