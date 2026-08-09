@@ -60,6 +60,8 @@ Admin only.
 }
 ```
 
+See [[global/errors]] for shared error codes handled by the axios interceptor.
+
 | Status | Code | Message |
 |--------|------|---------|
 | `400` | `ROUND_NAME_INVALID` | Round name is required. |
@@ -69,10 +71,4 @@ Admin only.
 | `400` | `ROUND_PHASE_ORDER_ALREADY_EXISTS` | The first round has already been created. Please create a new round with a higher phase order. |
 | `400` | `ROUND_PHASE_ORDER_DUPLICATE` | A round with this phase order already exists. Please use a different phase order. |
 | `400` | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round. |
-| `400` | `INVALID_DEVICE_ID` | Unable to verify your device. Please refresh the page and try again. |
-| `401` | `SESSION_UNAUTHORIZED` | Your session is invalid or has expired. Please log in again. |
-| `401` | `TOKEN_EXPIRED` | Token has expired. |
-| `401` | `TOKEN_INVALID` | Invalid or malformed token. |
-| `403` | `FORBIDDEN` | You do not have permission to perform this action. |
 | `500` | `ROUND_PHASE_ADD_ERROR` | Unable to add round phase. Please try again later. |
-| `500` | `SERVER_ERROR` | Something went wrong on our end. Please try again later. |
