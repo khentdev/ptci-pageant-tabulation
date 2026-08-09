@@ -54,18 +54,18 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 ### Backend
 
 - [x] Create round (name, phase order, contestant limit)
-- [ ] List rounds (ordered by phase order)
+- [x] List rounds (ordered by phase order)
 - [ ] Edit round name (always allowed)
 - [ ] Edit contestant limit (guard: reject if round already has contestants in `round_contestants`)
-- [ ] Delete round (guard: reject if round has categories or any score data)
+- [ ] Delete round (guard: reject if round has categories or any score data; allowed if round is empty)
 - [ ] Phase order unique constraint enforced
 
 ### Frontend
 
-- [ ] Rounds list page (ordered by phase order, shows name + limit)
+- [ ] Rounds list page (ordered by phase order, shows name + limit + Edit + Delete actions per row)
 - [ ] Create round form (name, phase order, contestant limit — blank = unlimited)
-- [ ] Edit round inline or modal (name always editable; limit editable only before advancement; phase order field hidden/disabled)
-- [ ] Delete round with confirmation modal (disabled if has categories or scores)
+- [ ] Edit round form — fetch lock state on open; name always editable; phase order read-only; limit editable or read-only based on `isLimitLocked`
+- [ ] Delete round with confirmation modal — button disabled if round has categories or scores
 
 ---
 
@@ -85,13 +85,13 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Categories list page (grouped by round, shows field count + sum status)
+- [ ] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
 - [ ] Create category form — round dropdown fetches all rounds live on open
-- [ ] Edit category name inline or modal (disabled if scores exist)
+- [ ] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
 - [ ] Category field editor — add fields (name + max score), running total shown, error if sum ≠ 100
 - [ ] Fields auto-sorted by max_value descending in editor and on judge screen
-- [ ] Delete field with confirmation (disabled if scores exist)
-- [ ] Delete category with confirmation (disabled if scores exist)
+- [ ] Delete field with confirmation — disabled if scores exist for that field
+- [ ] Delete category with confirmation — disabled if scores exist for that category
 - [ ] Category readiness indicator (✓ if sum = 100, ⚠ if not)
 
 ---

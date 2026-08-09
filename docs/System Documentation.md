@@ -102,7 +102,8 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - The `contestant_limit` of a round determines how many contestants are advanced into it from the previous round
 - **Next round** = the round with the lowest `phase_order` that is greater than the current round's `phase_order` (gaps in phase_order are allowed — e.g. 1, 5, 10 works the same as 1, 2, 3)
 - **Final round** = the round with the highest `phase_order` — shows "Declare Winners" instead of "Advance"
-- Cannot delete a round that already has categories or scoring data
+- Can delete a round only if it has no categories and no scores — useful for fixing setup mistakes
+- Cannot delete a round that already has categories or any scoring data
 - Phase order must be unique across all rounds
 - Phase order is immutable after creation — changing it would break round sequencing, current round derivation, and advancement logic
 - Contestant limit is locked once the round has contestants in `round_contestants` (advancement has occurred)
@@ -130,7 +131,9 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - System shows running total and error if fields do not sum to 100
 - A judge scores each field from **0 up to its `max_value`**
 - Category score per judge = `Σ field_values` (plain sum — no separate weighting needed; max values are the weights)
+- Can delete a category only if no scores exist for it — useful for fixing setup mistakes
 - Cannot delete a category with existing judge scores
+- Category name is editable only if no scores exist for it (scores exist = locked, no scores = editable)
 
 **Scoring Fields (Criteria) Rules**
 

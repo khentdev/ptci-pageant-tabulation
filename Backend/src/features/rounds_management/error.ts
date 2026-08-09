@@ -9,6 +9,7 @@ export const ROUND_ERROR_CODES = {
     ROUND_PHASE_ORDER_DUPLICATE: "ROUND_PHASE_ORDER_DUPLICATE",
     ROUND_CONTESTANT_LIMIT_REQUIRED: "ROUND_CONTESTANT_LIMIT_REQUIRED",
     ROUND_PHASE_ADD_ERROR: "ROUND_PHASE_ADD_ERROR",
+    ROUND_PHASE_GET_LIST_ERROR: "ROUND_PHASE_GET_LIST_ERROR",
 } as const
 
 export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
@@ -50,6 +51,11 @@ export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
     ROUND_PHASE_ADD_ERROR: {
         code: "ROUND_PHASE_ADD_ERROR",
         message: "Unable to add round phase. Please try again later.",
+        status: 500,
+    },
+    ROUND_PHASE_GET_LIST_ERROR: {
+        code: "ROUND_PHASE_GET_LIST_ERROR",
+        message: "Unable to get round phases. Please try again later.",
         status: 500,
     },
 }

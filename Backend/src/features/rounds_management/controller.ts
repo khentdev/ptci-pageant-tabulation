@@ -1,7 +1,8 @@
 import type { Context } from "hono";
-import { addRoundService } from "./service.js";
+import { addRoundService, getRoundsListService } from './service.js';
+
 import type { AppContext } from "../../types/context.js";
-import type { AddRoundInputVariables, AddRoundResponse } from "./types.js";
+import type { AddRoundInputVariables, AddRoundResponse, GetRoundsListResponse } from "./types.js";
 
 export async function addRoundController(c: Context<AppContext<AddRoundInputVariables>>) {
     const { name, phaseOrder, contestantLimit } = c.var.roundInput
@@ -9,4 +10,11 @@ export async function addRoundController(c: Context<AppContext<AddRoundInputVari
     return c.json<AddRoundResponse>({
         message: "Round added successfully",
     }, 201)
+}
+export async function getRoundsListController(c: Context) {
+    const roundsList = await getRoundsListService()
+    return c.json<GetRoundsListResponse>({
+        data: roundsList,
+        message: "Rounds list retrieved successfully",
+    })
 }

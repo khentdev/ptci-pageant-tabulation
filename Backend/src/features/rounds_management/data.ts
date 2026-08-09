@@ -13,3 +13,15 @@ export async function addRound({ name, phaseOrder, contestantLimit }: AddRoundIn
         },
     })
 }
+
+export async function getRoundsList() {
+    return await prisma.round.findMany({
+        orderBy: { phaseOrder: "asc" },
+        select: {
+            id: true,
+            phaseOrder: true,
+            name: true,
+            contestantLimit: true,
+        }
+    })
+}

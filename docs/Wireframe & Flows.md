@@ -124,20 +124,29 @@ See [[System Documentation]] for business rules.
 - On success → round appears in list; round also appears in Live Event sidebar
 - On fail (duplicate phase order, missing fields) → inline field errors
 
+**Edit Round Flow**
+
+- Admin clicks [ Edit ] on a round row → edit form opens prefilled
+- Name → always editable
+- Phase Order → read-only (displayed but cannot be changed)
+- Contestant Limit → editable only if round has no contestants yet; shown as read-only with a note if locked
+- On success → list updates inline
+
 **Wireframe — Rounds List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Rounds                             [ + Add Round ]    │
-│                                                       │
-│  #   Name            Phase Order   Limit              │
-│  ─── ─────────────   ───────────   ─────              │
-│  1   Preliminary     1             Unlimited          │
-│  2   Top 10          2             10                 │
-│  3   Top 5           3             5                  │
-│  4   Top 3           4             3                  │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Rounds                                             [ + Add Round ]   │
+│                                                                      │
+│  #   Name          Phase Order  Limit      Actions                   │
+│  ─── ───────────── ───────────  ────────   ─────────────────────     │
+│  1   Preliminary   1            Unlimited  [ Edit ]  [ Delete ]      │
+│  2   Top 10        2            10         [ Edit ]  [ Delete ]      │
+│  3   Top 5         3            5          [ Edit ]  [ Delete ]      │
+│  4   Top 3         4            3          [ Edit ]  [ Delete ]      │
+│                                                                      │
+│  Delete disabled if round has categories or scores                   │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Add Round Form**
@@ -152,6 +161,35 @@ See [[System Documentation]] for business rules.
 │                                          │
 │  [ Cancel ]              [ Save Round ]  │
 └──────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Round Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Top 5                        ] │
+│  Phase Order     [ 3 ]  (read-only)               │
+│  Contestant Limit[ 5                            ] │
+│                  ← locked if already advanced     │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Top 5                        ] │
+│  Phase Order     [ 3 ]  (read-only)               │
+│  Contestant Limit[ 5 ]  (read-only)               │
+│                  ⚠ Locked — contestants already   │
+│                    advanced into this round       │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -171,25 +209,71 @@ See [[System Documentation]] for business rules.
 - Running total shown; error shown if total ≠ 100
 - Category shows as "Ready" when total = 100
 
+**Edit Category Flow**
+
+- Admin clicks [ Edit ] on a category row → edit form opens prefilled with current name
+- Name → editable if no scores exist; read-only with note if locked
+- On success → list updates
+
 **Wireframe — Categories List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Categories                       [ + Add Category ]   │
-│                                                       │
-│  PRELIMINARY                                          │
-│  ├── Swimwear           4 fields   Total: 100  ✓      │
-│  ├── Talent             4 fields   Total: 100  ✓      │
-│  ├── Formal Wear        4 fields   Total: 100  ✓      │
-│  └── Production         3 fields   Total: 80   ⚠      │
-│                                                       │
-│  TOP 5                                                │
-│  └── Q&A Round          2 fields   Total: 100  ✓      │
-│                                                       │
-│  TOP 3                                                │
-│  └── Final Question     2 fields   Total: 100  ✓      │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│ Categories                                     [ + Add Category ]      │
+│                                                                        │
+│  PRELIMINARY                                                           │
+│  ├── Swimwear      4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  ├── Talent        4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  ├── Formal Wear   4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  └── Production    3 fields  Total: 80 ⚠  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  TOP 5                                                                 │
+│  └── Q&A Round     2 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  TOP 3                                                                 │
+│  └── Final Question 2 fields Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  Edit and Delete disabled if scores already exist for that category    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Category Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Category                                      │
+│                                                   │
+│  Round     [ Preliminary ▼ ]                      │
+│  Name      [ Swimwear       ]                     │
+│                                                   │
+│  [ Cancel ]                   [ Save Category ]   │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Category Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Category                                     │
+│                                                   │
+│  Round     [ Preliminary ]  (read-only)           │
+│  Name      [ Swimwear     ]                       │
+│                                                   │
+│  [ Cancel ]                   [ Save Changes ]    │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Category                                     │
+│                                                   │
+│  Round     [ Preliminary ]  (read-only)           │
+│  Name      [ Swimwear    ]  (read-only)           │
+│            ⚠ Locked — scores already submitted    │
+│              for this category                    │
+│                                                   │
+│  [ Cancel ]                                       │
+└──────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Category Field Editor**
@@ -198,16 +282,16 @@ See [[System Documentation]] for business rules.
 ┌──────────────────────────────────────────────────────┐
 │ Swimwear — Scoring Fields                             │
 │                                                       │
-│  #   Field Name             Max Score                 │
-│  ─   ─────────────────────  ─────────                 │
-│  1   Stage Presence         40                        │
-│  2   Figure & Fitness       30                        │
-│  3   Poise & Bearing        20                        │
-│  4   Overall Impact         10                        │
+│  #   Field Name             Max Score   Actions       │
+│  ─   ─────────────────────  ─────────   ───────       │
+│  1   Stage Presence         40          [ Delete ]    │
+│  2   Figure & Fitness       30          [ Delete ]    │
+│  3   Poise & Bearing        20          [ Delete ]    │
+│  4   Overall Impact         10          [ Delete ]    │
 │                                                       │
 │  Running Total: 100 / 100  ✓                          │
 │                                                       │
-│  [ + Add Field ]                [ Save ]              │
+│  [ + Add Field ]                                      │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -222,22 +306,76 @@ See [[System Documentation]] for business rules.
 - Clicks "Add Contestant" → fills form
 - On success → contestant appears in list
 
+**Edit Contestant Flow**
+
+- Admin clicks [ Edit ] on a contestant row → edit form opens prefilled
+- All fields editable if no scores exist; all read-only with note if locked
+- On success → list updates
+
 **Wireframe — Contestants List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Contestants                    [ + Add Contestant ]   │
-│                                                       │
-│  Filter: [ All ]  [ Male ]  [ Female ]                │
-│                                                       │
-│  #    Name                 Gender   Team              │
-│  ──   ─────────────────    ──────   ────              │
-│  1    Aniar, Andrea Mae    Female   Yellow            │
-│  2    Dela Cruz, Christine Female   Purple            │
-│  3    Delos Santos, Jona   Female   Purple            │
-│  ...                                                  │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Contestants                          [ + Add Contestant ]     │
+│                                                              │
+│  Filter: [ All ]  [ Male ]  [ Female ]                       │
+│                                                              │
+│  #    Name                 Gender   Team      Actions        │
+│  ──   ─────────────────    ──────   ────      ───────        │
+│  1    Aniar, Andrea Mae    Female   Yellow    [ Edit ]       │
+│  2    Dela Cruz, Christine Female   Purple    [ Edit ]       │
+│  3    Delos Santos, Jona   Female   Purple    [ Edit ]       │
+│  ...                                                         │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Contestant Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Contestant                                    │
+│                                                   │
+│  Candidate No.  [ 1              ]                │
+│  Name           [ Aniar, Andrea  ]                │
+│  Gender         [ Female ▼       ]                │
+│  Team Name      [ Yellow Team    ]                │
+│  Team Color     [ Yellow         ]                │
+│                                                   │
+│  [ Cancel ]               [ Save Contestant ]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Contestant Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Contestant                                   │
+│                                                   │
+│  Candidate No.  [ 1              ]                │
+│  Name           [ Aniar, Andrea  ]                │
+│  Gender         [ Female ▼       ]                │
+│  Team Name      [ Yellow Team    ]                │
+│  Team Color     [ Yellow         ]                │
+│                                                   │
+│  [ Cancel ]               [ Save Changes ]        │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Contestant                                   │
+│                                                   │
+│  Candidate No.  [ 1 ]  (read-only)                │
+│  Name           [ Aniar, Andrea ]  (read-only)    │
+│  Gender         [ Female ]  (read-only)           │
+│  Team Name      [ Yellow Team ]  (read-only)      │
+│  Team Color     [ Yellow ]  (read-only)           │
+│  ⚠ Locked — scores already exist for this        │
+│    contestant                                     │
+│                                                   │
+│  [ Close ]                                        │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -253,16 +391,42 @@ See [[System Documentation]] for business rules.
 **Wireframe — Judges List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Judges                               [ + Add Judge ]  │
-│                                                       │
-│  Name         Username    Actions                     │
-│  ──────────   ─────────   ───────                     │
-│  Judge 1      judge1      [ Reset Password ]          │
-│  Judge 2      judge2      [ Reset Password ]          │
-│  Judge 3      judge3      [ Reset Password ]          │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Judges                                     [ + Add Judge ]    │
+│                                                              │
+│  Name       Username   Actions                               │
+│  ────────   ────────   ───────────────────────────────────   │
+│  Judge 1    judge1     [ Reset Password ]                    │
+│  Judge 2    judge2     [ Reset Password ]                    │
+│  Judge 3    judge3     [ Reset Password ]                    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Judge Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Judge                                         │
+│                                                   │
+│  Name       [ Judge 1   ]                         │
+│  Username   [ judge1    ]                         │
+│  Password   [ ········  ]                         │
+│                                                   │
+│  [ Cancel ]                    [ Save Judge ]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Reset Password Modal**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Reset Password — Judge 1                          │
+│                                                   │
+│  New Password   [ ········  ]                     │
+│                                                   │
+│  [ Cancel ]                 [ Reset Password ]    │
+└──────────────────────────────────────────────────┘
 ```
 
 ---

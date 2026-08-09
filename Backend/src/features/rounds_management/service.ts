@@ -1,7 +1,7 @@
 import { AppError } from '../../errors/appError.js';
 import logger from '../../infra/logger.js';
 import { Prisma, prisma } from '../../infra/prisma.js';
-import { addRound } from './data.js';
+import { addRound, getRoundsList } from './data.js';
 
 import type { AddRoundInput } from "./types.js";
 
@@ -51,5 +51,14 @@ export async function addRoundService({ name, phaseOrder, contestantLimit }: Add
         }
         logger.error({ err }, "Error adding round")
         throw new AppError("ROUND_PHASE_ADD_ERROR")
+    }
+}
+
+export async function getRoundsListService() {
+    try {
+        return await getRoundsList()
+    } catch (err) {
+        logger.error({ err }, "Error getting rounds list")
+        throw new AppError("ROUND_PHASE_GET_LIST_ERROR")
     }
 }

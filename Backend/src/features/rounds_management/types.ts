@@ -14,3 +14,15 @@ export type AddRoundInputVariables = {
 export type AddRoundResponse = {
     message: string
 }
+
+// Get rounds list
+export type GetRoundsListDTO = {
+    id: number
+    phaseOrder: number
+    name: string
+    contestantLimit: number | null
+}
+export type GetRoundsListResponse = {
+    data: GetRoundsListDTO[]
+    message: string
+}
