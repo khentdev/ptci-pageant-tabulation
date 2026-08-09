@@ -1,9 +1,9 @@
 import { AppError } from '../../errors/appError.js';
 import logger from '../../infra/logger.js';
 import { Prisma, prisma } from '../../infra/prisma.js';
-import { addRound, getRoundsList } from './data.js';
+import { addRound, editRound, getRoundsList } from './data.js';
 
-import type { AddRoundInput } from "./types.js";
+import type { AddRoundInput, EditRoundInput } from "./types.js";
 
 export async function addRoundService({ name, phaseOrder, contestantLimit }: AddRoundInput) {
     if (phaseOrder > 1) {
@@ -60,5 +60,20 @@ export async function getRoundsListService() {
     } catch (err) {
         logger.error({ err }, "Error getting rounds list")
         throw new AppError("ROUND_PHASE_GET_LIST_ERROR")
+    }
+}
+
+export async function editRoundService({ id, name, contestantLimit }: EditRoundInput) {
+    const existingRound = await prisma.round.findUnique({ where: { id }, select: { id: true, contestantLimit: true, name: true } })
+    if (!existingRound) throw new AppError("ROUND_PHASE_NOT_FOUND")
+
+    const hasContestants = await prisma.roundContestant.count({ where: { roundId: id } })
+    if (hasContestants && contestantLimit !== existingRound.contestantLimit) throw new AppError("ROUND_CONTESTANT_LIMIT_LOCKED")
+
+    try {
+        await editRound({ id, name, contestantLimit: hasContestants ? existingRound.contestantLimit : contestantLimit })
+    } catch (err) {
+        logger.error({ err }, "Error editing round")
+        throw new AppError("ROUND_PHASE_EDIT_ERROR")
     }
 }

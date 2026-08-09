@@ -438,33 +438,152 @@ See [[System Documentation]] for business rules.
 
 ## Admin — Live Event Flows
 
-### 6. Monitor Round Progress
+### 6. Round Results Page — Full Layout
 
-**Flow**
+Each round in the Live Event sidebar has its own page. The page always has two sections stacked vertically: **Judge Submissions** on top, **Rankings** below. Both are always visible — rankings show partial results as judges submit.
 
-- Admin navigates to Live Event → Round Results → Preliminary
-- Page immediately shows all contestants and judge submission progress — no "Start Round" needed
-- Preliminary is always live; judges can score as soon as they log in
-- Admin monitors submission progress per judge per category
-- Once all judges have fully submitted → "Advance to Top N" button becomes enabled
-- Top N round pages show "No contestants yet" until advancement
-
-**Wireframe — Preliminary (In Progress)**
+**State 1 — In Progress (some judges still scoring)**
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                                    │
-│                                                               │
-│  Judge Submissions                                            │
-│  ─────────────────────────────────────────────               │
-│  Judge 1   Swimwear ✓  Talent ✓  Formal ✓  Production ✓  ✓   │
-│  Judge 2   Swimwear ✓  Talent ✓  Formal ✓  Production ✗  ✗   │
-│  Judge 3   Swimwear ✗  Talent ✗  Formal ✗  Production ✗  ✗   │
-│                                                               │
-│  2 of 3 judges fully submitted                                │
-│                                                               │
-│  [ Advance to Top 10 ]   ← disabled                          │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                                            │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│ ───────────────────────────────────────────────────────────────────  │
+│  Judge    Swimwear   Talent   Formal Wear   Production   Done?        │
+│  ──────   ────────   ──────   ──────────    ──────────   ─────        │
+│  Judge 1     ✓          ✓         ✓              ✓         ✓          │
+│  Judge 2     ✓          ✓         ✓              ✗         ✗          │
+│  Judge 3     ✗          ✗         ✗              ✗         ✗          │
+│                                                                       │
+│  2 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings (partial — updates as judges submit)                         │
+│ ───────────────────────────────────────────────────────────────────  │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   Lungcay, Keanna       91.00   97.00     —         —       94.00│
+│    2   Palay, Roldan         88.00   94.00     —         —       91.00│
+│    3   Badang, Ethel         85.00     —       —         —         —  │
+│   ...  (— means no scores yet for that category)                     │
+│                                                                       │
+│  [ Advance to Top 5 ]   ← disabled (not all judges submitted)        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 2 — All Submitted, No Tie**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                        ✅ All Submitted    │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+│  3 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings                                                              │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│    3   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
+│    4   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
+│    5   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ cutoff ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│    6   Dela Cruz, Christine  78.00   80.00   79.00     77.00    78.50 │
+│    7   Aniar, Andrea         75.00   77.00   76.00     74.00    75.50 │
+│   ...                                                                 │
+│                                                                       │
+│              [ Advance to Top 5 ]  ← enabled                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 2b — All Submitted, Tie at Cutoff**
+
+Same layout as State 2 — Judge Submissions on top, Rankings below. The Rankings section splits into two parts when a tie is detected.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                        ✅ All Submitted    │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+│  3 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings                                                              │
+│                                                                       │
+│  ✅ Included in Top 5 — 4 of 5 spots filled:                         │
+│  Rank  Contestant          Overall                                    │
+│    1   Lungcay, Keanna      93.00                                     │
+│    2   Palay, Roldan        89.75                                     │
+│    3   Badang, Ethel        85.75                                     │
+│    4   Tenorio, Sean        82.75                                     │
+│                                                                       │
+│  ⚠️  Tie — select 1 more to fill remaining spot:                     │
+│   [ ]  Reyes, Julian        80.75                                     │
+│   [ ]  Dela Cruz, Christine 80.75                                     │
+│   [ ]  Aniar, Andrea        80.75                                     │
+│                                                                       │
+│   Selected: 0 of 1 required                                           │
+│                                                                       │
+│              [ Advance to Top 5 ]  ← disabled until 1 selected       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+After admin selects 1:
+
+```
+│   [✓]  Reyes, Julian        80.75   ← selected                       │
+│   [ ]  Dela Cruz, Christine 80.75   ← disabled (max reached)         │
+│   [ ]  Aniar, Andrea        80.75   ← disabled (max reached)         │
+│                                                                       │
+│   Selected: 1 of 1 required ✓                                         │
+│              [ Advance to Top 5 ]  ← enabled                         │
+```
+
+---
+
+**State 3 — Past Round (already advanced, read-only history)**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                           ✓ Completed      │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+├──────────────────────────────────────────────────────────────────────┤
+│ Final Rankings                                                        │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│   ...                                                                 │
+│                                                                       │
+│  (no advance button — this round is completed)                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 4 — Top N Round, No Contestants Yet**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Top 5                                                  │
+│                                                                       │
+│  No contestants yet.                                                  │
+│  Advance contestants from the previous round to begin scoring.        │
+│                                                                       │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -475,35 +594,13 @@ See [[System Documentation]] for business rules.
 
 - All judges submit → page auto-refreshes (or admin refreshes)
 - Advance button becomes enabled
-- System shows ranked contestants with computed overall scores
-- Admin reviews rankings → clicks "Advance to Top 10"
-- System takes top 10, inserts into `round_contestants` for Top 10 round
-- Top 10 is now the current round (derived from data — has contestants, next round has none)
-- Admin clicks Top 10 in sidebar to monitor its progress
+- System shows ranked contestants with computed overall scores and cutoff line
+- Admin reviews rankings → clicks "Advance to Top 5"
+- System takes top 5, inserts into `round_contestants` for Top 5 round
+- Top 5 is now the current round (derived from data — has contestants, next round has none)
+- Preliminary page shows State 3 (read-only history)
+- Admin clicks Top 5 in sidebar → sees State 4 transitioning to State 1 as judges score
 - Judges' sidebar reflects the change on next poll
-
-**Wireframe — Preliminary (All Submitted, No Tie)**
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                ✅ All Submitted    │
-│                                                               │
-│  Rank  Contestant             Overall Score                   │
-│  ────  ─────────────────────  ─────────────                   │
-│    1   Lungcay, Keanna              95.33                     │
-│    2   Palay, Roldan                91.60                     │
-│    3   Badang, Ethel                84.00                     │
-│    4   Tenorio, Sean                83.80                     │
-│    5   Reyes, Julian                83.75                     │
-│    6   Dela Cruz, Christine         82.33   ← cutoff line     │
-│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                    │
-│    7   Aniar, Andrea                77.25                     │
-│    8   Cortez, Ivy                  74.67                     │
-│   ...                                                         │
-│                                                               │
-│            [ Advance Top 5 to Top 5 Round ]                  │
-└──────────────────────────────────────────────────────────────┘
-```
 
 ---
 

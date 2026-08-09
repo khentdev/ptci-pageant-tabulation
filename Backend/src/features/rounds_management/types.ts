@@ -26,3 +26,21 @@ export type GetRoundsListResponse = {
     data: GetRoundsListDTO[]
     message: string
 }
+
+// Edit round
+export type EditRoundRequestBody = {
+    name: unknown
+    contestantLimit?: unknown
+}
+export type EditRoundInput = {
+    id: number
+    name: string
+    contestantLimit: number | null
+}
+export type EditRoundInputVariables = {
+    editRoundInput: EditRoundInput
+}
+export type EditRoundResponse = {
+    message: string
+}
+

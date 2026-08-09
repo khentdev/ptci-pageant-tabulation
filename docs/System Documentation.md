@@ -117,7 +117,10 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 **Features**
 
 - Create a category: select round (dropdown), name
+- Edit category name (only if no scores exist for that category)
 - Add scoring fields (criteria) to a category: field name, max score
+- Delete scoring field (only if no scores exist for that field)
+- Delete category (only if no scores exist for that category)
 - View list of all categories grouped by round
 - Category is marked as **ready** only when all its fields sum to exactly 100; categories with fields not summing to 100 are incomplete and shown with a warning
 
