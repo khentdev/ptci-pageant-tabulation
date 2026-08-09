@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "System Documentation.md",
+                "file": "api-contracts/categories/categories-add.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "System Documentation"
+              "title": "categories-add"
             }
           }
         ]
@@ -190,14 +190,16 @@
   },
   "active": "e24abb75a8542841",
   "lastOpenFiles": [
-    "Implementation Tracker.md",
+    "api-contracts/rounds/rounds-add.md",
+    "api-contracts/categories/categories-add.md",
+    "api-contracts/rounds/rounds-edit.md",
+    "api-contracts/categories",
+    "api-contracts/rounds/rounds-delete.md",
     "Wireframe & Flows.md",
     "System Documentation.md",
-    "api-contracts/rounds/rounds-edit.md",
-    "api-contracts/rounds/rounds-delete.md",
+    "Implementation Tracker.md",
     "api-contracts/rounds/rounds-get-by-id.md",
     "api-contracts/rounds/rounds-list.md",
-    "api-contracts/rounds/rounds-add.md",
     "api-contracts/rounds",
     "api-contracts/auth/auth-session.md",
     "api-contracts/auth/auth-logout.md",
