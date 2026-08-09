@@ -65,7 +65,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Rounds list page (ordered by phase order, shows name + limit + Edit + Delete actions per row)
 - [ ] Create round form (name, phase order, contestant limit — blank = unlimited)
 - [ ] Edit round form — fetch lock state on open; name always editable; phase order read-only; limit editable or read-only based on `isLimitLocked`
-- [ ] Delete round with confirmation modal — button disabled if round has categories or scores
+- [ ] Delete round with confirmation modal — button always visible; backend rejects with error toast if round has categories or scores
 
 ---
 
@@ -91,7 +91,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Category field editor — add fields (name + max score), running total shown, error if sum ≠ 100
 - [ ] Fields auto-sorted by max_value descending in editor and on judge screen
 - [ ] Delete field with confirmation — disabled if scores exist for that field
-- [ ] Delete category with confirmation — disabled if scores exist for that category
+- [ ] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
 - [ ] Category readiness indicator (✓ if sum = 100, ⚠ if not)
 
 ---
