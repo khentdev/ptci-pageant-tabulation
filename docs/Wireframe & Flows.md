@@ -127,9 +127,10 @@ See [[System Documentation]] for business rules.
 **Edit Round Flow**
 
 - Admin clicks [ Edit ] on a round row → fetch `GET /rounds/:id` to get current values + lock state
-- Form renders based on `isLimitLocked` from response:
-  - `isLimitLocked = false` → contestant limit field is editable
-  - `isLimitLocked = true` → contestant limit field is read-only with ⚠ warning
+- Form renders based on `phaseOrder` and `isLimitLocked` from response:
+  - `phaseOrder === 1` → contestant limit field is **hidden entirely** (phase 1 is always unlimited, frontend does not send it)
+  - `phaseOrder > 1` and `isLimitLocked = false` → contestant limit field is editable
+  - `phaseOrder > 1` and `isLimitLocked = true` → contestant limit field is read-only with ⚠ warning
 - Name → always editable
 - Phase Order → always read-only (displayed but cannot be changed)
 - Admin saves → on success → list updates inline
@@ -165,7 +166,23 @@ See [[System Documentation]] for business rules.
 └──────────────────────────────────────────┘
 ```
 
-**Wireframe — Edit Round Form**
+**Wireframe — Edit Round Form (Phase 1 — Preliminary)**
+
+Contestant limit field is hidden entirely. Frontend omits it from the request.
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Preliminary                  ] │
+│  Phase Order     [ 1 ]  (read-only)               │
+│  (no contestant limit field — always unlimited)   │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Round Form (Phase 2+ — limit editable)**
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -174,7 +191,6 @@ See [[System Documentation]] for business rules.
 │  Round Name      [ Top 5                        ] │
 │  Phase Order     [ 3 ]  (read-only)               │
 │  Contestant Limit[ 5                            ] │
-│                  ← locked if already advanced     │
 │                                                   │
 │  [ Cancel ]                    [ Save Changes ]   │
 └──────────────────────────────────────────────────┘

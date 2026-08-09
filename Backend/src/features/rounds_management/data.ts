@@ -37,3 +37,28 @@ export async function editRound({ id, name, contestantLimit }: EditRoundInput) {
         }
     })
 }
+
+export async function getRoundById(id: number) {
+    const round = await prisma.round.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            phaseOrder: true,
+            name: true,
+            contestantLimit: true,
+            _count: {
+                select: {
+                    roundContestants: true,
+                },
+            },
+        },
+    })
+
+    if (!round) return null
+
+    const { _count, ...roundData } = round
+    return {
+        ...roundData,
+        isLimitLocked: _count.roundContestants > 0,
+    }
+}

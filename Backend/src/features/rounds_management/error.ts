@@ -10,10 +10,12 @@ export const ROUND_ERROR_CODES = {
     ROUND_CONTESTANT_LIMIT_REQUIRED: "ROUND_CONTESTANT_LIMIT_REQUIRED",
     ROUND_PHASE_ADD_ERROR: "ROUND_PHASE_ADD_ERROR",
     ROUND_PHASE_GET_LIST_ERROR: "ROUND_PHASE_GET_LIST_ERROR",
+    ROUND_PHASE_GET_BY_ID_ERROR: "ROUND_PHASE_GET_BY_ID_ERROR",
     ROUND_PHASE_EDIT_ERROR: "ROUND_PHASE_EDIT_ERROR",
     ROUND_ID_INVALID: "ROUND_ID_INVALID",
     ROUND_PHASE_NOT_FOUND: "ROUND_PHASE_NOT_FOUND",
-    ROUND_CONTESTANT_LIMIT_LOCKED: "ROUND_CONTESTANT_LIMIT_LOCKED"
+    ROUND_CONTESTANT_LIMIT_LOCKED: "ROUND_CONTESTANT_LIMIT_LOCKED",
+    ROUND_PRELIMINARY_LIMIT_LOCKED: "ROUND_PRELIMINARY_LIMIT_LOCKED",
 } as const
 
 export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
@@ -62,6 +64,11 @@ export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
         message: "Unable to get round phases. Please try again later.",
         status: 500,
     },
+    ROUND_PHASE_GET_BY_ID_ERROR: {
+        code: "ROUND_PHASE_GET_BY_ID_ERROR",
+        message: "Unable to get round phase. Please try again later.",
+        status: 500,
+    },
     ROUND_PHASE_EDIT_ERROR: {
         code: "ROUND_PHASE_EDIT_ERROR",
         message: "Unable to edit round phase. Please try again later.",
@@ -81,6 +88,11 @@ export const ROUND_ERROR_DEF: Record<RoundErrorCodes, ErrorDefinitions> = {
         code: "ROUND_CONTESTANT_LIMIT_LOCKED",
         message: "Contestant limit cannot be changed after contestants have advanced into this round",
         status: 400,
-    }
+    },
+    ROUND_PRELIMINARY_LIMIT_LOCKED: {
+        code: "ROUND_PRELIMINARY_LIMIT_LOCKED",
+        message: "Preliminary round contestant limit is always unlimited.",
+        status: 400,
+    },
 }
 export type RoundErrorCodes = keyof typeof ROUND_ERROR_CODES

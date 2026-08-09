@@ -247,6 +247,33 @@ describe("Edit Round Integration Test", () => {
                 contestantLimit: 10,
             })
         })
+
+        it("should allow editing the preliminary round name while keeping an unlimited contestant limit", async () => {
+            const round = await seedRound({
+                name: "Preliminary",
+                phaseOrder: 1,
+                contestantLimit: null,
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await patchEditRound(cookieHeader, csrfToken, round.id, {
+                name: "Prelims",
+                contestantLimit: null,
+            })
+            expect(res.status).toBe(200)
+
+            const updatedRound = await prisma.round.findUnique({
+                where: { id: round.id },
+                select: {
+                    name: true,
+                    contestantLimit: true,
+                },
+            })
+            expect(updatedRound).toEqual({
+                name: "Prelims",
+                contestantLimit: null,
+            })
+        })
     })
 
     describe("validation", () => {
@@ -349,6 +376,37 @@ describe("Edit Round Integration Test", () => {
             expect(unchangedRound).toEqual({
                 name: "Top 10",
                 contestantLimit: 10,
+            })
+        })
+
+        it("should return ROUND_PRELIMINARY_LIMIT_LOCKED when setting a contestant limit on the preliminary round", async () => {
+            const round = await seedRound({
+                name: "Preliminary",
+                phaseOrder: 1,
+                contestantLimit: null,
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await patchEditRound(cookieHeader, csrfToken, round.id, {
+                name: "Preliminary",
+                contestantLimit: 10,
+            })
+            const json = await res.json() as { error: { code: string; message: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("ROUND_PRELIMINARY_LIMIT_LOCKED")
+            expect(json.error.message).toBe("Preliminary round contestant limit is always unlimited.")
+
+            const unchangedRound = await prisma.round.findUnique({
+                where: { id: round.id },
+                select: {
+                    name: true,
+                    contestantLimit: true,
+                },
+            })
+            expect(unchangedRound).toEqual({
+                name: "Preliminary",
+                contestantLimit: null,
             })
         })
     })

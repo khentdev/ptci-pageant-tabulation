@@ -44,3 +44,22 @@ export type EditRoundResponse = {
     message: string
 }
 
+// Get round by id
+export type GetRoundByIdInput = {
+    id: number
+}
+export type GetRoundByIdInputVariables = {
+    getRoundByIdInput: GetRoundByIdInput
+}
+export type GetRoundByIdDTO = {
+    id: number
+    phaseOrder: number
+    name: string
+    contestantLimit: number | null
+    isLimitLocked: boolean
+}
+export type GetRoundByIdResponse = {
+    data: GetRoundByIdDTO
+    message: string
+}
+

@@ -23,6 +23,15 @@ export async function validateAddRoundInput(c: Context, next: Next) {
     await next()
 }
 
+export async function validateGetRoundByIdInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) throw new AppError("ROUND_ID_INVALID", { field: "get_round_by_id_input_id" })
+
+    c.set("getRoundByIdInput", { id: parsedId })
+    await next()
+}
+
 export async function validateEditRoundInput(c: Context, next: Next) {
     const id = c.req.param("id")
     const { name, contestantLimit } = await c.req.json<EditRoundRequestBody>()
