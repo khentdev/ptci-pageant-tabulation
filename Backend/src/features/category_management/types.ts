@@ -12,3 +12,18 @@ export type AddCategoryInputVariables = {
 export type AddCategoryResponse = {
     message: string
 }
+
+// Edit Category
+export type EditCategoryRequestBody = {
+    name: unknown
+}
+export type EditCategoryInput = {
+    id: number
+    name: string
+}
+export type EditCategoryInputVariables = {
+    editCategoryInput: EditCategoryInput
+}
+export type EditCategoryResponse = {
+    message: string
+}

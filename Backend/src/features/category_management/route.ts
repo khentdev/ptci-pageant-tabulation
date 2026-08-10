@@ -1,11 +1,12 @@
-import { Hono } from "hono"
+import { Hono } from 'hono';
 
-import { Role } from "../../../generated/prisma/enums.js"
-import authenticate from "../../middleware/authenticate.js"
-import { requireRole } from "../../middleware/requireRole.js"
-import { addCategoryController } from "./controller.js"
-import { validateAddCategoryInput } from "./middleware.js"
+import { Role } from '../../../generated/prisma/enums.js';
+import authenticate from '../../middleware/authenticate.js';
+import { requireRole } from '../../middleware/requireRole.js';
+import { addCategoryController, editCategoryController } from './controller.js';
+import { validateAddCategoryInput, validateEditCategoryInput } from './middleware.js';
 
 const categoryRoutes = new Hono()
 categoryRoutes.post("/", authenticate, requireRole(Role.ADMIN), validateAddCategoryInput, addCategoryController)
+categoryRoutes.patch("/:id", authenticate, requireRole(Role.ADMIN), validateEditCategoryInput, editCategoryController)
 export default categoryRoutes
