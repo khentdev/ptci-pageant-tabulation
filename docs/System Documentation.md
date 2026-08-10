@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 7, 2026
+**Last synced with codebase:** Aug 10, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---
@@ -52,7 +52,7 @@ Product-level documentation only. API contracts, request/response shapes, and im
 
 ---
 
-## 1. Public Candidates Page
+## 1. Public Candidates Page (Last na 'to: Wala pang contestants)
 
 **Features**
 
@@ -65,10 +65,11 @@ Product-level documentation only. API contracts, request/response shapes, and im
 **Business Rules**
 
 - No authentication required to view this page
-- Candidate data (number, name, gender, team name) is stored in the database and managed through Admin Setup
-- Each candidate card displays: candidate number, full name, team name, team color, and photo
-- Candidate photos are served from a static folder (`/public/candidates/`), named by candidate number (e.g., `1.jpg`, `2.jpg`)
+- Contestant data (number, name, gender, team name, team color) is hardcoded directly in the frontend — no backend API call
+- Candidate photos are placed manually in the frontend's `public/candidates/` folder, named by candidate number (e.g., `1.jpg`, `2.jpg`)
+- The frontend maps each hardcoded contestant's number to its image path (`/candidates/{candidate_number}.jpg`) entirely client-side
 - If a candidate has no image file, a placeholder is shown
+- This page is fully static — no backend involvement at all
 - This page is read-only — no add, edit, or delete actions available here
 
 ---
@@ -101,7 +102,8 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - The `contestant_limit` of a round determines how many contestants are advanced into it from the previous round
 - **Next round** = the round with the lowest `phase_order` that is greater than the current round's `phase_order` (gaps in phase_order are allowed — e.g. 1, 5, 10 works the same as 1, 2, 3)
 - **Final round** = the round with the highest `phase_order` — shows "Declare Winners" instead of "Advance"
-- Cannot delete a round that already has categories or scoring data
+- Can delete a round only if it has no categories and no scores — useful for fixing setup mistakes
+- Cannot delete a round that already has categories or any scoring data; backend rejects with an error message shown to admin
 - Phase order must be unique across all rounds
 - Phase order is immutable after creation — changing it would break round sequencing, current round derivation, and advancement logic
 - Contestant limit is locked once the round has contestants in `round_contestants` (advancement has occurred)
@@ -115,7 +117,10 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 **Features**
 
 - Create a category: select round (dropdown), name
+- Edit category name (only if no scores exist for that category)
 - Add scoring fields (criteria) to a category: field name, max score
+- Delete scoring field (only if no scores exist for that field)
+- Delete category (only if no scores exist for that category)
 - View list of all categories grouped by round
 - Category is marked as **ready** only when all its fields sum to exactly 100; categories with fields not summing to 100 are incomplete and shown with a warning
 
@@ -129,7 +134,9 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - System shows running total and error if fields do not sum to 100
 - A judge scores each field from **0 up to its `max_value`**
 - Category score per judge = `Σ field_values` (plain sum — no separate weighting needed; max values are the weights)
-- Cannot delete a category with existing judge scores
+- Can delete a category only if no scores exist for it — useful for fixing setup mistakes
+- Cannot delete a category with existing judge scores; backend rejects with an error message shown to admin
+- Category name is editable only if no scores exist for it (scores exist = locked, no scores = editable)
 
 **Scoring Fields (Criteria) Rules**
 
@@ -296,21 +303,25 @@ Admin must pick exactly (N - A) from the T tied contestants
 - Sidebar shows all rounds, each expandable to reveal categories underneath
 - Clicking a category fetches and displays the scoring grid
 - Scoring grid: contestants (rows) × scoring fields (columns) with max score indicators
-- Each contestant has an individual **Submit** button
-- Once submitted for a contestant, that row is disabled and shows "Submitted ✓"
-- Cannot edit a submitted score
+- Judge fills in scores for all contestants freely — no per-contestant submit
+- One **Submit All** button per category — submits all contestant scores at once
+- Once submitted, all inputs in that category become read-only with submitted values retained
+- Cannot edit after Submit All is clicked
 
 **Business Rules**
 
-- Judge sees all rounds in the sidebar (for context), but only the currently active round's categories are interactive
-- Inactive rounds display "No data yet" when expanded — no scoring is possible
-- On category open: system fetches contestants in the current round + any existing scores by this judge to pre-determine submitted state
-- Submitted state = a score record already exists in the DB for this judge + contestant + category; no extra column needed
-- All fields are required before submit — partial submission is not allowed
+- Judge sees all rounds in the sidebar (for context), but only rounds with contestants are interactive
+- Rounds without contestants show "No contestants yet" when expanded — no scoring is possible
+- On category open: system fetches contestants in the current round + any existing scores by this judge for that category to determine submitted state
+- **Submitted state is per category** — if any score exists for this judge + category → entire category is submitted and all inputs are read-only
+- Judge can freely change any contestant's score before clicking Submit All
+- All fields for all contestants must be filled before Submit All is allowed — partial submission is not allowed
 - Each field value must be between 0 and its `max_value` (inclusive); server also validates
-- Submit is per contestant (not per category) — judge can submit contestant A before scoring contestant B
-- After submit: inputs for that contestant are disabled and **retain their submitted values** (read-only) so the judge can verify what was saved; button changes to "Submitted ✓"
-- Judge cannot re-submit or edit a submitted score under any circumstance
+- Backend receives an array of all contestant scores in one request and inserts them in a single transaction — all succeed or all fail
+- Backend rejects submission if scores already exist for this judge + category (double-submit prevention)
+- DB unique constraint `[judgeId, contestantId, criteriaFieldId]` provides a second layer of protection against duplicate scores
+- After Submit All: all inputs for that category are read-only and retain submitted values so the judge can verify; Submit All button is hidden
+- Judge cannot re-submit or edit a submitted category under any circumstance
 - Score submission immediately updates admin's judge-submission-status tracker
 
 ---
