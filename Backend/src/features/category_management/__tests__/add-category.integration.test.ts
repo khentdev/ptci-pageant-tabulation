@@ -301,7 +301,7 @@ describe("Add Category Integration Test", () => {
                     name: "",
                     roundId: "1",
                 },
-                code: "CATEGORY_NAME_INVALID",
+                code: "CATEGORY_NAME_REQUIRED",
                 field: "add_category_input_name",
             },
             {
@@ -310,7 +310,7 @@ describe("Add Category Integration Test", () => {
                     name: "   ",
                     roundId: "1",
                 },
-                code: "CATEGORY_NAME_INVALID",
+                code: "CATEGORY_NAME_REQUIRED",
                 field: "add_category_input_name",
             },
             {
@@ -354,7 +354,7 @@ describe("Add Category Integration Test", () => {
                 body: {
                     name: "Swimwear",
                 },
-                code: "CATEGORY_ROUND_ID_INVALID",
+                code: "CATEGORY_ROUND_ID_REQUIRED",
                 field: "add_category_input_round_id",
             },
             {
@@ -362,7 +362,7 @@ describe("Add Category Integration Test", () => {
                 body: {
                     roundId: "1",
                 },
-                code: "CATEGORY_NAME_INVALID",
+                code: "CATEGORY_NAME_REQUIRED",
                 field: "add_category_input_name",
             },
         ])("should return $code if $testCase", async ({ body, code, field }) => {
@@ -388,7 +388,7 @@ describe("Add Category Integration Test", () => {
             const json = await res.json() as { error: { code: string; field: string } }
 
             expect(res.status).toBe(400)
-            expect(json.error.code).toBe("CATEGORY_ROUND_ID_INVALID")
+            expect(json.error.code).toBe("CATEGORY_ROUND_ID_REQUIRED")
             expect(json.error.field).toBe("add_category_input_round_id")
         })
 
@@ -403,7 +403,7 @@ describe("Add Category Integration Test", () => {
             const json = await res.json() as { error: { code: string; field: string } }
 
             expect(res.status).toBe(400)
-            expect(json.error.code).toBe("CATEGORY_NAME_INVALID")
+            expect(json.error.code).toBe("CATEGORY_NAME_REQUIRED")
             expect(json.error.field).toBe("add_category_input_name")
         })
     })
