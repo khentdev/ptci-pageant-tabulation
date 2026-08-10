@@ -27,3 +27,22 @@ export type EditCategoryInputVariables = {
 export type EditCategoryResponse = {
     message: string
 }
+
+// Get Category by ID
+export type GetCategoryByIdInput = {
+    id: number
+}
+export type GetCategoryByIdInputVariables = {
+    getCategoryByIdInput: GetCategoryByIdInput
+}
+export type GetCategoryByIdDTO = {
+    id: number;
+    roundId: number;
+    name: string;
+    roundName: string;
+    isLocked: boolean
+}
+export type GetCategoryByIdResponse = {
+    data: GetCategoryByIdDTO
+    message: string
+}

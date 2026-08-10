@@ -1,8 +1,8 @@
 import { AppError } from "../../errors/appError.js"
 import logger from "../../infra/logger.js"
 import { prisma } from "../../infra/prisma.js"
-import { createCategory, editCategory } from "./data.js"
-import type { AddCategoryInput, EditCategoryInput } from "./types.js"
+import { createCategory, editCategory, getCategoryById } from "./data.js"
+import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput } from "./types.js"
 
 export async function addCategoryService({ name, roundId }: AddCategoryInput) {
 
@@ -49,4 +49,16 @@ export async function editCategoryService({ id, name }: EditCategoryInput) {
         throw new AppError("CATEGORY_EDIT_ERROR")
     }
 
+}
+
+export async function getCategoryByIdService({ id }: GetCategoryByIdInput) {
+    try {
+        const category = await getCategoryById({ id })
+        if (!category) throw new AppError("CATEGORY_NOT_FOUND")
+        return category
+    } catch (err) {
+        if (err instanceof AppError) throw err
+        logger.error({ err, id }, "Error getting category by id")
+        throw new AppError("CATEGORY_GET_BY_ID_ERROR")
+    }
 }

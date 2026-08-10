@@ -26,3 +26,12 @@ export async function validateEditCategoryInput(c: Context, next: Next) {
     c.set("editCategoryInput", { id: parsedId, name: (name as string).trim() })
     await next()
 }
+
+export async function validateGetCategoryByIdInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) throw new AppError("CATEGORY_ID_INVALID", { field: "get_category_by_id_input_id" })
+
+    c.set("getCategoryByIdInput", { id: parsedId })
+    await next()
+}

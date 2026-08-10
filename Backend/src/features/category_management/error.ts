@@ -9,6 +9,7 @@ export const CATEGORY_ERROR_CODES = {
     CATEGORY_EDIT_ERROR: "CATEGORY_EDIT_ERROR",
     CATEGORY_NOT_FOUND: "CATEGORY_NOT_FOUND",
     CATEGORY_LOCKED: "CATEGORY_LOCKED",
+    CATEGORY_GET_BY_ID_ERROR: "CATEGORY_GET_BY_ID_ERROR",
 } as const
 
 export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = {
@@ -51,6 +52,11 @@ export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = 
         code: "CATEGORY_LOCKED",
         message: "Category cannot be edited because scores already exist for this category.",
         status: 400,
+    },
+    CATEGORY_GET_BY_ID_ERROR: {
+        code: "CATEGORY_GET_BY_ID_ERROR",
+        message: "Unable to get category by id.",
+        status: 500,
     },
 }
 
