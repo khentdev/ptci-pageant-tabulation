@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 7, 2026
+**Last synced with codebase:** Aug 10, 2026
 User flows and wireframes in plain English with ASCII layouts.
 See [[System Documentation]] for business rules.
 
@@ -124,20 +124,32 @@ See [[System Documentation]] for business rules.
 - On success → round appears in list; round also appears in Live Event sidebar
 - On fail (duplicate phase order, missing fields) → inline field errors
 
+**Edit Round Flow**
+
+- Admin clicks [ Edit ] on a round row → fetch `GET /rounds/:id` to get current values + lock state
+- Form renders based on `phaseOrder` and `isLimitLocked` from response:
+  - `phaseOrder === 1` → contestant limit field is **hidden entirely** (phase 1 is always unlimited, frontend does not send it)
+  - `phaseOrder > 1` and `isLimitLocked = false` → contestant limit field is editable
+  - `phaseOrder > 1` and `isLimitLocked = true` → contestant limit field is read-only with ⚠ warning
+- Name → always editable
+- Phase Order → always read-only (displayed but cannot be changed)
+- Admin saves → on success → list updates inline
+
 **Wireframe — Rounds List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Rounds                             [ + Add Round ]    │
-│                                                       │
-│  #   Name            Phase Order   Limit              │
-│  ─── ─────────────   ───────────   ─────              │
-│  1   Preliminary     1             Unlimited          │
-│  2   Top 10          2             10                 │
-│  3   Top 5           3             5                  │
-│  4   Top 3           4             3                  │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Rounds                                             [ + Add Round ]   │
+│                                                                      │
+│  #   Name          Phase Order  Limit      Actions                   │
+│  ─── ───────────── ───────────  ────────   ─────────────────────     │
+│  1   Preliminary   1            Unlimited  [ Edit ]  [ Delete ]      │
+│  2   Top 10        2            10         [ Edit ]  [ Delete ]      │
+│  3   Top 5         3            5          [ Edit ]  [ Delete ]      │
+│  4   Top 3         4            3          [ Edit ]  [ Delete ]      │
+│                                                                      │
+│  Delete disabled if round has categories or scores                   │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Add Round Form**
@@ -152,6 +164,50 @@ See [[System Documentation]] for business rules.
 │                                          │
 │  [ Cancel ]              [ Save Round ]  │
 └──────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Round Form (Phase 1 — Preliminary)**
+
+Contestant limit field is hidden entirely. Frontend omits it from the request.
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Preliminary                  ] │
+│  Phase Order     [ 1 ]  (read-only)               │
+│  (no contestant limit field — always unlimited)   │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Round Form (Phase 2+ — limit editable)**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Top 5                        ] │
+│  Phase Order     [ 3 ]  (read-only)               │
+│  Contestant Limit[ 5                            ] │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Round                                        │
+│                                                   │
+│  Round Name      [ Top 5                        ] │
+│  Phase Order     [ 3 ]  (read-only)               │
+│  Contestant Limit[ 5 ]  (read-only)               │
+│                  ⚠ Locked — contestants already   │
+│                    advanced into this round       │
+│                                                   │
+│  [ Cancel ]                    [ Save Changes ]   │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -171,25 +227,74 @@ See [[System Documentation]] for business rules.
 - Running total shown; error shown if total ≠ 100
 - Category shows as "Ready" when total = 100
 
+**Edit Category Flow**
+
+- Admin clicks [ Edit ] on a category row → fetch `GET /categories/:id` to get current values + lock state
+- Form renders based on `isLocked` from response:
+  - `isLocked = false` → name field is editable
+  - `isLocked = true` → name field is read-only with ⚠ warning
+- Round → always read-only (category cannot be moved to a different round)
+- Admin saves → on success → list updates
+
 **Wireframe — Categories List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Categories                       [ + Add Category ]   │
-│                                                       │
-│  PRELIMINARY                                          │
-│  ├── Swimwear           4 fields   Total: 100  ✓      │
-│  ├── Talent             4 fields   Total: 100  ✓      │
-│  ├── Formal Wear        4 fields   Total: 100  ✓      │
-│  └── Production         3 fields   Total: 80   ⚠      │
-│                                                       │
-│  TOP 5                                                │
-│  └── Q&A Round          2 fields   Total: 100  ✓      │
-│                                                       │
-│  TOP 3                                                │
-│  └── Final Question     2 fields   Total: 100  ✓      │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│ Categories                                     [ + Add Category ]      │
+│                                                                        │
+│  PRELIMINARY                                                           │
+│  ├── Swimwear      4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  ├── Talent        4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  ├── Formal Wear   4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  └── Production    3 fields  Total: 80 ⚠  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  TOP 5                                                                 │
+│  └── Q&A Round     2 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  TOP 3                                                                 │
+│  └── Final Question 2 fields Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│                                                                        │
+│  Edit and Delete disabled if scores already exist for that category    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Category Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Category                                      │
+│                                                   │
+│  Round     [ Preliminary ▼ ]                      │
+│  Name      [ Swimwear       ]                     │
+│                                                   │
+│  [ Cancel ]                   [ Save Category ]   │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Category Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Category                                     │
+│                                                   │
+│  Round     [ Preliminary ]  (read-only)           │
+│  Name      [ Swimwear     ]                       │
+│                                                   │
+│  [ Cancel ]                   [ Save Changes ]    │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Category                                     │
+│                                                   │
+│  Round     [ Preliminary ]  (read-only)           │
+│  Name      [ Swimwear    ]  (read-only)           │
+│            ⚠ Locked — scores already submitted    │
+│              for this category                    │
+│                                                   │
+│  [ Cancel ]                                       │
+└──────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Category Field Editor**
@@ -198,16 +303,16 @@ See [[System Documentation]] for business rules.
 ┌──────────────────────────────────────────────────────┐
 │ Swimwear — Scoring Fields                             │
 │                                                       │
-│  #   Field Name             Max Score                 │
-│  ─   ─────────────────────  ─────────                 │
-│  1   Stage Presence         40                        │
-│  2   Figure & Fitness       30                        │
-│  3   Poise & Bearing        20                        │
-│  4   Overall Impact         10                        │
+│  #   Field Name             Max Score   Actions       │
+│  ─   ─────────────────────  ─────────   ───────       │
+│  1   Stage Presence         40          [ Delete ]    │
+│  2   Figure & Fitness       30          [ Delete ]    │
+│  3   Poise & Bearing        20          [ Delete ]    │
+│  4   Overall Impact         10          [ Delete ]    │
 │                                                       │
 │  Running Total: 100 / 100  ✓                          │
 │                                                       │
-│  [ + Add Field ]                [ Save ]              │
+│  [ + Add Field ]                                      │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -222,22 +327,76 @@ See [[System Documentation]] for business rules.
 - Clicks "Add Contestant" → fills form
 - On success → contestant appears in list
 
+**Edit Contestant Flow**
+
+- Admin clicks [ Edit ] on a contestant row → edit form opens prefilled
+- All fields editable if no scores exist; all read-only with note if locked
+- On success → list updates
+
 **Wireframe — Contestants List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Contestants                    [ + Add Contestant ]   │
-│                                                       │
-│  Filter: [ All ]  [ Male ]  [ Female ]                │
-│                                                       │
-│  #    Name                 Gender   Team              │
-│  ──   ─────────────────    ──────   ────              │
-│  1    Aniar, Andrea Mae    Female   Yellow            │
-│  2    Dela Cruz, Christine Female   Purple            │
-│  3    Delos Santos, Jona   Female   Purple            │
-│  ...                                                  │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Contestants                          [ + Add Contestant ]     │
+│                                                              │
+│  Filter: [ All ]  [ Male ]  [ Female ]                       │
+│                                                              │
+│  #    Name                 Gender   Team      Actions        │
+│  ──   ─────────────────    ──────   ────      ───────        │
+│  1    Aniar, Andrea Mae    Female   Yellow    [ Edit ]       │
+│  2    Dela Cruz, Christine Female   Purple    [ Edit ]       │
+│  3    Delos Santos, Jona   Female   Purple    [ Edit ]       │
+│  ...                                                         │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Contestant Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Contestant                                    │
+│                                                   │
+│  Candidate No.  [ 1              ]                │
+│  Name           [ Aniar, Andrea  ]                │
+│  Gender         [ Female ▼       ]                │
+│  Team Name      [ Yellow Team    ]                │
+│  Team Color     [ Yellow         ]                │
+│                                                   │
+│  [ Cancel ]               [ Save Contestant ]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Contestant Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Contestant                                   │
+│                                                   │
+│  Candidate No.  [ 1              ]                │
+│  Name           [ Aniar, Andrea  ]                │
+│  Gender         [ Female ▼       ]                │
+│  Team Name      [ Yellow Team    ]                │
+│  Team Color     [ Yellow         ]                │
+│                                                   │
+│  [ Cancel ]               [ Save Changes ]        │
+└──────────────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Contestant                                   │
+│                                                   │
+│  Candidate No.  [ 1 ]  (read-only)                │
+│  Name           [ Aniar, Andrea ]  (read-only)    │
+│  Gender         [ Female ]  (read-only)           │
+│  Team Name      [ Yellow Team ]  (read-only)      │
+│  Team Color     [ Yellow ]  (read-only)           │
+│  ⚠ Locked — scores already exist for this        │
+│    contestant                                     │
+│                                                   │
+│  [ Close ]                                        │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -253,49 +412,194 @@ See [[System Documentation]] for business rules.
 **Wireframe — Judges List**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ Judges                               [ + Add Judge ]  │
-│                                                       │
-│  Name         Username    Actions                     │
-│  ──────────   ─────────   ───────                     │
-│  Judge 1      judge1      [ Reset Password ]          │
-│  Judge 2      judge2      [ Reset Password ]          │
-│  Judge 3      judge3      [ Reset Password ]          │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Judges                                     [ + Add Judge ]    │
+│                                                              │
+│  Name       Username   Actions                               │
+│  ────────   ────────   ───────────────────────────────────   │
+│  Judge 1    judge1     [ Reset Password ]                    │
+│  Judge 2    judge2     [ Reset Password ]                    │
+│  Judge 3    judge3     [ Reset Password ]                    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — Add Judge Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Add Judge                                         │
+│                                                   │
+│  Name       [ Judge 1   ]                         │
+│  Username   [ judge1    ]                         │
+│  Password   [ ········  ]                         │
+│                                                   │
+│  [ Cancel ]                    [ Save Judge ]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Reset Password Modal**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Reset Password — Judge 1                          │
+│                                                   │
+│  New Password   [ ········  ]                     │
+│                                                   │
+│  [ Cancel ]                 [ Reset Password ]    │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Admin — Live Event Flows
 
-### 6. Monitor Round Progress
+### 6. Round Results Page — Full Layout
 
-**Flow**
+Each round in the Live Event sidebar has its own page. The page always has two sections stacked vertically: **Judge Submissions** on top, **Rankings** below. Both are always visible — rankings show partial results as judges submit.
 
-- Admin navigates to Live Event → Round Results → Preliminary
-- Page immediately shows all contestants and judge submission progress — no "Start Round" needed
-- Preliminary is always live; judges can score as soon as they log in
-- Admin monitors submission progress per judge per category
-- Once all judges have fully submitted → "Advance to Top N" button becomes enabled
-- Top N round pages show "No contestants yet" until advancement
-
-**Wireframe — Preliminary (In Progress)**
+**State 1 — In Progress (some judges still scoring)**
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                                    │
-│                                                               │
-│  Judge Submissions                                            │
-│  ─────────────────────────────────────────────               │
-│  Judge 1   Swimwear ✓  Talent ✓  Formal ✓  Production ✓  ✓   │
-│  Judge 2   Swimwear ✓  Talent ✓  Formal ✓  Production ✗  ✗   │
-│  Judge 3   Swimwear ✗  Talent ✗  Formal ✗  Production ✗  ✗   │
-│                                                               │
-│  2 of 3 judges fully submitted                                │
-│                                                               │
-│  [ Advance to Top 10 ]   ← disabled                          │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                                            │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│ ───────────────────────────────────────────────────────────────────  │
+│  Judge    Swimwear   Talent   Formal Wear   Production   Done?        │
+│  ──────   ────────   ──────   ──────────    ──────────   ─────        │
+│  Judge 1     ✓          ✓         ✓              ✓         ✓          │
+│  Judge 2     ✓          ✓         ✓              ✗         ✗          │
+│  Judge 3     ✗          ✗         ✗              ✗         ✗          │
+│                                                                       │
+│  2 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings (partial — updates as judges submit)                         │
+│ ───────────────────────────────────────────────────────────────────  │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   Lungcay, Keanna       91.00   97.00     —         —       94.00│
+│    2   Palay, Roldan         88.00   94.00     —         —       91.00│
+│    3   Badang, Ethel         85.00     —       —         —         —  │
+│   ...  (— means no scores yet for that category)                     │
+│                                                                       │
+│  [ Advance to Top 5 ]   ← disabled (not all judges submitted)        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 2 — All Submitted, No Tie**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                        ✅ All Submitted    │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+│  3 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings                                                              │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│    3   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
+│    4   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
+│    5   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ cutoff ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│    6   Dela Cruz, Christine  78.00   80.00   79.00     77.00    78.50 │
+│    7   Aniar, Andrea         75.00   77.00   76.00     74.00    75.50 │
+│   ...                                                                 │
+│                                                                       │
+│              [ Advance to Top 5 ]  ← enabled                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 2b — All Submitted, Tie at Cutoff**
+
+Same layout as State 2 — Judge Submissions on top, Rankings below. The Rankings section splits into two parts when a tie is detected.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                        ✅ All Submitted    │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+│  3 of 3 judges fully submitted                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Rankings                                                              │
+│                                                                       │
+│  ✅ Included in Top 5 — 4 of 5 spots filled:                         │
+│  Rank  Contestant          Overall                                    │
+│    1   Lungcay, Keanna      93.00                                     │
+│    2   Palay, Roldan        89.75                                     │
+│    3   Badang, Ethel        85.75                                     │
+│    4   Tenorio, Sean        82.75                                     │
+│                                                                       │
+│  ⚠️  Tie — select 1 more to fill remaining spot:                     │
+│   [ ]  Reyes, Julian        80.75                                     │
+│   [ ]  Dela Cruz, Christine 80.75                                     │
+│   [ ]  Aniar, Andrea        80.75                                     │
+│                                                                       │
+│   Selected: 0 of 1 required                                           │
+│                                                                       │
+│              [ Advance to Top 5 ]  ← disabled until 1 selected       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+After admin selects 1:
+
+```
+│   [✓]  Reyes, Julian        80.75   ← selected                       │
+│   [ ]  Dela Cruz, Christine 80.75   ← disabled (max reached)         │
+│   [ ]  Aniar, Andrea        80.75   ← disabled (max reached)         │
+│                                                                       │
+│   Selected: 1 of 1 required ✓                                         │
+│              [ Advance to Top 5 ]  ← enabled                         │
+```
+
+---
+
+**State 3 — Past Round (already advanced, read-only history)**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Preliminary                           ✓ Completed      │
+├──────────────────────────────────────────────────────────────────────┤
+│ Judge Submissions                                                     │
+│  Judge 1     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 2     ✓    ✓    ✓    ✓    ✓                                   │
+│  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
+├──────────────────────────────────────────────────────────────────────┤
+│ Final Rankings                                                        │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│   ...                                                                 │
+│                                                                       │
+│  (no advance button — this round is completed)                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**State 4 — Top N Round, No Contestants Yet**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Round Results: Top 5                                                  │
+│                                                                       │
+│  No contestants yet.                                                  │
+│  Advance contestants from the previous round to begin scoring.        │
+│                                                                       │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -306,35 +610,13 @@ See [[System Documentation]] for business rules.
 
 - All judges submit → page auto-refreshes (or admin refreshes)
 - Advance button becomes enabled
-- System shows ranked contestants with computed overall scores
-- Admin reviews rankings → clicks "Advance to Top 10"
-- System takes top 10, inserts into `round_contestants` for Top 10 round
-- Top 10 is now the current round (derived from data — has contestants, next round has none)
-- Admin clicks Top 10 in sidebar to monitor its progress
+- System shows ranked contestants with computed overall scores and cutoff line
+- Admin reviews rankings → clicks "Advance to Top 5"
+- System takes top 5, inserts into `round_contestants` for Top 5 round
+- Top 5 is now the current round (derived from data — has contestants, next round has none)
+- Preliminary page shows State 3 (read-only history)
+- Admin clicks Top 5 in sidebar → sees State 4 transitioning to State 1 as judges score
 - Judges' sidebar reflects the change on next poll
-
-**Wireframe — Preliminary (All Submitted, No Tie)**
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                ✅ All Submitted    │
-│                                                               │
-│  Rank  Contestant             Overall Score                   │
-│  ────  ─────────────────────  ─────────────                   │
-│    1   Lungcay, Keanna              95.33                     │
-│    2   Palay, Roldan                91.60                     │
-│    3   Badang, Ethel                84.00                     │
-│    4   Tenorio, Sean                83.80                     │
-│    5   Reyes, Julian                83.75                     │
-│    6   Dela Cruz, Christine         82.33   ← cutoff line     │
-│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                    │
-│    7   Aniar, Andrea                77.25                     │
-│    8   Cortez, Ivy                  74.67                     │
-│   ...                                                         │
-│                                                               │
-│            [ Advance Top 5 to Top 5 Round ]                  │
-└──────────────────────────────────────────────────────────────┘
-```
 
 ---
 
@@ -482,6 +764,9 @@ See [[System Documentation]] for business rules.
 - Rounds with contestants show interactive categories; rounds without contestants show "No contestants yet" when expanded
 - Judge naturally knows which round is current by which categories are scoreable
 - Sidebar polling refreshes every 10 seconds to detect newly advanced rounds
+- Active category is highlighted in the sidebar based on the current URL `categoryId` param
+- On page refresh, the `categoryId` in the URL is read on load and the correct category is fetched and highlighted automatically
+- `/judge/scoring` with no categoryId redirects to or loads the first available category by default
 
 ---
 
@@ -609,7 +894,8 @@ See [[System Documentation]] for business rules.
 | `/admin/setup/contestants`    | Admin    | Add and manage contestants               |
 | `/admin/setup/judges`         | Admin    | Add and manage judge accounts            |
 | `/admin/live/results/:roundId`| Admin    | Round results, advancement, tie resolution |
-| `/judge/scoring`              | Judge    | Scoring interface with sidebar and grid  |
+| `/judge/scoring`              | Judge    | Scoring interface — redirects to first available category |
+| `/judge/scoring/:categoryId`  | Judge    | Scoring grid for a specific category; categoryId in URL persists on refresh |
 
 ---
 

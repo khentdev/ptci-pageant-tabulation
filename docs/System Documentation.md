@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 7, 2026
+**Last synced with codebase:** Aug 10, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---
@@ -102,7 +102,8 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - The `contestant_limit` of a round determines how many contestants are advanced into it from the previous round
 - **Next round** = the round with the lowest `phase_order` that is greater than the current round's `phase_order` (gaps in phase_order are allowed — e.g. 1, 5, 10 works the same as 1, 2, 3)
 - **Final round** = the round with the highest `phase_order` — shows "Declare Winners" instead of "Advance"
-- Cannot delete a round that already has categories or scoring data
+- Can delete a round only if it has no categories and no scores — useful for fixing setup mistakes
+- Cannot delete a round that already has categories or any scoring data; backend rejects with an error message shown to admin
 - Phase order must be unique across all rounds
 - Phase order is immutable after creation — changing it would break round sequencing, current round derivation, and advancement logic
 - Contestant limit is locked once the round has contestants in `round_contestants` (advancement has occurred)
@@ -116,7 +117,10 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 **Features**
 
 - Create a category: select round (dropdown), name
+- Edit category name (only if no scores exist for that category)
 - Add scoring fields (criteria) to a category: field name, max score
+- Delete scoring field (only if no scores exist for that field)
+- Delete category (only if no scores exist for that category)
 - View list of all categories grouped by round
 - Category is marked as **ready** only when all its fields sum to exactly 100; categories with fields not summing to 100 are incomplete and shown with a warning
 
@@ -130,7 +134,9 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - System shows running total and error if fields do not sum to 100
 - A judge scores each field from **0 up to its `max_value`**
 - Category score per judge = `Σ field_values` (plain sum — no separate weighting needed; max values are the weights)
-- Cannot delete a category with existing judge scores
+- Can delete a category only if no scores exist for it — useful for fixing setup mistakes
+- Cannot delete a category with existing judge scores; backend rejects with an error message shown to admin
+- Category name is editable only if no scores exist for it (scores exist = locked, no scores = editable)
 
 **Scoring Fields (Criteria) Rules**
 
