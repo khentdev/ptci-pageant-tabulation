@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html,
+body {
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background-color: #c7b99e;
+  color: black;
+}
+
+html.dark body {
+  background-color: #101215;
+  color: white;
+}
+
+@theme {
+  --font-poppins: 'Poppins', sans-serif;
+
+  --color-pine-teal-50: #eef6f4;
+  --color-pine-teal-100: #deede9;
+  --color-pine-teal-200: #bddbd4;
+  --color-pine-teal-300: #9cc9be;
+  --color-pine-teal-400: #7ab8a8;
+  --color-pine-teal-500: #59a693;
+  --color-pine-teal-600: #478575;
+  --color-pine-teal-700: #366358;
+  --color-pine-teal-800: #24423b;
+  --color-pine-teal-900: #12211d;
+  --color-pine-teal-950: #0c1715;
+
+  --color-custom-green: #c7d3c3;
+  --color-custom-light-brown1: #cbbfa7;
+  --color-custom-light-brown2: #dad1be;
+  --color-custom-gray: #999999;
+
+  --color-custom-black: #101215;
+
+  --color-custom-blue-500: #0ea5e9;
+  --color-custom-blue-600: #0284c7;
+  --color-custom-blue-700: #0369a1;
+  --color-custom-blue-800: #075985;
+  --color-custom-blue-900: #0c4a6e;
+
+  --color-baltic-blue-50: #eef1f6;
+  --color-baltic-blue-100: #dee2ed;
+  --color-baltic-blue-200: #bdc5db;
+  --color-baltic-blue-300: #9ca9c9;
+  --color-baltic-blue-400: #7a8cb8;
+  --color-baltic-blue-500: #596fa6;
+  --color-baltic-blue-600: #475985;
+  --color-baltic-blue-700: #364363;
+  --color-baltic-blue-800: #242c42;
+  --color-baltic-blue-900: #121621;
+  --color-baltic-blue-950: #0c1017;
+
+  --color-jungle-green-50: #f2fbf8;
+  --color-jungle-green-100: #d3f4e9;
+  --color-jungle-green-200: #a8e7d3;
+  --color-jungle-green-300: #74d4b8;
+  --color-jungle-green-400: #47ba9c;
+  --color-jungle-green-500: #33b092;
+  --color-jungle-green-600: #227f6b;
+  --color-jungle-green-700: #1f6657;
+  --color-jungle-green-800: #1d5247;
+  --color-jungle-green-900: #1c453d;
+  --color-jungle-green-950: #0b2824;
+
+  --color-dark-khaki-50: #f6f3ef;
+  --color-dark-khaki-100: #ece8df;
+  --color-dark-khaki-200: #dad1be;
+  --color-dark-khaki-300: #c7b99e;
+  --color-dark-khaki-400: #b5a27d;
+  --color-dark-khaki-500: #a28b5d;
+  --color-dark-khaki-600: #826f4a;
+  --color-dark-khaki-700: #615338;
+  --color-dark-khaki-800: #413825;
+  --color-dark-khaki-900: #201c13;
+  --color-dark-khaki-950: #17130d;
+  --color-dark-khaki-custom: #cec3ab;
+  /*- --background-image-header1: url('/src/assets/img/bg4.webp');
+  --background-image-header: url('/src/assets/img/bg2.png')
+  
+  the color for custom gray ICON is #B8B8B8
+  --background-image-search: url('/src/assets/img/searchGray.png');
+  --background-image-dropdown: url('/src/assets/img/down-arrow.png');
+  --background-image-dropdown-white: url('/src/assets/img/down-arrow-white.png');
+  --background-image-user: url('/src/assets/img/userGray.png');
+  --background-image-email: url('/src/assets/img/emailGray.png');
+  --background-image-password: url('/src/assets/img/padlockGray.png');*/
+}
