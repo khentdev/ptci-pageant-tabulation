@@ -73,10 +73,10 @@ Creates a category with a name and round assignment only. Scoring fields are add
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message |
-|--------|------|---------|
-| `400` | `CATEGORY_NAME_REQUIRED` | Category name is required. |
-| `400` | `CATEGORY_ROUND_ID_REQUIRED` | Select a round to add a category. |
-| `400` | `CATEGORY_ROUND_ID_INVALID` | Invalid round id. |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. |
-| `500` | `CATEGORY_ADD_ERROR` | Unable to add category. |
+| Status | Code | Message | Notes |
+|--------|------|---------|-------|
+| `400` | `CATEGORY_NAME_REQUIRED` | Category name is required. | |
+| `400` | `CATEGORY_ROUND_ID_REQUIRED` | Select a round to add a category. | |
+| `400` | `CATEGORY_ROUND_ID_INVALID` | Invalid round id. | Backend API layer only. Do not handle in frontend. |
+| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
+| `500` | `CATEGORY_ADD_ERROR` | Unable to add category. | |

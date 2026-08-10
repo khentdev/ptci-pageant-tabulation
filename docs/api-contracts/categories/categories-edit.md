@@ -86,11 +86,11 @@ Used when the admin clicks **Edit** on a category row.
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message |
-|--------|------|---------|
-| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. |
-| `404` | `CATEGORY_NOT_FOUND` | Category not found. |
-| `500` | `CATEGORY_GET_BY_ID_ERROR` | Unable to get category by id. |
+| Status | Code | Message | Notes |
+|--------|------|---------|-------|
+| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
+| `404` | `CATEGORY_NOT_FOUND` | Category not found. | |
+| `500` | `CATEGORY_GET_BY_ID_ERROR` | Unable to get category by id. | |
 
 ---
 
@@ -166,10 +166,10 @@ Round assignment is immutable after creation and is not accepted in the request 
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message |
-|--------|------|---------|
-| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. |
-| `400` | `CATEGORY_NAME_REQUIRED` | Category name is required. |
-| `400` | `CATEGORY_LOCKED` | Category cannot be edited because scores already exist for this category. |
-| `404` | `CATEGORY_NOT_FOUND` | Category not found. |
-| `500` | `CATEGORY_EDIT_ERROR` | Unable to edit category. |
+| Status | Code | Message | Notes |
+|--------|------|---------|-------|
+| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
+| `400` | `CATEGORY_NAME_REQUIRED` | Category name is required. | |
+| `400` | `CATEGORY_LOCKED` | Category cannot be edited because scores already exist for this category. | |
+| `404` | `CATEGORY_NOT_FOUND` | Category not found. | |
+| `500` | `CATEGORY_EDIT_ERROR` | Unable to edit category. | |
