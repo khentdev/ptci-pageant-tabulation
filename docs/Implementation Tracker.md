@@ -75,7 +75,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create category (name, round — round_id selected from dropdown)
+- [x] Create category (name, round — round_id selected from dropdown)
 - [ ] Edit category name (guard: reject if scores exist for this category)
 - [ ] List categories grouped by round
 - [ ] Add scoring field to category (field name, max_value)
