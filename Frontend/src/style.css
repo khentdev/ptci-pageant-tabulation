@@ -84,6 +84,13 @@ html.dark body {
   --color-dark-khaki-900: #201c13;
   --color-dark-khaki-950: #17130d;
   --color-dark-khaki-custom: #cec3ab;
+
+  /* Pageant Tabulation Main Theme*/
+
+  --color-main-light-brown: #f7eecf;
+  --color-auth-green: #d0d6b2;
+  --color-custom-gray: #979b86;
+  --color-main-dark-brown: #a78d6d;
   /*- --background-image-header1: url('/src/assets/img/bg4.webp');
   --background-image-header: url('/src/assets/img/bg2.png')
   
@@ -94,4 +101,7 @@ html.dark body {
   --background-image-user: url('/src/assets/img/userGray.png');
   --background-image-email: url('/src/assets/img/emailGray.png');
   --background-image-password: url('/src/assets/img/padlockGray.png');*/
+  --background-image-user: url('/src/assets/imgs/userGray.png');
+  --background-image-password: url('/src/assets/imgs/padlockGray.png');
+  --background-image-bg1: url('/src/assets/imgs/bg4.jpg');
 }
