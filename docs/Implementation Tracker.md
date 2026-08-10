@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 8, 2026
+**Last synced with codebase:** Aug 10, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -15,10 +15,10 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Seed admin account into database (single admin, username + hashed password — done once before event)
-- [ ] Login (username + password, role check, JWT set in HTTP-only cookie)
-- [ ] Session check on app load (`GET /session/me` — returns role + user info)
-- [ ] Logout (clear JWT cookie)
+- [x] Seed admin account into database (single admin, username + hashed password — done once before event)
+- [x] Login (username + password, role check, JWT set in HTTP-only cookie)
+- [x] Session check on app load (`GET /session/me` — returns role + user info)
+- [x] Logout (clear JWT cookie)
 
 ### Frontend
 
@@ -34,15 +34,16 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Contestants list API — public, no auth, supports filter by gender (`male` / `female` / all)
-- [ ] Static file serving for candidate photos (`/public/candidates/{number}.jpg`)
+- N/A — page is fully static, no backend involvement
 
 ### Frontend
 
 - [ ] Candidates page — responsive grid layout, vertical scroll
+- [ ] Hardcode contestant data (number, name, gender, team name, team color) directly in frontend
 - [ ] Gender filter (All · Male · Female) — re-renders grid on change
 - [ ] Candidate card — number, full name, team name, team color, photo
-- [ ] Placeholder image when photo file not found
+- [ ] Image loaded from `public/candidates/{candidate_number}.jpg`
+- [ ] Placeholder image when photo file not found (handled client-side)
 
 ---
 
@@ -52,19 +53,19 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create round (name, phase order, contestant limit)
-- [ ] List rounds (ordered by phase order)
-- [ ] Edit round name (always allowed)
-- [ ] Edit contestant limit (guard: reject if round already has contestants in `round_contestants`)
-- [ ] Delete round (guard: reject if round has categories or any score data)
-- [ ] Phase order unique constraint enforced
+- [x] Create round (name, phase order, contestant limit)
+- [x] List rounds (ordered by phase order)
+- [x] Edit round name (always allowed)
+- [x] Edit contestant limit (guard: reject if round already has contestants in `round_contestants`)
+- [x] Delete round (guard: reject if round has categories or any score data; allowed if round is empty)
+- [x] Phase order unique constraint enforced
 
 ### Frontend
 
-- [ ] Rounds list page (ordered by phase order, shows name + limit)
+- [ ] Rounds list page (ordered by phase order, shows name + limit + Edit + Delete actions per row)
 - [ ] Create round form (name, phase order, contestant limit — blank = unlimited)
-- [ ] Edit round inline or modal (name always editable; limit editable only before advancement; phase order field hidden/disabled)
-- [ ] Delete round with confirmation modal (disabled if has categories or scores)
+- [ ] Edit round form — fetch lock state on open; name always editable; phase order read-only; limit editable or read-only based on `isLimitLocked`
+- [ ] Delete round with confirmation modal — button always visible; backend rejects with error toast if round has categories or scores
 
 ---
 
@@ -74,7 +75,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create category (name, round — round_id selected from dropdown)
+- [x] Create category (name, round — round_id selected from dropdown)
 - [ ] Edit category name (guard: reject if scores exist for this category)
 - [ ] List categories grouped by round
 - [ ] Add scoring field to category (field name, max_value)
@@ -84,13 +85,13 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Categories list page (grouped by round, shows field count + sum status)
+- [ ] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
 - [ ] Create category form — round dropdown fetches all rounds live on open
-- [ ] Edit category name inline or modal (disabled if scores exist)
+- [ ] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
 - [ ] Category field editor — add fields (name + max score), running total shown, error if sum ≠ 100
 - [ ] Fields auto-sorted by max_value descending in editor and on judge screen
-- [ ] Delete field with confirmation (disabled if scores exist)
-- [ ] Delete category with confirmation (disabled if scores exist)
+- [ ] Delete field with confirmation — disabled if scores exist for that field
+- [ ] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
 - [ ] Category readiness indicator (✓ if sum = 100, ⚠ if not)
 
 ---
@@ -179,18 +180,22 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Rounds + categories list API — returns all rounds with their categories (for sidebar)
 - [ ] Contestants by round API — returns contestants in `round_contestants` for a given round (or all contestants for phase_order = 1)
 - [ ] Scoring fields by category API — returns fields sorted by max_value descending
-- [ ] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state per contestant)
-- [ ] Submit score API — per contestant per category; validate all fields present, values within 0–max_value; reject if score already exists for this judge + contestant + category
+- [ ] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state: any score exists for this judge + category = fully submitted)
+- [ ] Batch submit scores API — receives array of all contestant scores for a category; validates all fields present and within 0–max_value; rejects if already submitted for this judge + category; inserts all in a single transaction
 
 ### Frontend
 
 - [ ] Judge shell layout — sidebar + content area
+- [ ] Route: `/judge/scoring/:categoryId?` — categoryId optional; no categoryId redirects to first available category
+- [ ] On page load: read categoryId from URL → fetch and display that category automatically (survives refresh)
 - [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand
+- [ ] Active category highlighted in sidebar based on current URL categoryId
 - [ ] Rounds without contestants show "No contestants yet" when expanded
 - [ ] Category scoring grid — contestants as rows, fields as columns with max label
-- [ ] Per-contestant Submit button (enabled when all fields filled)
-- [ ] Submitted state — inputs become read-only with submitted values retained; button shows "Submitted ✓"
-- [ ] Inline field validation — value cannot exceed max_value; all fields required
+- [ ] All inputs freely editable before Submit All — no per-contestant locking
+- [ ] Submit All button (enabled only when all fields for all contestants are filled)
+- [ ] Submitted state per category — if scores exist for this judge + category → all inputs read-only, submitted values retained, Submit All hidden, ✓ Submitted shown in header
+- [ ] Inline field validation — value cannot exceed max_value; all fields required before Submit All
 - [ ] Sidebar polling every 10s — detect newly advanced rounds and update sidebar
 
 ---
