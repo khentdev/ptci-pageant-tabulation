@@ -57,10 +57,10 @@ Permanently deletes a round. Allowed only when the round has no categories and n
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message |
-|--------|------|---------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. |
-| `400` | `ROUND_PHASE_CATEGORY_LOCKED` | Round phase cannot be deleted because it has categories. |
-| `400` | `ROUND_PHASE_HAS_CONTESTANTS` | Round phase cannot be deleted because it has contestants. |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. |
-| `500` | `ROUND_PHASE_DELETE_ERROR` | Unable to delete round phase. Please try again later. |
+| Status | Code | Message | Notes |
+|--------|------|---------|-------|
+| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
+| `400` | `ROUND_PHASE_CATEGORY_LOCKED` | Round phase cannot be deleted because it has categories. | |
+| `400` | `ROUND_PHASE_HAS_CONTESTANTS` | Round phase cannot be deleted because it has contestants. | |
+| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
+| `500` | `ROUND_PHASE_DELETE_ERROR` | Unable to delete round phase. Please try again later. | |
