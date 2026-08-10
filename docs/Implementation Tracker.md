@@ -76,7 +76,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 ### Backend
 
 - [x] Create category (name, round — round_id selected from dropdown)
-- [ ] Edit category name (guard: reject if scores exist for this category)
+- [x] Edit category name (guard: reject if scores exist for this category)
 - [ ] List categories grouped by round
 - [ ] Add scoring field to category (field name, max_value)
 - [ ] Delete scoring field (guard: reject if any scores exist for this field)
@@ -204,9 +204,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] JWT auth middleware — validate token on all protected routes
-- [ ] Role guard middleware — `adminOnly` and `judgeOnly` guards
-- [ ] Global error handler — consistent error response shape
+- [x] JWT auth middleware — validate token on all protected routes
+- [x] Role guard middleware — `adminOnly` and `judgeOnly` guards
+- [x] Global error handler — consistent error response shape
 - [ ] Input validation — field-level validation on all mutation endpoints
 
 ### Frontend
