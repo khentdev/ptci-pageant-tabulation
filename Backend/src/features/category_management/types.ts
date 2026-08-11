@@ -46,3 +46,22 @@ export type GetCategoryByIdResponse = {
     data: GetCategoryByIdDTO
     message: string
 }
+
+// Get Category List
+export type CategoryDTO = {
+    id: number;
+    name: string;
+    fieldCount: number;
+    totalScore: number;
+    isLocked: boolean;
+}
+export type GetCategoryListDTO = {
+    id: number;
+    name: string;
+    phaseOrder: number;
+    categories: CategoryDTO[]
+}
+export type GetCategoryListResponse = {
+    data: GetCategoryListDTO[]
+    message: string
+}

@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import type { AppContext } from "../../types/context.js";
-import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse } from "./types.js";
-import { addCategoryService, editCategoryService, getCategoryByIdService } from './service.js';
+import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryListResponse } from "./types.js";
+import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryListService } from './service.js';
 
 export async function addCategoryController(c: Context<AppContext<AddCategoryInputVariables>>) {
     const { name, roundId } = c.var.addCategoryInput
@@ -28,5 +28,13 @@ export async function getCategoryByIdController(c: Context<AppContext<GetCategor
     return c.json<GetCategoryByIdResponse>({
         data: category,
         message: "Category retrieved successfully",
+    }, 200)
+}
+
+export async function getCategoryListController(c: Context) {
+    const categoryList = await getCategoryListService()
+    return c.json<GetCategoryListResponse>({
+        data: categoryList,
+        message: "Category list retrieved successfully",
     }, 200)
 }

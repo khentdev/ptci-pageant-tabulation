@@ -118,20 +118,21 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 
 - Create a category: select round (dropdown), name
 - Edit category name (only if no scores exist for that category)
-- Add scoring fields (criteria) to a category: field name, max score
+- Add scoring fields (criteria) to a category via a batch form: all fields submitted at once with total validated at 100
 - Delete scoring field (only if no scores exist for that field)
 - Delete category (only if no scores exist for that category)
 - View list of all categories grouped by round
-- Category is marked as **ready** only when all its fields sum to exactly 100; categories with fields not summing to 100 are incomplete and shown with a warning
+- A category is either **complete** (has fields, total = 100) or **empty** (no fields yet) — no partial field states exist in the DB
 
 **Business Rules**
 
 - A category must belong to exactly one round (selected from round dropdown)
 - Round dropdown always fetches live data so admin can attach a forgotten category to an existing round at any time
-- A category can have one or more scoring fields (minimum 1 to activate)
+- A category must have at least one scoring field
+- Scoring fields are submitted as a **batch** — all fields in one request; no partial field sets allowed in the DB
 - Each scoring field has a `name` and a `max_value` (integer or decimal, min 1)
-- The sum of all `max_value`s in a category must equal **100** before the category can go live
-- System shows running total and error if fields do not sum to 100
+- The sum of all `max_value`s in the batch must equal exactly **100** — validated server-side; rejected if not
+- Frontend shows a live running total and disables Save until total = 100
 - A judge scores each field from **0 up to its `max_value`**
 - Category score per judge = `Σ field_values` (plain sum — no separate weighting needed; max values are the weights)
 - Can delete a category only if no scores exist for it — useful for fixing setup mistakes

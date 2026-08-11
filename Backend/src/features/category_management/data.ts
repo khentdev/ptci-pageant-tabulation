@@ -58,3 +58,49 @@ export async function getCategoryById({ id }: GetCategoryByIdInput) {
         isLocked: _count.scores > 0,
     }
 }
+
+export async function getCategoryList() {
+    const round = await prisma.round.findMany({
+        orderBy: { phaseOrder: "asc" },
+        select: {
+            id: true,
+            name: true,
+            phaseOrder: true,
+            categories: {
+                select: {
+                    id: true,
+                    name: true,
+                    _count: {
+                        select: {
+                            scores: true,
+                            criteriaFields: true
+                        }
+                    },
+                    criteriaFields: {
+                        select: {
+                            maxValue: true
+                        }
+                    }
+                },
+                orderBy: { name: "asc" }
+            }
+        },
+    })
+
+    return round.map((r) => ({
+        id: r.id,
+        name: r.name,
+        phaseOrder: r.phaseOrder,
+        categories: r.categories.map((c) => {
+            const totalScore = c.criteriaFields.reduce((sum, field) => sum + Number(field.maxValue), 0)
+            return {
+                id: c.id,
+                name: c.name,
+                fieldCount: c._count.criteriaFields,
+                totalScore,
+                isLocked: c._count.scores > 0
+            }
+        })
+    }))
+
+}
