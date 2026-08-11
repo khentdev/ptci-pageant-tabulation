@@ -2,7 +2,7 @@ import loadEnvVar from "./loadEnv.js";
 
 export const env = {
     NODE_ENV: loadEnvVar("NODE_ENV", "development"),
-    PORT: 3004,
+    PORT: 3003,
     DATABASE_URL: loadEnvVar("DATABASE_URL"),
 
     DOMAIN_NAME: loadEnvVar("DOMAIN_NAME", "localhost"),
