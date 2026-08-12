@@ -8,6 +8,11 @@ const authStore = useAuthStore();
 const userName = ref('');
 const userPassword = ref('');
 
+const clearError = () => {
+  if (authStore.isInvalidCredentials) {
+    authStore.isInvalidCredentials = '';
+  }
+};
 const loginFunction = () => {
   if (userName.value === '' || userPassword.value === '') {
     return;
@@ -33,6 +38,7 @@ const loginFunction = () => {
       <img src="../../assets/imgs/PTCI.png" alt="" class="relative bottom-1 h-8 w-10" />
     </div>
     <form
+      @submit.prevent=""
       class="from-auth-green to-main-light-brown flex h-full w-full flex-col items-center justify-center gap-4 rounded-3xl border border-black/15 bg-linear-150 from-30% to-100% py-6 drop-shadow-md drop-shadow-black/30 sm:w-md md:w-lg"
     >
       <div class="flex h-full w-full flex-col items-center justify-center gap-4">
@@ -50,6 +56,7 @@ const loginFunction = () => {
             class="stroke stroke-custom-gray absolute top-1/2 left-10 -translate-y-1/2"
           ></circle-user>
           <input
+            @input="clearError"
             required
             v-model="userName"
             type="text"
@@ -61,6 +68,7 @@ const loginFunction = () => {
         <div class="relative h-full w-full px-6">
           <Lock class="stroke stroke-custom-gray absolute top-1/2 left-10 -translate-y-1/2"></Lock>
           <input
+            @input="clearError"
             required
             v-model="userPassword"
             type="password"
@@ -81,6 +89,7 @@ const loginFunction = () => {
 
       <div class="flex h-full w-full flex-col items-center justify-center gap-2 px-6">
         <button
+          type="submit"
           :disabled="authStore.isLoading"
           :class="authStore.buttonDisabled"
           @click="loginFunction"
