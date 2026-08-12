@@ -17,6 +17,7 @@ export const CATEGORY_ERROR_CODES = {
     CATEGORY_FIELD_MAX_VALUE_INVALID: "CATEGORY_FIELD_MAX_VALUE_INVALID",
     CATEGORY_FIELDS_TOTAL_INVALID: "CATEGORY_FIELDS_TOTAL_INVALID",
     CATEGORY_FIELDS_SAVE_ERROR: "CATEGORY_FIELDS_SAVE_ERROR",
+    CATEGORY_FIELDS_GET_ERROR: "CATEGORY_FIELDS_GET_ERROR",
 } as const
 
 export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = {
@@ -98,6 +99,11 @@ export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = 
     CATEGORY_FIELDS_SAVE_ERROR: {
         code: "CATEGORY_FIELDS_SAVE_ERROR",
         message: "Unable to save scoring fields.",
+        status: 500,
+    },
+    CATEGORY_FIELDS_GET_ERROR: {
+        code: "CATEGORY_FIELDS_GET_ERROR",
+        message: "Unable to get category fields.",
         status: 500,
     },
 }

@@ -37,6 +37,17 @@ export async function validateGetCategoryByIdInput(c: Context, next: Next) {
     await next()
 }
 
+export async function validateGetCategoryFieldsInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        throw new AppError("CATEGORY_ID_INVALID", { field: "get_category_fields_input_id" })
+    }
+
+    c.set("getCategoryFieldsInput", { categoryId: parsedId })
+    await next()
+}
+
 export async function validateSaveCategoryFieldsInput(c: Context, next: Next) {
     const id = c.req.param("id")
     const parsedId = Number(id)

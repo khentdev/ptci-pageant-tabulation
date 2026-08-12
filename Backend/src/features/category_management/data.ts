@@ -1,5 +1,5 @@
 import { prisma } from "../../infra/prisma.js";
-import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput, SaveCategoryFieldsInput } from "./types.js";
+import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput, GetCategoryFieldsInput, SaveCategoryFieldsInput } from "./types.js";
 
 export async function createCategory({ name, roundId }: AddCategoryInput) {
     await prisma.category.create({
@@ -106,6 +106,40 @@ export async function getCategoryList() {
 }
 
 
+export async function getCategoryFields({ categoryId }: GetCategoryFieldsInput) {
+    const category = await prisma.category.findUnique({
+        where: { id: categoryId },
+        select: {
+            name: true,
+            criteriaFields: {
+                select: {
+                    id: true,
+                    name: true,
+                    maxValue: true,
+                },
+                orderBy: { maxValue: "desc" },
+            },
+            _count: {
+                select: {
+                    scores: true,
+                },
+            },
+        },
+    })
+
+    if (!category) return null
+
+    return {
+        categoryName: category.name,
+        isLocked: category._count.scores > 0,
+        fields: category.criteriaFields.map((field) => ({
+            id: field.id,
+            name: field.name,
+            maxValue: Number(field.maxValue),
+        })),
+    }
+}
+
 export async function saveCategoryFields({ categoryId, fields }: SaveCategoryFieldsInput) {
     await prisma.$transaction([
         prisma.criteriaField.deleteMany({ where: { categoryId } }),
@@ -118,6 +152,4 @@ export async function saveCategoryFields({ categoryId, fields }: SaveCategoryFie
             }))
         })
     ])
-
-
 }

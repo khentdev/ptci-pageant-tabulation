@@ -86,3 +86,25 @@ export type SaveCategoryFieldsInput = {
 export type SaveCategoryFieldsResponse = {
     message: string
 }
+
+// Get Category Fields
+export type CategoryFieldDTO = {
+    id: number
+    name: string
+    maxValue: number
+}
+export type GetCategoryFieldsInput = {
+    categoryId: number
+}
+export type GetCategoryFieldsInputVariables = {
+    getCategoryFieldsInput: GetCategoryFieldsInput
+}
+export type GetCategoryFieldsDTO = {
+    categoryName: string
+    isLocked: boolean
+    fields: CategoryFieldDTO[]
+}
+export type GetCategoryFieldsResponse = {
+    data: GetCategoryFieldsDTO
+    message: string
+}

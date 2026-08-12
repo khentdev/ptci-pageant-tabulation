@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import type { AppContext } from "../../types/context.js";
-import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryListResponse, SaveCategoryFieldsInputVariables, SaveCategoryFieldsResponse } from "./types.js";
-import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryListService, saveCategoryFieldsService } from './service.js';
+import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryFieldsInputVariables, GetCategoryFieldsResponse, GetCategoryListResponse, SaveCategoryFieldsInputVariables, SaveCategoryFieldsResponse } from "./types.js";
+import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryFieldsService, getCategoryListService, saveCategoryFieldsService } from './service.js';
 
 export async function addCategoryController(c: Context<AppContext<AddCategoryInputVariables>>) {
     const { name, roundId } = c.var.addCategoryInput
@@ -36,6 +36,16 @@ export async function getCategoryListController(c: Context) {
     return c.json<GetCategoryListResponse>({
         data: categoryList,
         message: "Category list retrieved successfully",
+    }, 200)
+}
+
+export async function getCategoryFieldsController(c: Context<AppContext<GetCategoryFieldsInputVariables>>) {
+    const { categoryId } = c.var.getCategoryFieldsInput
+
+    const categoryFields = await getCategoryFieldsService({ categoryId })
+    return c.json<GetCategoryFieldsResponse>({
+        data: categoryFields,
+        message: "Category fields retrieved successfully",
     }, 200)
 }
 

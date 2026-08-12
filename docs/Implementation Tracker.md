@@ -78,7 +78,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [x] Create category (name, round — round_id selected from dropdown)
 - [x] Edit category name (guard: reject if scores exist for this category)
 - [x] List categories grouped by round
-- [ ] Get fields by category API — returns existing fields for a category (used to pre-fill the field editor on open)
+- [x] Get fields by category API — returns existing fields for a category (used to pre-fill the field editor on open)
 - [X] Add scoring fields to category — batch endpoint: receives array of fields, validates total max_value === 100, inserts all in one transaction; replaces existing fields if category already has them
 - [ ] Delete category (guard: reject if any scores exist for this category)
 
