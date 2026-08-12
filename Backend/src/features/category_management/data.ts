@@ -1,5 +1,5 @@
 import { prisma } from "../../infra/prisma.js";
-import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput } from "./types.js";
+import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput, SaveCategoryFieldsInput } from "./types.js";
 
 export async function createCategory({ name, roundId }: AddCategoryInput) {
     await prisma.category.create({
@@ -102,5 +102,22 @@ export async function getCategoryList() {
             }
         })
     }))
+
+}
+
+
+export async function saveCategoryFields({ categoryId, fields }: SaveCategoryFieldsInput) {
+    await prisma.$transaction([
+        prisma.criteriaField.deleteMany({ where: { categoryId } }),
+        prisma.criteriaField.createMany({
+            data: fields.map((f) =>
+            ({
+                categoryId,
+                name: f.name,
+                maxValue: f.maxValue
+            }))
+        })
+    ])
+
 
 }

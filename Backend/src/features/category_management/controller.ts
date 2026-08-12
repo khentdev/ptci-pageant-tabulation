@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import type { AppContext } from "../../types/context.js";
-import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryListResponse } from "./types.js";
-import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryListService } from './service.js';
+import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryListResponse, SaveCategoryFieldsInputVariables, SaveCategoryFieldsResponse } from "./types.js";
+import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryListService, saveCategoryFieldsService } from './service.js';
 
 export async function addCategoryController(c: Context<AppContext<AddCategoryInputVariables>>) {
     const { name, roundId } = c.var.addCategoryInput
@@ -36,5 +36,14 @@ export async function getCategoryListController(c: Context) {
     return c.json<GetCategoryListResponse>({
         data: categoryList,
         message: "Category list retrieved successfully",
+    }, 200)
+}
+
+export async function saveCategoryFieldsController(c: Context<AppContext<SaveCategoryFieldsInputVariables>>) {
+    const { categoryId, fields } = c.var.saveCategoryFieldsInput
+
+    await saveCategoryFieldsService({ categoryId, fields })
+    return c.json<SaveCategoryFieldsResponse>({
+        message: "Category fields saved successfully",
     }, 200)
 }

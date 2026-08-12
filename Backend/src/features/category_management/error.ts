@@ -11,6 +11,12 @@ export const CATEGORY_ERROR_CODES = {
     CATEGORY_LOCKED: "CATEGORY_LOCKED",
     CATEGORY_GET_BY_ID_ERROR: "CATEGORY_GET_BY_ID_ERROR",
     CATEGORY_GET_LIST_ERROR: "CATEGORY_GET_LIST_ERROR",
+    CATEGORY_FIELDS_REQUIRED: "CATEGORY_FIELDS_REQUIRED",
+    CATEGORY_FIELD_NAME_REQUIRED: "CATEGORY_FIELD_NAME_REQUIRED",
+    CATEGORY_FIELD_MAX_VALUE_REQUIRED: "CATEGORY_FIELD_MAX_VALUE_REQUIRED",
+    CATEGORY_FIELD_MAX_VALUE_INVALID: "CATEGORY_FIELD_MAX_VALUE_INVALID",
+    CATEGORY_FIELDS_TOTAL_INVALID: "CATEGORY_FIELDS_TOTAL_INVALID",
+    CATEGORY_FIELDS_SAVE_ERROR: "CATEGORY_FIELDS_SAVE_ERROR",
 } as const
 
 export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = {
@@ -62,6 +68,36 @@ export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = 
     CATEGORY_GET_LIST_ERROR: {
         code: "CATEGORY_GET_LIST_ERROR",
         message: "Unable to get category list.",
+        status: 500,
+    },
+    CATEGORY_FIELDS_REQUIRED: {
+        code: "CATEGORY_FIELDS_REQUIRED",
+        message: "Add at least one scoring field.",
+        status: 400,
+    },
+    CATEGORY_FIELD_NAME_REQUIRED: {
+        code: "CATEGORY_FIELD_NAME_REQUIRED",
+        message: "Field name is required.",
+        status: 400,
+    },
+    CATEGORY_FIELD_MAX_VALUE_REQUIRED: {
+        code: "CATEGORY_FIELD_MAX_VALUE_REQUIRED",
+        message: "Max score is required.",
+        status: 400,
+    },
+    CATEGORY_FIELD_MAX_VALUE_INVALID: {
+        code: "CATEGORY_FIELD_MAX_VALUE_INVALID",
+        message: "Max score must be at least 1 with up to 2 decimal places.",
+        status: 400,
+    },
+    CATEGORY_FIELDS_TOTAL_INVALID: {
+        code: "CATEGORY_FIELDS_TOTAL_INVALID",
+        message: "Scoring fields must total exactly 100.",
+        status: 400,
+    },
+    CATEGORY_FIELDS_SAVE_ERROR: {
+        code: "CATEGORY_FIELDS_SAVE_ERROR",
+        message: "Unable to save scoring fields.",
         status: 500,
     },
 }

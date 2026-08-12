@@ -1,3 +1,5 @@
+import type { Decimal } from "@prisma/client/runtime/client"
+
 export type AddCategoryRequestBody = {
     name: unknown
     roundId: unknown
@@ -63,5 +65,24 @@ export type GetCategoryListDTO = {
 }
 export type GetCategoryListResponse = {
     data: GetCategoryListDTO[]
+    message: string
+}
+
+// Add Criteria Field
+export type SaveCategoryFieldsRequestBody = {
+    fields: unknown
+}
+export type CategoryFieldInput = {
+    name: string
+    maxValue: Decimal
+}
+export type SaveCategoryFieldsInputVariables = {
+    saveCategoryFieldsInput: SaveCategoryFieldsInput
+}
+export type SaveCategoryFieldsInput = {
+    categoryId: number
+    fields: CategoryFieldInput[]
+}
+export type SaveCategoryFieldsResponse = {
     message: string
 }
