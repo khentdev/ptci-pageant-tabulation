@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import type { AppContext } from "../../types/context.js";
-import type { AddCategoryInputVariables, AddCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryFieldsInputVariables, GetCategoryFieldsResponse, GetCategoryListResponse, SaveCategoryFieldsInputVariables, SaveCategoryFieldsResponse } from "./types.js";
-import { addCategoryService, editCategoryService, getCategoryByIdService, getCategoryFieldsService, getCategoryListService, saveCategoryFieldsService } from './service.js';
+import type { AddCategoryInputVariables, AddCategoryResponse, DeleteCategoryInputVariables, DeleteCategoryResponse, EditCategoryInputVariables, EditCategoryResponse, GetCategoryByIdInputVariables, GetCategoryByIdResponse, GetCategoryFieldsInputVariables, GetCategoryFieldsResponse, GetCategoryListResponse, SaveCategoryFieldsInputVariables, SaveCategoryFieldsResponse } from "./types.js";
+import { addCategoryService, deleteCategoryService, editCategoryService, getCategoryByIdService, getCategoryFieldsService, getCategoryListService, saveCategoryFieldsService } from './service.js';
 
 export async function addCategoryController(c: Context<AppContext<AddCategoryInputVariables>>) {
     const { name, roundId } = c.var.addCategoryInput
@@ -55,5 +55,14 @@ export async function saveCategoryFieldsController(c: Context<AppContext<SaveCat
     await saveCategoryFieldsService({ categoryId, fields })
     return c.json<SaveCategoryFieldsResponse>({
         message: "Category fields saved successfully",
+    }, 200)
+}
+
+export async function deleteCategoryController(c: Context<AppContext<DeleteCategoryInputVariables>>) {
+    const { id } = c.var.deleteCategoryInput
+
+    await deleteCategoryService({ id })
+    return c.json<DeleteCategoryResponse>({
+        message: "Category deleted successfully",
     }, 200)
 }

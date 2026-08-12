@@ -18,6 +18,7 @@ export const CATEGORY_ERROR_CODES = {
     CATEGORY_FIELDS_TOTAL_INVALID: "CATEGORY_FIELDS_TOTAL_INVALID",
     CATEGORY_FIELDS_SAVE_ERROR: "CATEGORY_FIELDS_SAVE_ERROR",
     CATEGORY_FIELDS_GET_ERROR: "CATEGORY_FIELDS_GET_ERROR",
+    CATEGORY_DELETE_ERROR: "CATEGORY_DELETE_ERROR",
 } as const
 
 export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = {
@@ -104,6 +105,11 @@ export const CATEGORY_ERROR_DEF: Record<CategoryErrorCodes, ErrorDefinitions> = 
     CATEGORY_FIELDS_GET_ERROR: {
         code: "CATEGORY_FIELDS_GET_ERROR",
         message: "Unable to get category fields.",
+        status: 500,
+    },
+    CATEGORY_DELETE_ERROR: {
+        code: "CATEGORY_DELETE_ERROR",
+        message: "Unable to delete category.",
         status: 500,
     },
 }

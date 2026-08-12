@@ -94,3 +94,14 @@ export async function validateSaveCategoryFieldsInput(c: Context, next: Next) {
     c.set("saveCategoryFieldsInput", { categoryId: parsedId, fields: parsedFields })
     await next()
 }
+
+export async function validateDeleteCategoryInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        throw new AppError("CATEGORY_ID_INVALID", { field: "delete_category_input_id" })
+    }
+
+    c.set("deleteCategoryInput", { id: parsedId })
+    await next()
+}

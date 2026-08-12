@@ -108,3 +108,14 @@ export type GetCategoryFieldsResponse = {
     data: GetCategoryFieldsDTO
     message: string
 }
+
+// Delete Category
+export type DeleteCategoryInput = {
+    id: number
+}
+export type DeleteCategoryInputVariables = {
+    deleteCategoryInput: DeleteCategoryInput
+}
+export type DeleteCategoryResponse = {
+    message: string
+}

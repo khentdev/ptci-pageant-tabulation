@@ -2,10 +2,10 @@ import { AppError } from '../../errors/appError.js';
 import logger from '../../infra/logger.js';
 import { prisma } from '../../infra/prisma.js';
 import {
-    createCategory, editCategory, getCategoryById, getCategoryFields, getCategoryList, saveCategoryFields
+    createCategory, deleteCategory, editCategory, getCategoryById, getCategoryFields, getCategoryList, saveCategoryFields
 } from './data.js';
 
-import type { AddCategoryInput, EditCategoryInput, GetCategoryByIdInput, GetCategoryFieldsInput, SaveCategoryFieldsInput } from "./types.js"
+import type { AddCategoryInput, DeleteCategoryInput, EditCategoryInput, GetCategoryByIdInput, GetCategoryFieldsInput, SaveCategoryFieldsInput } from "./types.js"
 
 export async function addCategoryService({ name, roundId }: AddCategoryInput) {
 
@@ -110,5 +110,28 @@ export async function saveCategoryFieldsService({ categoryId, fields }: SaveCate
     } catch (err) {
         logger.error({ err }, "Error saving category fields")
         throw new AppError("CATEGORY_FIELDS_SAVE_ERROR")
+    }
+}
+
+export async function deleteCategoryService({ id }: DeleteCategoryInput) {
+    const categoryExists = await prisma.category.findUnique({
+        where: { id },
+    })
+    if (!categoryExists) {
+        logger.warn({ id }, "Category not found")
+        throw new AppError("CATEGORY_NOT_FOUND")
+    }
+
+    const hasScores = await prisma.score.count({ where: { categoryId: id } })
+    if (hasScores > 0) {
+        logger.warn({ id }, "Category is locked because scores exist")
+        throw new AppError("CATEGORY_LOCKED")
+    }
+
+    try {
+        await deleteCategory({ id })
+    } catch (err) {
+        logger.error({ err, id }, "Error deleting category")
+        throw new AppError("CATEGORY_DELETE_ERROR")
     }
 }
