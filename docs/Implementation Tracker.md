@@ -100,7 +100,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Add contestant (candidate number, name, gender, team name, team color)
+- [X] Add contestant (candidate number, name, gender, team name, team color)
 - [ ] List contestants (filter by gender)
 - [ ] Edit contestant (guard: reject if any scores exist for this contestant)
 - [ ] Delete contestant (guard: reject if any scores exist)
