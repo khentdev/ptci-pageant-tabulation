@@ -9,3 +9,4 @@ export const authService = {
     return GetTypeResponse<loginResponse>(res);
   },
 };
+    
