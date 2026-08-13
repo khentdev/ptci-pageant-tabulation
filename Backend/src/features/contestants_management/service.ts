@@ -1,8 +1,8 @@
 import { AppError } from "../../errors/appError.js"
 import logger from "../../infra/logger.js"
 import { Prisma, prisma } from "../../infra/prisma.js"
-import { addContestant } from "./data.js"
-import type { AddContestantInput } from "./types.js"
+import { addContestant, getAllContestants } from "./data.js"
+import type { AddContestantInput, GetAllContestantsParams } from "./types.js"
 
 export async function addContestantService({ candidateNumber, name, gender, teamName, teamColor }: AddContestantInput) {
     const existingContestant = await prisma.contestant.findUnique({
@@ -24,5 +24,14 @@ export async function addContestantService({ candidateNumber, name, gender, team
         }
         logger.error({ err }, "Error adding contestant")
         throw new AppError("CONTESTANT_ADD_ERROR")
+    }
+}
+
+export async function getAllContestantsService({ filter }: GetAllContestantsParams) {
+    try {
+        return await getAllContestants({ filter })
+    } catch (err) {
+        logger.error({ err }, "Error fetching contestants")
+        throw new AppError("CONTESTANT_GET_ALL_ERROR")
     }
 }

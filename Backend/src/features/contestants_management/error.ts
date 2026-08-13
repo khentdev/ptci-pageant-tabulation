@@ -10,6 +10,8 @@ export const CONTESTANT_ERROR_CODES = {
     CONTESTANT_TEAM_NAME_REQUIRED: "CONTESTANT_TEAM_NAME_REQUIRED",
     CONTESTANT_TEAM_COLOR_REQUIRED: "CONTESTANT_TEAM_COLOR_REQUIRED",
     CONTESTANT_ADD_ERROR: "CONTESTANT_ADD_ERROR",
+    CONTESTANT_GET_ALL_ERROR: "CONTESTANT_GET_ALL_ERROR",
+    CONTESTANT_FILTER_INVALID: "CONTESTANT_FILTER_INVALID",
 } as const
 
 export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions> = {
@@ -57,6 +59,16 @@ export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions
         code: "CONTESTANT_ADD_ERROR",
         message: "Unable to add contestant.",
         status: 500,
+    },
+    CONTESTANT_GET_ALL_ERROR: {
+        code: "CONTESTANT_GET_ALL_ERROR",
+        message: "Unable to fetch contestants.",
+        status: 500,
+    },
+    CONTESTANT_FILTER_INVALID: {
+        code: "CONTESTANT_FILTER_INVALID",
+        message: "Filter must be Male or Female.",
+        status: 400,
     },
 }
 

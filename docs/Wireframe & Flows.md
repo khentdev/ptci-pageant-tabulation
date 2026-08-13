@@ -362,19 +362,20 @@ Admin fills all fields at once. Running total updates live. Save is disabled unt
 **Wireframe — Contestants List**
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ Contestants                          [ + Add Contestant ]     │
-│                                                              │
-│  Filter: [ All ]  [ Male ]  [ Female ]                       │
-│                                                              │
-│  #    Name                 Gender   Team      Actions        │
-│  ──   ─────────────────    ──────   ────      ───────        │
-│  1    Aniar, Andrea Mae    Female   Yellow    [ Edit ]       │
-│  2    Dela Cruz, Christine Female   Purple    [ Edit ]       │
-│  3    Delos Santos, Jona   Female   Purple    [ Edit ]       │
-│  ...                                                         │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Contestants                                  [ + Add Contestant ]     │
+│                                                                      │
+│  Filter: [ All ]  [ Male ]  [ Female ]                               │
+│                                                                      │
+│  #    Name                 Gender   Team      Actions                │
+│  ──   ─────────────────    ──────   ────      ───────────────────    │
+│  1    Aniar, Andrea Mae    Female   Yellow    [ Edit ] [ Delete ]    │
+│  2    Dela Cruz, Christine Female   Purple    [ Edit ] [ Delete ]    │
+│  3    Delos Santos, Jona   Female   Purple    [ Edit ] [ Delete ]    │
+│  ...                                                                 │
+│                                                                      │
+│  Delete rejected by backend if scores exist for that contestant      │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Add Contestant Form**

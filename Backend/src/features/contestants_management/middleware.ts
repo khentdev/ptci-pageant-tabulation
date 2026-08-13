@@ -28,3 +28,15 @@ export async function validateAddContestantInput(c: Context, next: Next) {
     })
     await next()
 }
+
+export async function validateGetAllContestantsParams(c: Context, next: Next) {
+    const rawFilter = c.req.query("filter")
+    const normalized = rawFilter?.trim().toUpperCase() || undefined
+
+    if (normalized !== undefined && normalized !== "MALE" && normalized !== "FEMALE") {
+        throw new AppError("CONTESTANT_FILTER_INVALID", { field: "get_all_contestants_params_filter" })
+    }
+
+    c.set("getAllContestantsParams", normalized ? { filter: normalized as Gender } : {})
+    await next()
+}

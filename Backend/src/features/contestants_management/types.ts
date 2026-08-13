@@ -19,3 +19,22 @@ export type AddContestantInputVariables = {
 export type AddContestantResponse = {
     message: string
 }
+
+// Get all contestants
+export type GetAllContestantsParams = {
+    filter?: Gender
+}
+export type GetAllContestantsParamsVariables = {
+    getAllContestantsParams: GetAllContestantsParams
+}
+export type GetAllContestantsDTO = {
+    candidateNumber: number;
+    name: string;
+    gender: Gender;
+    teamName: string;
+    teamColor: string;
+}
+export type GetAllContestantsResponse = {
+    data: GetAllContestantsDTO[]
+    message: string
+}
