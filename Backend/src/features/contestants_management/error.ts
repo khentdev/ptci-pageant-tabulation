@@ -11,7 +11,13 @@ export const CONTESTANT_ERROR_CODES = {
     CONTESTANT_TEAM_COLOR_REQUIRED: "CONTESTANT_TEAM_COLOR_REQUIRED",
     CONTESTANT_ADD_ERROR: "CONTESTANT_ADD_ERROR",
     CONTESTANT_GET_ALL_ERROR: "CONTESTANT_GET_ALL_ERROR",
+    CONTESTANT_GET_BY_ID_ERROR: "CONTESTANT_GET_BY_ID_ERROR",
     CONTESTANT_FILTER_INVALID: "CONTESTANT_FILTER_INVALID",
+    CONTESTANT_ID_REQUIRED: "CONTESTANT_ID_REQUIRED",
+    CONTESTANT_ID_INVALID: "CONTESTANT_ID_INVALID",
+    CONTESTANT_NOT_FOUND: "CONTESTANT_NOT_FOUND",
+    CONTESTANT_LOCKED: "CONTESTANT_LOCKED",
+    CONTESTANT_EDIT_ERROR: "CONTESTANT_EDIT_ERROR",
 } as const
 
 export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions> = {
@@ -65,10 +71,40 @@ export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions
         message: "Unable to fetch contestants.",
         status: 500,
     },
+    CONTESTANT_GET_BY_ID_ERROR: {
+        code: "CONTESTANT_GET_BY_ID_ERROR",
+        message: "Unable to get contestant by id.",
+        status: 500,
+    },
     CONTESTANT_FILTER_INVALID: {
         code: "CONTESTANT_FILTER_INVALID",
         message: "Filter must be Male or Female.",
         status: 400,
+    },
+    CONTESTANT_ID_REQUIRED: {
+        code: "CONTESTANT_ID_REQUIRED",
+        message: "Contestant ID is required.",
+        status: 400,
+    },
+    CONTESTANT_ID_INVALID: {
+        code: "CONTESTANT_ID_INVALID",
+        message: "Contestant ID must be a positive whole number.",
+        status: 400,
+    },
+    CONTESTANT_NOT_FOUND: {
+        code: "CONTESTANT_NOT_FOUND",
+        message: "Contestant not found.",
+        status: 404,
+    },
+    CONTESTANT_LOCKED: {
+        code: "CONTESTANT_LOCKED",
+        message: "Contestant cannot be edited because it has scores already.",
+        status: 400,
+    },
+    CONTESTANT_EDIT_ERROR: {
+        code: "CONTESTANT_EDIT_ERROR",
+        message: "Unable to edit contestant.",
+        status: 500,
     },
 }
 

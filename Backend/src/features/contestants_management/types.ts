@@ -38,3 +38,47 @@ export type GetAllContestantsResponse = {
     data: GetAllContestantsDTO[]
     message: string
 }
+
+// Get contestant by id
+export type GetContestantByIdInput = {
+    id: number
+}
+export type GetContestantByIdInputVariables = {
+    getContestantByIdInput: GetContestantByIdInput
+}
+export type GetContestantByIdDTO = {
+    id: number
+    candidateNumber: number
+    name: string
+    gender: Gender
+    teamName: string
+    teamColor: string
+    isLocked: boolean
+}
+export type GetContestantByIdResponse = {
+    data: GetContestantByIdDTO
+    message: string
+}
+
+// Edit contestant
+export type EditContestantRequestBody = {
+    candidateNumber: unknown
+    name: unknown
+    gender: unknown
+    teamName: unknown
+    teamColor: unknown
+}
+export type EditContestantInput = {
+    id: number
+    candidateNumber: number
+    name: string
+    gender: Gender
+    teamName: string
+    teamColor: string
+}
+export type EditContestantInputVariables = {
+    editContestantInput: EditContestantInput
+}
+export type EditContestantResponse = {
+    message: string
+}

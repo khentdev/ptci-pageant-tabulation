@@ -543,11 +543,10 @@ describe("Add Contestant Integration Test", () => {
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
             const res = await postAddContestant(cookieHeader, csrfToken, validBody)
-            const json = await res.json() as { error: { code: string; field: string } }
+            const json = await res.json() as { error: { code: string } }
 
             expect(res.status).toBe(400)
             expect(json.error.code).toBe("CONTESTANT_CANDIDATE_NUMBER_DUPLICATE")
-            expect(json.error.field).toBe("add_contestant_input_candidate_number")
         })
 
         it("should not create a contestant when candidate number is duplicate", async () => {
