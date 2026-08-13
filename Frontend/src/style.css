@@ -10,6 +10,7 @@ body {
   margin: 0;
 }
 
+/*
 body {
   background-color: #c7b99e;
   color: black;
@@ -18,7 +19,7 @@ body {
 html.dark body {
   background-color: #101215;
   color: white;
-}
+} */
 
 @theme {
   --font-poppins: 'Poppins', sans-serif;

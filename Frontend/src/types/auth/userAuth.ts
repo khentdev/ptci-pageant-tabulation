@@ -13,8 +13,10 @@ export interface loginResponse {
 export type role = 'ADMIN' | 'JUDGE';
 
 export type user = {
-  id: number;
-  name: string;
-  username: string;
-  role: role;
+  user: {
+    id: number;
+    name: string;
+    username: string;
+    role: role;
+  };
 };
