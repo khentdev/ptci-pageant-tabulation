@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User, CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
+import { CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
 import type { loginInput } from '@/types/auth/userAuth';
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore';
