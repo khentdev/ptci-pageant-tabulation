@@ -1,7 +1,7 @@
 import type { Context } from "hono"
 import type { AppContext } from "../../types/context.js"
-import { addContestantService, editContestantService, getAllContestantsService, getContestantByIdService } from "./service.js"
-import type { AddContestantInputVariables, EditContestantInputVariables, GetAllContestantsParamsVariables, GetAllContestantsResponse, GetContestantByIdInputVariables, GetContestantByIdResponse } from "./types.js"
+import { addContestantService, deleteContestantService, editContestantService, getAllContestantsService, getContestantByIdService } from "./service.js"
+import type { AddContestantInputVariables, DeleteContestantInputVariables, EditContestantInputVariables, GetAllContestantsParamsVariables, GetAllContestantsResponse, GetContestantByIdInputVariables, GetContestantByIdResponse } from "./types.js"
 
 export async function addContestantController(c: Context<AppContext<AddContestantInputVariables>>) {
     const input = c.var.addContestantInput
@@ -28,4 +28,11 @@ export async function editContestantController(c: Context<AppContext<EditContest
     const input = c.var.editContestantInput
     await editContestantService(input)
     return c.json({ message: "Contestant updated successfully" }, 200)
+}
+
+
+export async function deleteContestantController(c: Context<AppContext<DeleteContestantInputVariables>>) {
+    const input = c.var.deleteContestantInput
+    await deleteContestantService(input)
+    return c.json({ message: "Contestant deleted successfully" }, 200)
 }

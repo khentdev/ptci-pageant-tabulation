@@ -1,8 +1,8 @@
 import { AppError } from "../../errors/appError.js"
 import logger from "../../infra/logger.js"
 import { Prisma, prisma } from "../../infra/prisma.js"
-import { addContestant, editContestant, getAllContestants, getContestantById } from "./data.js"
-import type { AddContestantInput, EditContestantInput, GetAllContestantsParams, GetContestantByIdInput } from "./types.js"
+import { addContestant, deleteContestant, editContestant, getAllContestants, getContestantById } from "./data.js"
+import type { AddContestantInput, DeleteContestantInput, EditContestantInput, GetAllContestantsParams, GetContestantByIdInput } from "./types.js"
 
 export async function addContestantService({ candidateNumber, name, gender, teamName, teamColor }: AddContestantInput) {
     const existingContestant = await prisma.contestant.findUnique({
@@ -82,5 +82,29 @@ export async function editContestantService({ id, candidateNumber, name, gender,
         }
         logger.error({ err }, "Error editing contestant")
         throw new AppError("CONTESTANT_EDIT_ERROR")
+    }
+}
+
+export async function deleteContestantService({ id }: DeleteContestantInput) {
+    const contestant = await prisma.contestant.findUnique({
+        where: { id },
+        select: { id: true },
+    })
+    if (!contestant) {
+        logger.warn({ id }, "Contestant not found on contestant delete")
+        throw new AppError("CONTESTANT_NOT_FOUND")
+    }
+
+    const contestantHasScores = await prisma.score.count({ where: { contestantId: id } })
+    if (contestantHasScores > 0) {
+        logger.warn({ id }, "Contestant is locked because scores exist")
+        throw new AppError("CONTESTANT_LOCKED")
+    }
+
+    try {
+        await deleteContestant({ id })
+    } catch (err) {
+        logger.error({ err }, "Error deleting contestant")
+        throw new AppError("CONTESTANT_DELETE_ERROR")
     }
 }

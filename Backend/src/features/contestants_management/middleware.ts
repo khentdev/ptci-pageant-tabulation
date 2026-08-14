@@ -81,3 +81,13 @@ export async function validateEditContestantInput(c: Context, next: Next) {
     })
     await next()
 }
+
+export async function validateDeleteContestantInput(c: Context, next: Next) {
+    const id = c.req.param("id")
+
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) throw new AppError("CONTESTANT_ID_INVALID", { field: "delete_contestant_input" })
+
+    c.set("deleteContestantInput", { id: parsedId })
+    await next()
+}

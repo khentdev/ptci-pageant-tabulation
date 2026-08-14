@@ -82,3 +82,14 @@ export type EditContestantInputVariables = {
 export type EditContestantResponse = {
     message: string
 }
+
+// Delete contestant
+export type DeleteContestantInput = {
+    id: number
+}
+export type DeleteContestantInputVariables = {
+    deleteContestantInput: DeleteContestantInput
+}
+export type DeleteContestantResponse = {
+    message: string
+}

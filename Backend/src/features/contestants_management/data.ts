@@ -1,6 +1,6 @@
 import { Prisma, prisma } from '../../infra/prisma.js';
 
-import type { AddContestantInput, EditContestantInput, Gender, GetAllContestantsParams, GetContestantByIdInput } from "./types.js";
+import type { AddContestantInput, DeleteContestantInput, EditContestantInput, Gender, GetAllContestantsParams, GetContestantByIdInput } from "./types.js";
 
 export async function addContestant({ candidateNumber, name, gender, teamName, teamColor }: AddContestantInput) {
     await prisma.contestant.create({
@@ -73,5 +73,11 @@ export async function editContestant({ id, candidateNumber, name, gender, teamNa
         select: {
             id: true,
         }
+    })
+}
+
+export async function deleteContestant({ id }: DeleteContestantInput) {
+    await prisma.contestant.delete({
+        where: { id },
     })
 }

@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 13, 2026
+**Last synced with codebase:** Aug 14, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -103,8 +103,8 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [X] Add contestant (candidate number, name, gender, team name, team color)
 - [x] List contestants (filter by gender)
 - [x] Edit contestant (guard: reject if any scores exist for this contestant)
-- [ ] Delete contestant (guard: reject if any scores exist)
-- [ ] Candidate number unique constraint enforced
+- [x] Delete contestant (guard: reject if any scores exist)
+- [x] Candidate number unique constraint enforced
 
 ### Frontend
 

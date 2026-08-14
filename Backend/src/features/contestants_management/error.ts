@@ -18,6 +18,7 @@ export const CONTESTANT_ERROR_CODES = {
     CONTESTANT_NOT_FOUND: "CONTESTANT_NOT_FOUND",
     CONTESTANT_LOCKED: "CONTESTANT_LOCKED",
     CONTESTANT_EDIT_ERROR: "CONTESTANT_EDIT_ERROR",
+    CONTESTANT_DELETE_ERROR: "CONTESTANT_DELETE_ERROR",
 } as const
 
 export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions> = {
@@ -104,6 +105,11 @@ export const CONTESTANT_ERROR_DEF: Record<ContestantErrorCodes, ErrorDefinitions
     CONTESTANT_EDIT_ERROR: {
         code: "CONTESTANT_EDIT_ERROR",
         message: "Unable to edit contestant.",
+        status: 500,
+    },
+    CONTESTANT_DELETE_ERROR: {
+        code: "CONTESTANT_DELETE_ERROR",
+        message: "Unable to delete contestant.",
         status: 500,
     },
 }
