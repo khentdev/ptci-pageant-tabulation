@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia';
 import type { loginInput, loginResponse, user } from '@/types/auth/userAuth';
-import { axiosInstance } from '@/api/axios/axiosConfig';
+
 import { errorHandler } from '@/api/errors/errorHandler';
 import { ref, computed } from 'vue';
 import { authService } from './service';
 import type { AuthErrorCodes } from '@/types/auth/error';
-import type { Axios, AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
-import router from '../../router/auth/authRoutes';
+import router from '../../router';
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<user | null>(null);
@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await authService.loginUser(user);
       loginResponseUser.value = res;
       await router.replace({ path: '/admin/live/results' });
-      console.log(currentUser.value);
+    
     } catch (error) {
       const { code, message } = errorHandler<AuthErrorCodes>(
         error as AxiosError<ErrorResponse<AuthErrorCodes>>,
@@ -44,7 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authService.getMe();
       currentUser.value = res;
-      console.log(res);
+
     } catch (error) {
       console.error('fetchUser failed:', error);
       currentUser.value = null;
@@ -60,7 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await authService.logoutUser();
       currentUser.value = null;
       window.location.reload();
-      console.log(res.data.user);
+     
     } catch (error) {
       console.log(error);
     } finally {
