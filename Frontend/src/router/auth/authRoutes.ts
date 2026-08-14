@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { useAuthStore } from '@/stores/auth/authStore.ts';
+import { type RouteRecordRaw } from 'vue-router';
 export const authRoutes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
