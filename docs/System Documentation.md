@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 7, 2026
+**Last synced with codebase:** Aug 10, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---

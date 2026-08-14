@@ -1,27 +1,26 @@
-# Edit Round
+# Edit Category
 
 Admin only.
 
-The edit round flow uses two endpoints on the same resource:
+The edit category flow uses two endpoints on the same resource:
 
-1. `GET /rounds/:id` — fetch current values and lock state when opening the edit form
-2. `PATCH /rounds/:id` — save changes
+1. `GET /categories/:id` — fetch current values and lock state when opening the edit form
+2. `PATCH /categories/:id` — save changes
 
 **Frontend form rules**
 
 | Field | Rule |
 |-------|------|
-| Name | Always editable |
-| Phase order | Always read-only (display only — not sent on save) |
-| Contestant limit | Hidden when `phaseOrder === 1` (omit from request or send `null`); editable when `phaseOrder > 1` and `isLimitLocked = false`; read-only when `isLimitLocked = true` |
+| Round | Always read-only (display only — not sent on save) |
+| Name | Required — non-empty after trim; editable when `isLocked = false`; read-only when `isLocked = true` |
 
 ---
 
-## Get Round By Id
+## Get Category By Id
 
-`GET /rounds/:id`
+`GET /categories/:id`
 
-Used when the admin clicks **Edit** on a round row.
+Used when the admin clicks **Edit** on a category row.
 
 ### Request
 
@@ -43,7 +42,7 @@ Used when the admin clicks **Edit** on a round row.
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `id` | `number` | Yes | Round ID — positive whole number |
+| `id` | `number` | Yes | Category ID — positive whole number |
 
 ### Response
 
@@ -52,24 +51,24 @@ Used when the admin clicks **Edit** on a round row.
 ```json
 {
   "data": {
-    "id": 2,
-    "phaseOrder": 2,
-    "name": "Top 10",
-    "contestantLimit": 10,
-    "isLimitLocked": false
+    "id": 1,
+    "name": "Swimwear",
+    "roundId": 1,
+    "roundName": "Preliminary",
+    "isLocked": false
   },
-  "message": "Round retrieved successfully"
+  "message": "Category retrieved successfully"
 }
 ```
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `data` | `GetRoundByIdDTO` | Round details for the edit form |
-| `data.id` | `number` | Round ID |
-| `data.phaseOrder` | `number` | Round sequence order — always read-only in the edit form |
-| `data.name` | `string` | Round name |
-| `data.contestantLimit` | `number \| null` | `null` = unlimited (preliminary round) |
-| `data.isLimitLocked` | `boolean` | `true` when contestants have already advanced into this round |
+| `data` | `GetCategoryByIdDTO` | Category details for the edit form |
+| `data.id` | `number` | Category ID |
+| `data.name` | `string` | Category name |
+| `data.roundId` | `number` | Round ID — always read-only in the edit form |
+| `data.roundName` | `string` | Round name — always read-only in the edit form |
+| `data.isLocked` | `boolean` | `true` when scores already exist for this category |
 | `message` | `string` | Success message |
 
 ### Errors
@@ -89,15 +88,15 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 
 | Status | Code | Message | Notes |
 |--------|------|---------|-------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
-| `500` | `ROUND_PHASE_GET_BY_ID_ERROR` | Unable to get round phase. Please try again later. | |
+| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
+| `404` | `CATEGORY_NOT_FOUND` | Category not found. | |
+| `500` | `CATEGORY_GET_BY_ID_ERROR` | Unable to get category by id. | |
 
 ---
 
-## Save Round
+## Save Category
 
-`PATCH /rounds/:id`
+`PATCH /categories/:id`
 
 Used when the admin submits the edit form.
 
@@ -122,23 +121,21 @@ Used when the admin submits the edit form.
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `id` | `number` | Yes | Round ID — positive whole number |
+| `id` | `number` | Yes | Category ID — positive whole number |
 
 **Body**
 
 ```json
 {
-  "name": "string",
-  "contestantLimit": 10
+  "name": "string"
 }
 ```
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `name` | `string` | Yes | Non-empty after trim — always editable |
-| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Positive whole number for later rounds. Must match the existing value when `isLimitLocked = true`. |
+| `name` | `string` | Yes | Non-empty after trim — editable only when `isLocked = false` |
 
-Phase order is immutable after creation and is not accepted in the request body.
+Round assignment is immutable after creation and is not accepted in the request body.
 
 ### Response
 
@@ -146,7 +143,7 @@ Phase order is immutable after creation and is not accepted in the request body.
 
 ```json
 {
-  "message": "Round edited successfully"
+  "message": "Category updated successfully"
 }
 ```
 
@@ -171,10 +168,8 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 
 | Status | Code | Message | Notes |
 |--------|------|---------|-------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
-| `400` | `ROUND_NAME_INVALID` | Round name is required. | |
-| `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400` | `ROUND_CONTESTANT_LIMIT_LOCKED` | Contestant limit cannot be changed after contestants have advanced into this round | |
-| `400` | `ROUND_PRELIMINARY_LIMIT_LOCKED` | Preliminary round contestant limit is always unlimited. | |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
-| `500` | `ROUND_PHASE_EDIT_ERROR` | Unable to edit round phase. Please try again later. | |
+| `400` | `CATEGORY_ID_INVALID` | Category ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
+| `400` | `CATEGORY_NAME_REQUIRED` | Category name is required. | |
+| `400` | `CATEGORY_LOCKED` | Category cannot be edited because scores already exist for this category. | |
+| `404` | `CATEGORY_NOT_FOUND` | Category not found. | |
+| `500` | `CATEGORY_EDIT_ERROR` | Unable to edit category. | |

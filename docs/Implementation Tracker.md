@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 8, 2026
+**Last synced with codebase:** Aug 10, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -75,7 +75,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create category (name, round — round_id selected from dropdown)
+- [x] Create category (name, round — round_id selected from dropdown)
 - [ ] Edit category name (guard: reject if scores exist for this category)
 - [ ] List categories grouped by round
 - [ ] Add scoring field to category (field name, max_value)

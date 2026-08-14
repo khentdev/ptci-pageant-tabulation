@@ -53,10 +53,4 @@ Rotates cookies when session token expires in less than 1 hour:
 }
 ```
 
-| Status | Code | Message |
-|--------|------|---------|
-| `400` | `INVALID_DEVICE_ID` | Unable to verify your device. Please refresh the page and try again. |
-| `401` | `SESSION_UNAUTHORIZED` | Your session is invalid or has expired. Please log in again. |
-| `401` | `TOKEN_EXPIRED` | Token has expired. |
-| `401` | `TOKEN_INVALID` | Invalid or malformed token. |
-| `500` | `SERVER_ERROR` | Something went wrong on our end. Please try again later. |
+See [[global/errors]] for shared error codes handled by the axios interceptor. This endpoint has no endpoint-specific error codes.
