@@ -22,9 +22,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Login page (shared for admin and judge; role-based redirect on success)
-- [ ] Global session middleware (validate session on every protected route load; redirect to login if invalid/expired)
-- [ ] Logout button + redirect to login
+- [x] Login page (shared for admin and judge; role-based redirect on success)
+- [x] Global session middleware (validate session on every protected route load; redirect to login if invalid/expired)
+- [x] Logout button + redirect to login
 
 ---
 
@@ -223,7 +223,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ## Known Issues / Polish
 
-*(Add issues here as they are discovered during testing)*
+_(Add issues here as they are discovered during testing)_
 
 - [ ] Full smoke test: admin setup → judges score → advance → declare winners
 
