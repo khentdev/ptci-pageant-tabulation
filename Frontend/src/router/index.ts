@@ -3,7 +3,17 @@ import { useAuthStore } from '@/stores/auth/authStore';
 import { authRoutes } from './auth/authRoutes';
 import { adminRoutes } from './admin/adminRoutes';
 
+<<<<<<< HEAD
 export const routes: RouteRecordRaw[] = [...authRoutes, ...adminRoutes];
+=======
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    redirect: { name: 'admin-homepage' },
+  },
+  ...authRoutes,
+];
+>>>>>>> cfb086b85042a834e4195daf98b16099a6c851ec
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,8 +22,15 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
+  if (authStore.currentUser) {
+    return;
+  }
+  const hasAuthPages = to.matched.some(record => record.meta.isAuthPage);
+  if (hasAuthPages) {
+    return;
+  }
 
-  if (!authStore.currentUser) {
+  if (!authStore.sessionInitialized) {
     await authStore.checkAuth();
   }
 
@@ -21,9 +38,6 @@ router.beforeEach(async (to) => {
     return { name: 'login' };
   }
 
-  if (to.meta.requiresGuest && authStore.isAdmin) {
-    return { name: 'admin-homepage' };
-  }
 });
 
 export default router;
