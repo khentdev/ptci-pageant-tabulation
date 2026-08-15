@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/auth/authStore';
 import { authRoutes } from './auth/authRoutes';
+import { adminRoutes } from './admin/adminRoutes';
 
-export const routes: RouteRecordRaw[] = [...authRoutes];
+export const routes: RouteRecordRaw[] = [...authRoutes, ...adminRoutes];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
