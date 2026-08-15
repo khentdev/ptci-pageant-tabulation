@@ -1,11 +1,9 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { useAuthStore } from '@/stores/auth/authStore.ts';
-export const routes: RouteRecordRaw[] = [
+import { type RouteRecordRaw } from 'vue-router';
+export const authRoutes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
     component: () => import('../../views/errors/notFound.vue'),
   },
-
   {
     path: '/',
     name: 'root',
@@ -16,7 +14,7 @@ export const routes: RouteRecordRaw[] = [
         path: '/auth/login',
         name: 'login',
         component: () => import('../../views/auth/loginViews.vue'),
-        meta: { requiresGuest: true },
+        meta: { isAuthPage: true },
       },
     ],
   },
@@ -27,26 +25,3 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAdmin: true },
   },
 ];
-
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-});
-
-router.beforeEach(async (to, from) => {
-  const authStore = useAuthStore();
-
-  if (!authStore.currentUser) {
-    await authStore.checkAuth();
-  }
-
-  if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    return { name: 'login' };
-  }
-
-  if (to.meta.requiresGuest && authStore.isAdmin) {
-    return { name: 'admin-homepage' };
-  }
-});
-
-export default router;

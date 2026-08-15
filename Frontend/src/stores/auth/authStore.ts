@@ -1,82 +1,138 @@
 import { defineStore } from 'pinia';
-import type { loginInput, loginResponse, user } from '@/types/auth/userAuth';
-import { axiosInstance } from '@/api/axios/axiosConfig';
+import { computed, reactive, ref } from 'vue';
+
 import { errorHandler } from '@/api/errors/errorHandler';
-import { ref, computed } from 'vue';
+import { useToast } from '@/composables/Toast/useToast';
+import * as AUTH_ERRORS from '@/types/auth/error';
+
+import router from '../../router';
 import { authService } from './service';
+
+import type { loginInput, user } from '@/types/auth/userAuth';
 import type { AuthErrorCodes } from '@/types/auth/error';
-import type { Axios, AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
-import router from '../../router/auth/authRoutes';
-
 export const useAuthStore = defineStore('auth', () => {
+  const { toast } = useToast();
   const currentUser = ref<user | null>(null);
-  const loginResponseUser = ref<loginResponse | null>();
-  const isInvalidCredentials = ref('');
-  const isLoading = ref(false);
 
-  const buttonDisabled = computed(() => ['disabled:opacity-50', 'disabled:cursor-not-allowed']);
-  const isAdmin = computed(() => currentUser?.value?.user.role === 'ADMIN');
-  const isJudge = computed(() => currentUser.value?.user.role === 'JUDGE');
+  const isInvalidCredentials = ref('');
+  const sessionInitialized = ref(false);
+
+  const systemErrors = reactive({
+    sessionError: false,
+  });
+
+  const loadingStates = reactive({
+    isLoggingIn: false,
+    isRefreshingSession: false,
+    isLoggingOut: false,
+  });
+
+  const isAdmin = computed(() => {
+    return currentUser.value?.user?.role === 'ADMIN';
+  });
 
   const loginUser = async (user: loginInput) => {
-    isLoading.value = true;
+    loadingStates.isLoggingIn = true;
     try {
       const res = await authService.loginUser(user);
-      loginResponseUser.value = res;
-      await router.replace({ path: '/admin/live/results' });
-      console.log(currentUser.value);
+      currentUser.value = res.data.user;
+      await router.push({ name: 'admin-homepage' });
     } catch (error) {
-      const { code, message } = errorHandler<AuthErrorCodes>(
+      const { code, message, type } = errorHandler<AuthErrorCodes>(
         error as AxiosError<ErrorResponse<AuthErrorCodes>>,
       );
-
+      console.log(type);
+      if (type === 'offline') {
+        toast.warning('Please check your internet connection and try again.', { title: 'You are offline' });
+      }
+      if (type === 'server_error' || type === 'unreachable' || type === 'timeout') {
+        isInvalidCredentials.value = message;
+      }
       if (code === 'INVALID_CREDENTIALS') {
         isInvalidCredentials.value = message;
       }
     } finally {
-      isLoading.value = false;
+      loadingStates.isLoggingIn = false;
     }
   };
 
+  let refreshPromise: Promise<void> | null = null;
   const checkAuth = async () => {
-    isLoading.value = true;
+    if (loadingStates.isRefreshingSession && refreshPromise) {
+      return refreshPromise;
+    }
+    loadingStates.isRefreshingSession = true;
+
+    refreshPromise = (async () => {
+      const MAX_RETRIES = 5;
+
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          const res = await authService.getMe();
+          currentUser.value = res;
+          break;
+        } catch (err) {
+          const { code, type } = errorHandler<AUTH_ERRORS.SessionErrorCodes>(err as AxiosError<ErrorResponse<AUTH_ERRORS.SessionErrorCodes>>);
+          if (code === AUTH_ERRORS.SESSION_LOCK_IN_PROGRESS && attempt < MAX_RETRIES - 1) {
+            const baseDelay = 500;
+            const maxDelay = 3000;
+            const delay = Math.min(baseDelay * (2 ** attempt), maxDelay);
+            const jitter = Math.random() * 200;
+            await new Promise(r => setTimeout(r, delay + jitter));
+            continue;
+          }
+          const sessionFailureCodes = [
+            AUTH_ERRORS.SESSION_UNAUTHORIZED,
+            AUTH_ERRORS.TOKEN_INVALID,
+            AUTH_ERRORS.TOKEN_EXPIRED,
+          ];
+
+          if (code && sessionFailureCodes.includes(code)) {
+            currentUser.value = null;
+            return;
+          }
+
+          if (type === 'offline' || type === 'server_error' || type === 'unreachable' || type === 'timeout') {
+            // I-shoshow nito yung blocking error UI with retry button
+            systemErrors.sessionError = true;
+            return;
+          }
+        }
+      }
+    })();
+
     try {
-      const res = await authService.getMe();
-      currentUser.value = res;
-      console.log(res);
-    } catch (error) {
-      console.error('fetchUser failed:', error);
-      currentUser.value = null;
+      return await refreshPromise;
     } finally {
-      isLoading.value = false;
+      refreshPromise = null;
+      sessionInitialized.value = true;
+      loadingStates.isRefreshingSession = false;
     }
   };
 
   const logoutUser = async () => {
-    isLoading.value;
+    loadingStates.isLoggingOut = true;
 
     try {
-      const res = await authService.logoutUser();
+      await authService.logoutUser();
       currentUser.value = null;
-      window.location.reload();
-      console.log(res.data.user);
-    } catch (error) {
-      console.log(error);
+      await router.replace({ name: 'login' });
     } finally {
-      isLoading.value;
+      loadingStates.isLoggingOut = false;
     }
   };
 
   return {
     loginUser,
     isInvalidCredentials,
-    buttonDisabled,
-    isLoading,
+    loadingStates,
     isAdmin,
-    isJudge,
     checkAuth,
     currentUser,
     logoutUser,
+    systemErrors,
+    sessionInitialized,
   };
 });

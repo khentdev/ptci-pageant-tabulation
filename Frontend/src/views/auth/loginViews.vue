@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User, CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
+import { CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
 import type { loginInput } from '@/types/auth/userAuth';
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore';
@@ -78,9 +78,9 @@ const loginFunction = () => {
         </div>
         <div
           v-if="authStore.isInvalidCredentials"
-          class="flex h-full w-full justify-center text-center"
+          class="flex h-full w-full justify-start"
         >
-          <p class="flex px-6 text-sm text-red-500 sm:items-center sm:gap-2 sm:text-base">
+          <p class="flex px-6 text-sm text-red-500  gap-1 sm:gap-2 sm:text-base">
             <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
             >{{ authStore.isInvalidCredentials }}
           </p>
@@ -90,13 +90,12 @@ const loginFunction = () => {
       <div class="flex h-full w-full flex-col items-center justify-center gap-2 px-6">
         <button
           type="submit"
-          :disabled="authStore.isLoading"
-          :class="authStore.buttonDisabled"
+          :disabled="authStore.loadingStates.isLoggingIn"
           @click="loginFunction"
-          class="bg-jungle-green-900 flex h-15 w-full cursor-pointer items-center justify-center rounded-xl border-2 border-white/10 text-white"
+          class="bg-jungle-green-900 flex h-15 w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer items-center justify-center rounded-xl border-2 border-white/10 text-white"
         >
-          <LoaderCircle v-if="authStore.isLoading" class="animate-spin"></LoaderCircle>
-          {{ authStore.isLoading ? '' : 'Sign in' }}
+          <LoaderCircle v-if="authStore.loadingStates.isLoggingIn" class="animate-spin"></LoaderCircle>
+          {{ authStore.loadingStates.isLoggingIn ? '' : 'Sign in' }}
         </button>
       </div>
     </form>

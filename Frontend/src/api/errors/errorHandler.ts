@@ -15,9 +15,9 @@ export type InfraErrorType = {
   message: string;
 };
 export const INFRA_MESSAGES = {
-  [INFRA_ERROR_OFFLINE]: "You're offline. Check your connection.",
-  [INFRA_ERROR_SERVER_UNREACHABLE]: "Can't reach the server. Try again in a moment.",
-  [INFRA_ERROR_SERVER_ERROR]: "Something went wrong on our end. We're on it.",
+  [INFRA_ERROR_OFFLINE]: 'You\'re offline. Check your connection.',
+  [INFRA_ERROR_SERVER_UNREACHABLE]: 'Can\'t reach the server. Try again in a moment.',
+  [INFRA_ERROR_SERVER_ERROR]: 'Something went wrong on our end. We\'re on it.',
   [INFRA_ERROR_TIMEOUT]: 'Request timed out. Try again.',
 } as const;
 
