@@ -8,12 +8,10 @@ export const authService = {
     const res = await axiosInstance.post('/auth/login', user);
     return GetTypeResponse<loginResponse>(res);
   },
-
   getMe: async () => {
     const res = await axiosInstance.get('/session/me');
     return GetTypeResponse<user>(res);
   },
-
   logoutUser: async () => {
     const res = await axiosInstance.delete('/session/logout');
     return GetTypeResponse<loginResponse>(res);

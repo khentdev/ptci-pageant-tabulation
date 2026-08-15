@@ -4,7 +4,6 @@ export const authRoutes: RouteRecordRaw[] = [
     path: '/:pathMatch(.*)*',
     component: () => import('../../views/errors/notFound.vue'),
   },
-
   {
     path: '/',
     name: 'root',
@@ -15,7 +14,7 @@ export const authRoutes: RouteRecordRaw[] = [
         path: '/auth/login',
         name: 'login',
         component: () => import('../../views/auth/loginViews.vue'),
-        meta: { requiresGuest: true },
+        meta: { isAuthPage: true },
       },
     ],
   },

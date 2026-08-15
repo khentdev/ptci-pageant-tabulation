@@ -2,7 +2,13 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore';
 import { authRoutes } from './auth/authRoutes';
 
-export const routes: RouteRecordRaw[] = [...authRoutes];
+export const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    redirect: { name: 'admin-homepage' },
+  },
+  ...authRoutes,
+];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,8 +17,15 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
+  if (authStore.currentUser) {
+    return;
+  }
+  const hasAuthPages = to.matched.some(record => record.meta.isAuthPage);
+  if (hasAuthPages) {
+    return;
+  }
 
-  if (!authStore.currentUser) {
+  if (!authStore.sessionInitialized) {
     await authStore.checkAuth();
   }
 
@@ -20,9 +33,6 @@ router.beforeEach(async (to) => {
     return { name: 'login' };
   }
 
-  if (to.meta.requiresGuest && authStore.isAdmin) {
-    return { name: 'admin-homepage' };
-  }
 });
 
 export default router;
