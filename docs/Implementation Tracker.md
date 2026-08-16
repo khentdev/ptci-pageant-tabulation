@@ -121,7 +121,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create judge account (name, username, password — role always set to `judge`)
+- [x] Create judge account (name, username, password — role always set to `judge`)
 - [ ] List judges
 - [ ] Reset judge password
 

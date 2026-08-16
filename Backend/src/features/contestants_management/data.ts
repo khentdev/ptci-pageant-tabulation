@@ -1,6 +1,6 @@
-import { Prisma, prisma } from '../../infra/prisma.js';
+import { prisma } from '../../infra/prisma.js';
 
-import type { AddContestantInput, DeleteContestantInput, EditContestantInput, Gender, GetAllContestantsParams, GetContestantByIdInput } from "./types.js";
+import type { AddContestantInput, DeleteContestantInput, EditContestantInput, GetAllContestantsParams, GetContestantByIdInput } from "./types.js";
 
 export async function addContestant({ candidateNumber, name, gender, teamName, teamColor }: AddContestantInput) {
     await prisma.contestant.create({
