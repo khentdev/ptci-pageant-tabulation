@@ -9,6 +9,7 @@ import router from '../../router';
 import { authService } from './service';
 
 import type { loginInput, user } from '@/types/auth/userAuth';
+import { isSessionFailureCode } from '@/types/auth/error';
 import type { AuthErrorCodes } from '@/types/auth/error';
 import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
@@ -83,13 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
             await new Promise(r => setTimeout(r, delay + jitter));
             continue;
           }
-          const sessionFailureCodes = [
-            AUTH_ERRORS.SESSION_UNAUTHORIZED,
-            AUTH_ERRORS.TOKEN_INVALID,
-            AUTH_ERRORS.TOKEN_EXPIRED,
-          ];
-
-          if (code && sessionFailureCodes.includes(code)) {
+          if (isSessionFailureCode(code)) {
             currentUser.value = null;
             return;
           }
