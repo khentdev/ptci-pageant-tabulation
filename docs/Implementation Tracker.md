@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 14, 2026
+**Last synced with codebase:** Aug 16, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -123,9 +123,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 - [x] Create judge account (name, username, password — role always set to `judge`)
 - [x] List judges
-- [ ] Edit judge name and username (always allowed — no lock condition)
-- [ ] Reset judge password
-- [ ] Delete judge (guard: reject if judge has submitted any scores)
+- [x] Edit judge name and username (always allowed — no lock condition)
+- [x] Reset judge password
+- [x] Delete judge (guard: reject if judge has submitted any scores)
 
 ### Frontend
 
