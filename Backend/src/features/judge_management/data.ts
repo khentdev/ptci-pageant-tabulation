@@ -9,3 +9,10 @@ export async function addJudge({ name, username, password }: AddJudgeInput) {
         select: { id: true },
     })
 }
+
+export async function getJudgeList() {
+    return await prisma.user.findMany({
+        where: { role: Role.JUDGE },
+        select: { id: true, name: true, username: true },
+    })
+}

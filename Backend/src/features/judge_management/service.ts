@@ -1,6 +1,6 @@
 import * as argon from 'argon2';
 
-import { addJudge } from './data.js';
+import { addJudge, getJudgeList } from './data.js';
 
 import type { AddJudgeInput } from "./types.js";
 import logger from '../../infra/logger.js';
@@ -25,5 +25,14 @@ export async function addJudgeService({ name, username, password }: AddJudgeInpu
     } catch (err) {
         logger.error({ err }, "Error adding judge");
         throw new AppError("JUDGE_ADD_FAILED");
+    }
+}
+
+export async function getJudgeListService() {
+    try {
+        return await getJudgeList()
+    } catch (err) {
+        logger.error({ err }, "Error getting judge list");
+        throw new AppError("JUDGE_GET_LIST_FAILED");
     }
 }

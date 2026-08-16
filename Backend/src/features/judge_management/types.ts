@@ -14,3 +14,14 @@ export type AddJudgeInputVariables = {
 export type AddJudgeResponse = {
     message: string
 }
+
+// Get Judge List
+export type GetJudgeListDTO = {
+    id: number
+    name: string
+    username: string
+}
+export type GetJudgeListResponse = {
+    data: GetJudgeListDTO[]
+    message: string
+}
