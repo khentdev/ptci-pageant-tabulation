@@ -22,9 +22,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Login page (shared for admin and judge; role-based redirect on success)
-- [ ] Global session middleware (validate session on every protected route load; redirect to login if invalid/expired)
-- [ ] Logout button + redirect to login
+- [x] Login page (shared for admin and judge; role-based redirect on success)
+- [x] Global session middleware (validate session on every protected route load; redirect to login if invalid/expired)
+- [x] Logout button + redirect to login
 
 ---
 
@@ -121,15 +121,19 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create judge account (name, username, password — role always set to `judge`)
-- [ ] List judges
+- [x] Create judge account (name, username, password — role always set to `judge`)
+- [x] List judges
+- [ ] Edit judge name and username (always allowed — no lock condition)
 - [ ] Reset judge password
+- [ ] Delete judge (guard: reject if judge has submitted any scores)
 
 ### Frontend
 
-- [ ] Judges list page
+- [ ] Judges list page (Edit + Reset Password + Delete actions per row)
 - [ ] Create judge form (name, username, password)
+- [ ] Edit judge form (name, username — always editable)
 - [ ] Reset judge password modal
+- [ ] Delete judge confirmation modal — backend rejects with error toast if judge has scores
 
 ---
 
@@ -221,7 +225,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ## Known Issues / Polish
 
-*(Add issues here as they are discovered during testing)*
+_(Add issues here as they are discovered during testing)_
 
 - [ ] Full smoke test: admin setup → judges score → advance → declare winners
 
