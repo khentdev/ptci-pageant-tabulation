@@ -171,6 +171,7 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 
 - Create judge account: name, username, password
 - View list of all judges
+- Edit judge name and username
 - Reset judge password
 
 **Business Rules**
@@ -178,6 +179,8 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - Judge username must be unique system-wide
 - Admin creates and manages all judge accounts — no self-registration
 - A judge account belongs to role `judge` and can only access the scoring panel
+- Name and username are always editable — no lock condition (cosmetic fields, useful for fixing typos)
+- If username is changed while a judge is logged in, their existing session remains valid (JWT stores user ID not username); judge uses the new username on next login
 - Cannot delete a judge account with existing submitted scores
 - Number of judges is not fixed; any number of judges can be created
 

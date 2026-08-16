@@ -412,16 +412,17 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 **Wireframe — Judges List**
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ Judges                                     [ + Add Judge ]    │
-│                                                              │
-│  Name       Username   Actions                               │
-│  ────────   ────────   ───────────────────────────────────   │
-│  Judge 1    judge1     [ Reset Password ]                    │
-│  Judge 2    judge2     [ Reset Password ]                    │
-│  Judge 3    judge3     [ Reset Password ]                    │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ Judges                                             [ + Add Judge ]    │
+│                                                                      │
+│  Name       Username   Actions                                        │
+│  ────────   ────────   ──────────────────────────────────────────    │
+│  Judge 1    judge1     [ Edit ] [ Reset Password ] [ Delete ]         │
+│  Judge 2    judge2     [ Edit ] [ Reset Password ] [ Delete ]         │
+│  Judge 3    judge3     [ Edit ] [ Reset Password ] [ Delete ]         │
+│                                                                      │
+│  Delete rejected by backend if judge has submitted scores             │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Wireframe — Add Judge Form**
@@ -435,6 +436,19 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 │  Password   [ ········  ]                         │
 │                                                   │
 │  [ Cancel ]                    [ Save Judge ]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Wireframe — Edit Judge Form**
+
+```
+┌──────────────────────────────────────────────────┐
+│ Edit Judge                                        │
+│                                                   │
+│  Name       [ Judge 1   ]                         │
+│  Username   [ judge1    ]                         │
+│                                                   │
+│  [ Cancel ]                  [ Save Changes ]     │
 └──────────────────────────────────────────────────┘
 ```
 

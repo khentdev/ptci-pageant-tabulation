@@ -123,15 +123,19 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Create judge account (name, username, password — role always set to `judge`)
-- [ ] List judges
+- [x] Create judge account (name, username, password — role always set to `judge`)
+- [x] List judges
+- [ ] Edit judge name and username (always allowed — no lock condition)
 - [ ] Reset judge password
+- [ ] Delete judge (guard: reject if judge has submitted any scores)
 
 ### Frontend
 
-- [ ] Judges list page
+- [ ] Judges list page (Edit + Reset Password + Delete actions per row)
 - [ ] Create judge form (name, username, password)
+- [ ] Edit judge form (name, username — always editable)
 - [ ] Reset judge password modal
+- [ ] Delete judge confirmation modal — backend rejects with error toast if judge has scores
 
 ---
 
