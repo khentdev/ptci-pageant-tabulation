@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 10, 2026
+**Last synced with codebase:** Aug 17, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---
@@ -23,7 +23,7 @@ Product-level documentation only. API contracts, request/response shapes, and im
 | Auth                      | Username + password login for Admin and Judge roles; role-based routing     |
 | Public Candidates Page    | Public-facing grid of candidate photos filterable by gender                 |
 | Admin — Setup             | Create rounds, categories, scoring fields, contestants, and judge accounts  |
-| Admin — Live Event        | Start rounds, monitor judge submissions, advance contestants, declare winners |
+| Admin — Live Event        | Monitor judge submissions, view results, advance contestants, declare winners |
 | Judge — Scoring Interface | View active categories, fill in scores per contestant, submit              |
 
 ---
@@ -37,7 +37,7 @@ Product-level documentation only. API contracts, request/response shapes, and im
 **Features**
 
 - Login with username + password
-- Role-based redirect after login: Admin → Admin panel · Judge → Scoring panel
+- Role-based redirect after login: Admin → `/admin/live/results/:roundId` (Preliminary, `phase_order = 1`) · Judge → Scoring panel
 - Session management via JWT stored in HTTP-only cookie
 - Logout clears session and redirects to login
 
@@ -174,6 +174,7 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - View list of all judges
 - Edit judge name and username
 - Reset judge password
+- Delete judge account (only if no scores submitted)
 
 **Business Rules**
 
@@ -228,8 +229,19 @@ Used **during** the actual pageant event. Separate view from Setup.
      avg_category_score = Σ all judges' category_scores / number of judges
 
 3. Overall round score per contestant (shown in admin Round Results as the ranking column):
-     overall_score = Σ avg_category_scores / number of categories in this round
+     overall_score = Σ avg_category_scores (for categories with a value) / count of those categories
 ```
+
+**Partial rankings (while judges are still scoring)**
+
+- Per category column: average across judges who have submitted that category; `—` if no judge has submitted that category yet for this round's contestants
+- Overall column: average of category columns that are not `—`; show `—` if no category has a value yet
+- Tie detection and advancement use rankings only when `allJudgesSubmitted` is `true` (full averages across all judges for every category in the round)
+
+**Rankings contestant pool**
+
+- `phase_order = 1` (Preliminary): all contestants
+- `phase_order > 1`: only contestants in `round_contestants` for that round
 
 **Where Each Score Appears**
 
@@ -241,10 +253,59 @@ Used **during** the actual pageant event. Separate view from Setup.
 
 Judges only see the fields they fill in. No totals, no running math, no score feedback shown on the judge's screen.
 
+**Results Fetch Payload (page mount and manual refresh only — no auto-polling)**
+
+Frontend does not compute submission state, ties, or whether Advance is allowed. Backend sends flags on every `GET` round results fetch. Admin refreshes the page (or navigates back to the round) to see updated scores.
+
+| Field                            | Purpose                                                                                                                                                                                                           |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `allJudgesSubmitted`             | `true` only when every judge has submitted every contestant in every category of this round. `false` if there are zero judges                                                                                     |
+| `judgeSubmissions`               | Per judge, per category submitted flags. Frontend only renders ✓ / ✗ from this                                                                                                                                    |
+| `rankings`                       | Contestant rows with category averages + overall score (see partial rules above)                                                                                                                                  |
+| `isCompleted`                    | `true` when the next round already has contestants in `round_contestants` (i.e. this round was already advanced). Page is read-only history (State 3). Frontend **hides** Advance button and tie-resolution panel |
+| `canAdvance`                     | `true` only when Advance is allowed (all conditions below met). When `false`, Advance stays hidden if `isCompleted` is `true`; otherwise disabled with helper from `canAdvanceReason`                             |
+| `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
+| `advancement.hasTie`             | `true` only if a tie straddles the next round's cutoff — frontend shows tie-resolution panel below the full rankings table                                                                                        |
+| `advancement.requiredSelections` | How many tied contestants admin must pick (`N - A`). `0` if no tie                                                                                                                                                |
+| `advancement.included`           | Auto-included contestants: `id`, `name`, `overallScore`                                                                                                                                                           |
+| `advancement.tied`               | Tied contestants admin may pick: `id`, `name`, `overallScore`                                                                                                                                                     |
+| `nextRound`                      | `{ id, name, contestantLimit, categoryCount }`. `null` on the final round                                                                                                                                         |
+
+`canAdvance` is `true` only when all of the following hold:
+
+1. This round is not completed (`isCompleted` is `false`)
+2. Not the final round (`nextRound` is not `null` for Advance; final round uses Declare Winners)
+3. `allJudgesSubmitted` is `true`
+4. Next round has no contestants in `round_contestants` yet
+5. Next round has at least one category (`nextRound.categoryCount > 0`)
+
+Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCompleted` is `false`. While judges are still scoring, send empty `included` / `tied` arrays and `hasTie: false`.
+
+**Tie comparison**
+
+- Two contestants are tied when their `overallScore` matches after rounding to **2 decimal places**
+- Only a tie that **straddles the cutoff** (not enough spots for all tied contestants) triggers the tie UI
+- Ties entirely above or below the cutoff do not require admin action
+
+**Advance API**
+
+`POST /rounds/:id/advance`
+
+| Case | Request body | Backend behavior |
+| --- | --- | --- |
+| No tie | No body (or empty) | Backend takes top `N` from final rankings (`included` list) |
+| Tie at cutoff | `{ selectedContestantIds: number[] }` — IDs from `advancement.tied` only | Backend merges `advancement.included` + `selectedContestantIds`; validates count === `nextRound.contestantLimit` |
+
+Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend keeps tie checkbox selection in local state until Advance succeeds (no auto-polling to reset it).
+
 **Business Rules**
 
 - Rankings are computed on the fly from the `scores` table — not stored separately
-- Advance button is visible only when: this round has contestants + the next round has no contestants yet + all judges have fully submitted
+- Tie detection runs on every results fetch — not after clicking Advance. Advance is only the confirm action
+- Advance button shown and enabled only when `canAdvance` is `true`
+- When `isCompleted` is `true`, hide Advance button and tie-resolution panel entirely (State 3)
+- If `allJudgesSubmitted` is `false`, Advance stays disabled (or hidden until all judges submit — same as State 1)
+- Advance is rejected if the next round has no categories — admin must add categories in Setup first
 - System determines how many to advance by reading the **next round's `contestant_limit`**
 - Contestants ranked above the cutoff are auto-advanced; no admin selection needed
 - A tie only requires admin resolution when it **straddles the cutoff line** — meaning some tied contestants fall above the cutoff and some below (not enough spots for all tied contestants)
@@ -266,7 +327,9 @@ Admin must pick exactly (N - A) from the T tied contestants
 - All top N contestants are clearly ranked → Advance button is immediately enabled → one click advances all
 
 **Tie case:**
-- Page splits into two sections: "Included" (auto-selected, above cutoff) and "Tie — select X more"
+- Full rankings table (all category columns) remains visible — same as the no-tie view
+- When `advancement.hasTie` is `true`, a tie-resolution panel appears **below** the rankings table
+- Panel shows "Included" (from `advancement.included`) and "Tie — select X more" (checkboxes from `advancement.tied`)
 - Admin checks the required number of tied contestants to fill remaining spots
 - Remaining checkbox count = `N - A` (system always shows exactly how many are needed)
 - Unneeded checkboxes in the tied group are disabled once the required count is reached (prevents over-selection)
@@ -295,7 +358,9 @@ Admin must pick exactly (N - A) from the T tied contestants
 - Declaring winners sets `winners_declared_at` timestamp on that round — this is the lock mechanism
 - Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display, and no further changes are possible
 - Declaring winners is irreversible — no undo
-- A tie on the final round uses the same tie resolution UI — admin must resolve the tie before the Declare Winners button enables
+- Final round uses the same cutoff tie UI when more contestants tie at the top-N cutoff than slots remain (e.g. top 3 with a tie at rank 3). Admin picks who is included in the ranked top 3; medals (1st / 2nd / 3rd) follow final ranking order after resolution
+- `canDeclareWinners` follows the same gating as `canAdvance` (all judges submitted, not already declared) plus any cutoff tie resolved
+- Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
 
 ---
@@ -326,7 +391,8 @@ Admin must pick exactly (N - A) from the T tied contestants
 - DB unique constraint `[judgeId, contestantId, criteriaFieldId]` provides a second layer of protection against duplicate scores
 - After Submit All: all inputs for that category are read-only and retain submitted values so the judge can verify; Submit All button is hidden
 - Judge cannot re-submit or edit a submitted category under any circumstance
-- Score submission immediately updates admin's judge-submission-status tracker
+- Score submission is visible to admin on next round-results page refresh (no auto-polling)
+- Judge sidebar refetches rounds/categories on page mount and manual refresh only — judge refreshes to see newly advanced rounds
 
 ---
 
@@ -351,14 +417,14 @@ Admin must pick exactly (N - A) from the T tied contestants
 - Public candidates page (read-only, no auth)
 - Admin setup: rounds, categories, scoring fields, contestants, judge accounts
 - Admin live event: round control, results, advancement, tie resolution, declare winners
-- Judge scoring interface with per-contestant submission and lock
+- Judge scoring interface with per-category batch submission and lock
 - Auto score calculation and ranking
 - Judge submission status tracking
 
 **Out of Scope (Not built in this version)**
 
 - Image upload UI for candidates (images placed manually in folder)
-- Real-time WebSocket updates (replaced by page refresh / polling every 10–30s)
+- Real-time WebSocket or auto-polling (admin and judge views refetch on manual page refresh only)
 - Print or PDF export of results
 - SMS or email notifications
 - Score editing or correction after submission

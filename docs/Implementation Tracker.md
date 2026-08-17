@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 10, 2026
+**Last synced with codebase:** Aug 17, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -22,7 +22,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [x] Login page (shared for admin and judge; role-based redirect on success)
+- [x] Login page (shared for admin and judge; role-based redirect on success — admin → Preliminary round results `/admin/live/results/:roundId`)
 - [x] Global session middleware (validate session on every protected route load; redirect to login if invalid/expired)
 - [x] Logout button + redirect to login
 
@@ -110,8 +110,8 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 - [ ] Contestants list page (gender filter: All · Male · Female)
 - [ ] Add contestant form
-- [ ] Edit contestant form (disabled if scores exist)
-- [ ] Delete contestant with confirmation modal (disabled if scores exist)
+- [ ] Edit contestant form — fetch lock state on open; fields read-only when scores exist
+- [ ] Delete contestant with confirmation modal — button always visible; backend rejects with error toast if scores exist
 
 ---
 
@@ -143,11 +143,10 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Round results API — compute rankings per round on the fly (avg per category per contestant across all judges + overall score)
-- [ ] Judge submission status API — per round: which judges have fully submitted all contestants across all categories
-- [ ] Tie detection logic — detect if advancement cutoff is straddled by tied contestants
-- [ ] Advancement API — insert selected contestants into `round_contestants` for next round; validate count matches next round's `contestant_limit`
-- [ ] Declare winners API — lock final round results (irreversible)
+- [ ] Round results API — one fetch per round page (mount / manual refresh): rankings, `allJudgesSubmitted`, `isCompleted`, `canAdvance`, `canAdvanceReason`, per-judge per-category submission flags, `nextRound` (with `categoryCount`), and advancement payload (`hasTie`, `requiredSelections`, `included[]`, `tied[]` with contestant id + name + overall score)
+- [ ] Tie detection on that same results fetch — not on Advance click; detect only if cutoff is straddled by tied contestants; compare `overallScore` rounded to 2 decimal places
+- [ ] Advancement API — no body when no tie (backend picks top N); with tie, `{ selectedContestantIds }` merged with auto-included; validate `canAdvance` and count matches next round's `contestant_limit`
+- [ ] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance for final ranking; results fetch returns `canDeclareWinners` and `winnersDeclaredAt`
 
 ### Frontend
 
@@ -155,21 +154,21 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Round Results page (shared component, driven by round ID)
   - [ ] Ranking table: contestant rows × (one column per category avg + overall score column + rank)
   - [ ] Judge submission status display (per judge per category: ✓ / ✗)
-  - [ ] Advance button — visible only when: round has contestants + next round has no contestants + all judges fully submitted
+  - [ ] Advance button — hidden when `isCompleted` is `true`; enabled when `canAdvance` is `true`; disabled helper from `canAdvanceReason` otherwise
   - [ ] Advance button label dynamically reads next round name (`Advance to [Next Round Name]`)
-- [ ] No-tie advancement flow — button enabled immediately, one click advances all top N
-- [ ] Tie resolution UI (same page, replaces/extends ranking table):
-  - [ ] "Included" section — auto-advanced contestants (above cutoff)
-  - [ ] "Tie" section — tied contestants with checkboxes
+- [ ] No-tie advancement flow — `canAdvance` true and no tie → one click, empty body, backend advances top N
+- [ ] Tie resolution UI (below full rankings table when `advancement.hasTie`):
+  - [ ] Full rankings table unchanged (all category columns, same as no-tie state)
+  - [ ] Tie-resolution panel rendered under table from `advancement.included` / `advancement.tied`
   - [ ] Selection counter ("Selected: X of Y required")
   - [ ] Disable extra checkboxes once required count is reached
   - [ ] Advance button disabled until selection count matches required
-  - [ ] One click on enabled button advances all (auto + selected tied)
+  - [ ] One click on enabled button advances all (auto + selected tied via `selectedContestantIds`)
 - [ ] Final round view — "Declare Winners" button instead of Advance
   - [ ] Declare Winners confirmation modal (warn: irreversible)
   - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores)
-- [ ] Past rounds remain visible and browsable after advancement (read-only)
-- [ ] Polling every 10–30s to refresh judge submission status
+- [ ] Past rounds remain visible and browsable after advancement (`isCompleted` — read-only)
+- [ ] Refetch on page mount and manual browser refresh only — no auto-polling
 
 ---
 
@@ -190,7 +189,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Judge shell layout — sidebar + content area
 - [ ] Route: `/judge/scoring/:categoryId?` — categoryId optional; no categoryId redirects to first available category
 - [ ] On page load: read categoryId from URL → fetch and display that category automatically (survives refresh)
-- [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand
+- [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand; refetch on page refresh only (no polling)
 - [ ] Active category highlighted in sidebar based on current URL categoryId
 - [ ] Rounds without contestants show "No contestants yet" when expanded
 - [ ] Category scoring grid — contestants as rows, fields as columns with max label
@@ -198,7 +197,6 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [ ] Submit All button (enabled only when all fields for all contestants are filled)
 - [ ] Submitted state per category — if scores exist for this judge + category → all inputs read-only, submitted values retained, Submit All hidden, ✓ Submitted shown in header
 - [ ] Inline field validation — value cannot exceed max_value; all fields required before Submit All
-- [ ] Sidebar polling every 10s — detect newly advanced rounds and update sidebar
 
 ---
 
