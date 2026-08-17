@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 10, 2026
+**Last synced with codebase:** Aug 17, 2026
 User flows and wireframes in plain English with ASCII layouts.
 See [[System Documentation]] for business rules.
 
@@ -13,7 +13,7 @@ See [[System Documentation]] for business rules.
 - User visits the app root `/` → redirected to `/login`
 - User fills in username and password → submits
   - On invalid credentials → show "Invalid username or password", stay on page
-  - On success (role = `admin`) → redirect to `/admin/live/results`
+  - On success (role = `admin`) → redirect to `/admin/live/results/:roundId` where `roundId` is the round with `phase_order = 1` (Preliminary)
   - On success (role = `judge`) → redirect to `/judge/scoring`
 - Expired or invalid session on any protected page → redirected back to `/login`
 
@@ -148,7 +148,7 @@ See [[System Documentation]] for business rules.
 │  3   Top 5         3            5          [ Edit ]  [ Delete ]      │
 │  4   Top 3         4            3          [ Edit ]  [ Delete ]      │
 │                                                                      │
-│  Delete disabled if round has categories or scores                   │
+│  Delete rejected by backend if round has categories or scores        │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -472,6 +472,21 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 
 Each round in the Live Event sidebar has its own page. The page always has two sections stacked vertically: **Judge Submissions** on top, **Rankings** below. Both are always visible — rankings show partial results as judges submit.
 
+On page mount and manual refresh only (no auto-polling), frontend fetches round results once. Backend returns:
+
+- `allJudgesSubmitted` — every judge has submitted every category in this round
+- `isCompleted` — `true` after this round was advanced (next round has `round_contestants` rows). Hides Advance and tie UI; read-only history (State 3)
+- `canAdvance` — gates the Advance button; `canAdvanceReason` when disabled (e.g. judges incomplete, next round already filled, next round has no categories)
+- `judgeSubmissions` — frontend only paints ✓ / ✗ from this; it does not invent submitted state
+- `rankings` — category averages + overall (`—` for categories with no submissions yet while judging is in progress)
+- `advancement.included` — auto-included contestants (`id`, `name`, `overallScore`)
+- `advancement.tied` — tied contestants to pick from (`id`, `name`, `overallScore`)
+- `advancement.requiredSelections` — how many tied contestants must be selected
+- `advancement.hasTie` — when `true`, show a tie-resolution panel **below** the full rankings table (do not replace or simplify the table)
+- `nextRound` — `{ id, name, contestantLimit, categoryCount }`; `null` on final round
+
+Frontend never computes the cutoff tie itself. **No tie:** Advance sends an empty body — backend picks top N. **Tie:** Advance sends `selectedContestantIds` for tied picks only; backend merges with `included`. Tie equality uses `overallScore` rounded to 2 decimal places. Checkbox selection stays in local state until Advance succeeds.
+
 **State 1 — In Progress (some judges still scoring)**
 
 ```
@@ -488,7 +503,7 @@ Each round in the Live Event sidebar has its own page. The page always has two s
 │                                                                       │
 │  2 of 3 judges fully submitted                                        │
 ├──────────────────────────────────────────────────────────────────────┤
-│ Rankings (partial — updates as judges submit)                         │
+│ Rankings (partial — refresh page to update)                          │
 │ ───────────────────────────────────────────────────────────────────  │
 │  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
 │  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
@@ -536,7 +551,7 @@ Each round in the Live Event sidebar has its own page. The page always has two s
 
 **State 2b — All Submitted, Tie at Cutoff**
 
-Same layout as State 2 — Judge Submissions on top, Rankings below. The Rankings section splits into two parts when a tie is detected.
+Same as State 2 — full rankings table with all category columns stays visible. When `advancement.hasTie` is `true`, frontend renders an additional **Tie Resolution** block directly under the rankings table (inside the Rankings section). Data comes from `advancement.included`, `advancement.tied`, and `advancement.requiredSelections` — frontend does not compute the tie itself.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -549,15 +564,25 @@ Same layout as State 2 — Judge Submissions on top, Rankings below. The Ranking
 │  3 of 3 judges fully submitted                                        │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Rankings                                                              │
+│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│    3   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
+│    4   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ cutoff ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│    5   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │  ← tied
+│    6   Dela Cruz, Christine  80.00   80.00   79.00     77.00    80.75 │  ← tied
+│    7   Aniar, Andrea         80.00   77.00   76.00     74.00    80.75 │  ← tied
+│   ...                                                                 │
+│                                                                       │
+│  ── Tie Resolution (shown only when advancement.hasTie) ───────────  │
 │                                                                       │
 │  ✅ Included in Top 5 — 4 of 5 spots filled:                         │
-│  Rank  Contestant          Overall                                    │
-│    1   Lungcay, Keanna      93.00                                     │
-│    2   Palay, Roldan        89.75                                     │
-│    3   Badang, Ethel        85.75                                     │
-│    4   Tenorio, Sean        82.75                                     │
+│    Lungcay, Keanna (93.00) · Palay, Roldan (89.75) ·                 │
+│    Badang, Ethel (85.75) · Tenorio, Sean (82.75)                     │
 │                                                                       │
-│  ⚠️  Tie — select 1 more to fill remaining spot:                     │
+│  ⚠️  Tie at cutoff — select 1 more to fill remaining spot:           │
 │   [ ]  Reyes, Julian        80.75                                     │
 │   [ ]  Dela Cruz, Christine 80.75                                     │
 │   [ ]  Aniar, Andrea        80.75                                     │
@@ -571,6 +596,7 @@ Same layout as State 2 — Judge Submissions on top, Rankings below. The Ranking
 After admin selects 1:
 
 ```
+│  ⚠️  Tie at cutoff — select 1 more to fill remaining spot:           │
 │   [✓]  Reyes, Julian        80.75   ← selected                       │
 │   [ ]  Dela Cruz, Christine 80.75   ← disabled (max reached)         │
 │   [ ]  Aniar, Andrea        80.75   ← disabled (max reached)         │
@@ -620,75 +646,33 @@ After admin selects 1:
 
 ### 8. View Results & Advance (No Tie)
 
-**Flow**
+See **§6 State 2** for layout. Flow summary:
 
-- All judges submit → page auto-refreshes (or admin refreshes)
-- Advance button becomes enabled
-- System shows ranked contestants with computed overall scores and cutoff line
-- Admin reviews rankings → clicks "Advance to Top 5"
-- System takes top 5, inserts into `round_contestants` for Top 5 round
-- Top 5 is now the current round (derived from data — has contestants, next round has none)
-- Preliminary page shows State 3 (read-only history)
-- Admin clicks Top 5 in sidebar → sees State 4 transitioning to State 1 as judges score
-- Judges' sidebar reflects the change on next poll
+- All judges submit → admin refreshes the page to see updated scores
+- When `canAdvance` is `true` and `advancement.hasTie` is `false`, Advance button is enabled
+- Admin reviews rankings → clicks "Advance to [Next Round Name]"
+- Backend takes top N, inserts into `round_contestants` for next round (empty request body)
+- Next round is now the current round (derived from data — has contestants, round after that has none)
+- Preliminary page shows State 3 (`isCompleted`) on next refresh — read-only history
+- Admin clicks next round in sidebar → sees State 4 transitioning to State 1 as judges score
+- Judges' sidebar reflects the change on next page refresh
+
+**Blocked:** If next round has no categories (`canAdvanceReason = NEXT_ROUND_NO_CATEGORIES`), Advance stays disabled with helper text — admin must add categories in Setup first.
 
 ---
 
 ### 9. Tie Resolution
 
-**Flow**
+See **§6 State 2b** for layout. Flow summary:
 
-- Admin opens Round Results — page already shows rankings
-- If no tie at cutoff → Advance button is immediately enabled (see Step 8)
-- If tie straddles the cutoff → page shows two sections
-- Admin selects the required number from the tied group
-- Once selection count matches required spots → Advance button enables
+- Admin opens Round Results — page already shows rankings (refresh to update)
+- If no tie at cutoff → Advance enabled when `canAdvance` is `true` (see §8)
+- If tie straddles the cutoff → full rankings table stays; tie-resolution panel appears below it (see §6 State 2b)
+- Admin selects the required number from the tied group (local checkbox state)
+- Once selection count matches required spots → Advance enables
 - Checking more than required is blocked (extra checkboxes disabled)
-- Admin clicks Advance → all (auto-included + selected) advance together in one action
-- No separate "Save" step
-
-**Wireframe — No Tie (button immediately enabled)**
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                ✅ All Submitted    │
-│                                                               │
-│  Rank  Contestant             Score                           │
-│   1    Lungcay, Keanna        95.33  ← advancing             │
-│   2    Palay, Roldan          91.60  ← advancing             │
-│   3    Badang, Ethel          84.00  ← advancing             │
-│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  cutoff                  │
-│   4    Tenorio, Sean          82.40                           │
-│   5    Reyes, Julian          80.10                           │
-│                                                               │
-│              [ Advance to Top 3 ]  ← enabled                 │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Wireframe — Tie at Cutoff**
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Round Results: Preliminary                ✅ All Submitted    │
-│                                                               │
-│  ✅ Included in Top 3 — 2 of 3 spots filled:                 │
-│   1    Lungcay, Keanna        95.33                           │
-│   2    Palay, Roldan          91.60                           │
-│                                                               │
-│  ⚠️  Tie — select 1 more to fill remaining spot:             │
-│   [ ]  Badang, Ethel          82.00                           │
-│   [ ]  Tenorio, Sean          82.00                           │
-│   [ ]  Reyes, Julian          82.00                           │
-│                                                               │
-│   Selected: 0 of 1 required                                   │
-│                                                               │
-│              [ Advance to Top 3 ]  ← disabled                │
-│                                                               │
-│  (after admin selects 1)                                      │
-│   Selected: 1 of 1 required ✓                                 │
-│              [ Advance to Top 3 ]  ← enabled                 │
-└──────────────────────────────────────────────────────────────┘
-```
+- Admin clicks Advance → backend merges auto-included + `selectedContestantIds` in one action
+- No separate "Save" step; selection clears only after successful Advance
 
 ---
 
@@ -699,7 +683,7 @@ After admin selects 1:
 - Admin clicks Top 5 in sidebar (after advancement)
 - Sees the 5 advanced contestants with no scores yet
 - Judges can now see and score Top 5 categories
-- Same monitoring flow as Step 6 (Monitor Round Progress)
+- Same monitoring flow as §6 (Round Results page — State 1 while judges score)
 
 **Wireframe — Top 5 (Just Activated)**
 
@@ -736,20 +720,31 @@ After admin selects 1:
 - Rankings are permanently locked
 - Winners displayed with medal indicators
 
-**Wireframe — Final Round Results**
+**Wireframe — Final Round Results (before declare)**
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Round Results: Top 3                      ✅ All Submitted    │
+├──────────────────────────────────────────────────────────────┤
+│ Judge Submissions + full Rankings table (same layout as §6)   │
 │                                                               │
-│  Final Rankings                                               │
-│  ──────────────────────────────────────────                   │
+│  (tie-resolution panel below rankings if cutoff tie exists)   │
+│                                                               │
+│         [ 🏆 Declare Winners ]  ← enabled when canDeclare     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Wireframe — After Declare Winners**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Round Results: Top 3                         ✓ Declared       │
+│                                                               │
 │  🥇  Lungcay, Keanna              95.00                       │
 │  🥈  Palay, Roldan                88.50                       │
 │  🥉  Badang, Ethel                84.00                       │
 │                                                               │
-│         [ 🏆 Declare Winners ]                                │
-│                                                               │
+│  (Declare button hidden — results locked)                     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -777,7 +772,7 @@ After admin selects 1:
 - No active round indicator — no status column exists to derive it from
 - Rounds with contestants show interactive categories; rounds without contestants show "No contestants yet" when expanded
 - Judge naturally knows which round is current by which categories are scoreable
-- Sidebar polling refreshes every 10 seconds to detect newly advanced rounds
+- Sidebar refetches on page refresh only — no auto-polling; judge refreshes to see newly advanced rounds
 - Active category is highlighted in the sidebar based on the current URL `categoryId` param
 - On page refresh, the `categoryId` in the URL is read on load and the correct category is fetched and highlighted automatically
 - `/judge/scoring` with no categoryId redirects to or loads the first available category by default
@@ -875,7 +870,7 @@ After admin selects 1:
 **Flow**
 
 - Admin confirms advancement → contestants inserted into `round_contestants` for Top 5
-- Judge's sidebar (on next 10s poll) reflects the change:
+- Judge's sidebar (on next page refresh) reflects the change:
   - Preliminary remains collapsed and browsable (no label change)
   - Top 5 now has contestants → categories become interactive
 - Judge clicks Top 5 category → sees only the 5 advanced contestants with blank score inputs
