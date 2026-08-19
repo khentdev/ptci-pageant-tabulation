@@ -150,7 +150,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order
+- [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order (API contract: [[live-event/live-results-sidebar]] — reuses `GET /rounds`)
 - [ ] Round Results page (shared component, driven by round ID)
   - [ ] Ranking table: contestant rows × (one column per category avg + overall score column + rank)
   - [ ] Judge submission status display (per judge per category: ✓ / ✗)
