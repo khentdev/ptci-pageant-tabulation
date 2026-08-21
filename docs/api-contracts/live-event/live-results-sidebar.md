@@ -67,4 +67,5 @@ Clicking a sidebar item navigates to that round's results page. The main content
 | Section | Endpoint | Contract |
 |---------|----------|----------|
 | Judge Submissions | `GET /live-event/round-results/:id` | [[live-event/live-judge-submissions]] |
-| Rankings, Advance, tie resolution | `GET /live-event/round-results/:id/advancement` | [[live-event/live-round-results]] |
+| Rankings preview, tie resolution | `GET /live-event/round-results/:id/advancement` | [[live-event/live-round-results]] |
+| Advance action | `POST /live-event/round-results/:id/advancement` | [[live-event/live-round-advance]] |

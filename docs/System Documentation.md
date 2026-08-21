@@ -291,11 +291,11 @@ Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCo
 
 **Advance API**
 
-`POST /rounds/:id/advance`
+`POST /live-event/round-results/:id/advancement` — API contract: [[live-event/live-round-advance]]
 
 | Case | Request body | Backend behavior |
 | --- | --- | --- |
-| No tie | No body (or empty) | Backend takes top `N` from final rankings (`included` list) |
+| No tie | No body (or empty) | Backend takes contestants from `advancement.included` (top N by ranking, or all eligible when fewer than N have scores) |
 | Tie at cutoff | `{ selectedContestantIds: number[] }` — IDs from `advancement.tied` only | Backend merges `advancement.included` + `selectedContestantIds`; validates count === `nextRound.contestantLimit` |
 
 Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend keeps tie checkbox selection in local state until Advance succeeds (no auto-polling to reset it).
@@ -309,6 +309,7 @@ Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend k
 - If `allJudgesSubmitted` is `false`, Advance stays disabled (or hidden until all judges submit — same as State 1)
 - Advance is rejected if the next round has no categories — admin must add categories in Setup first
 - System determines how many to advance by reading the **next round's `contestant_limit`**
+- When fewer contestants have scores than the limit, advancement may include fewer than N — all eligible scored contestants advance
 - Contestants ranked above the cutoff are auto-advanced; no admin selection needed
 - A tie only requires admin resolution when it **straddles the cutoff line** — meaning some tied contestants fall above the cutoff and some below (not enough spots for all tied contestants)
 - A tie where all tied contestants are above the cutoff → all advance automatically, no issue

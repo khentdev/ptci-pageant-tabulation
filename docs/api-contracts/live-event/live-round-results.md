@@ -6,6 +6,8 @@ Admin only.
 
 Returns **rankings**, advancement preview, and round-state flags for one round. Used for the Rankings section, Advance button, tie-resolution panel, and Declare Winners on the Admin Live Event → Round Results page.
 
+**Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`).
+
 **Does not include** `judgeSubmissions` — fetch that separately via [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`).
 
 **Related docs:** [[live-event/live-results-sidebar]] (sidebar navigation) · [[live-event/live-judge-submissions]] (judge matrix) · [[Wireframe & Flows]] §6 (Rankings UI) · [[System Documentation]] §3.2 (business rules)
@@ -167,16 +169,16 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 
 ### Advancement preview
 
-| Case | `advancement` shape |
-|------|---------------------|
-| Judges still scoring | `hasTie: false`, `included: []`, `tied: []` |
-| Round completed | Empty advancement (same as above) |
-| All judges done, no tie | `included` = top N by overall; `hasTie: false` |
-| Eligible ≤ limit | All scored contestants in `included`; no tie |
+| Case                     | `advancement` shape                                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Judges still scoring     | `hasTie: false`, `included: []`, `tied: []`                                                                          |
+| Round completed          | Empty advancement (same as above)                                                                                    |
+| All judges done, no tie  | `included` = top N by overall; `hasTie: false`                                                                       |
+| Eligible ≤ limit         | All scored contestants in `included`; no tie                                                                         |
 | Tie at cutoff (State 2b) | `hasTie: true`, `requiredSelections = N - included.length`, `included` = above cutoff, `tied` = same score at cutoff |
-| Tie below cutoff only | `hasTie: false` — tied group does not straddle the line |
+| Tie below cutoff only    | `hasTie: false` — tied group does not straddle the line                                                              |
 
-Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement POST (`POST /rounds/:id/advance`) is a separate endpoint — not covered here.
+Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement write is [[live-event/live-round-advance]] — not covered here.
 
 ### Empty / edge cases
 
@@ -197,7 +199,7 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Overall cell | `overallScore` — number or `—` when `null` |
 | Rank cell | `rank` — number or `—` when `null` |
 | All submitted badge | Show when `allJudgesSubmitted === true` (Wireframe State 2+) |
-| Advance button | Hidden when `isCompleted`; enabled when `canAdvance`; disabled helper from `canAdvanceReason` |
+| Advance button | Hidden when `isCompleted`; enabled when `canAdvance`; disabled helper from `canAdvanceReason`. On click, POST [[live-event/live-round-advance]] |
 | Advance label | `Advance to ${nextRound.name}` when `nextRound` is set |
 | Tie panel | Show when `advancement.hasTie === true` |
 | Declare Winners | Final round; enabled when `canDeclareWinners === true` |

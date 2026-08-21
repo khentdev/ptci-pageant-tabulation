@@ -1,6 +1,6 @@
 import type { Context } from "hono";
-import type { GetJudgeSubmissionsInputVariables, GetJudgeSubmissionsResponse, GetRoundResultsInputVariables, GetRoundResultsResponse } from "./types.js";
-import { getJudgeSubmissionsService, getRoundResultsByIdService } from "./service.js";
+import type { AdvanceRoundInputVariables, AdvanceRoundResponse, GetJudgeSubmissionsInputVariables, GetJudgeSubmissionsResponse, GetRoundResultsInputVariables, GetRoundResultsResponse } from "./types.js";
+import { advanceRoundService, getJudgeSubmissionsService, getRoundResultsByIdService } from "./service.js";
 import type { AppContext } from "../../types/context.js";
 
 export async function getJudgeSubmissionsController(c: Context<AppContext<GetJudgeSubmissionsInputVariables>>) {
@@ -19,4 +19,12 @@ export async function getRoundResultsByIdController(c: Context<AppContext<GetRou
         data: roundResults,
         message: "Round results fetched successfully"
     }, 200)
+}
+
+export async function advanceRoundController(c: Context<AppContext<AdvanceRoundInputVariables>>) {
+    const input = c.get("advanceRound")
+    await advanceRoundService(input)
+    return c.json<AdvanceRoundResponse>({
+        message: "Round advanced successfully"
+    }, 201)
 }

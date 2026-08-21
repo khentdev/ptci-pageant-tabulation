@@ -16,6 +16,7 @@ export class AppError extends Error {
         this.code = FEATURE_ERROR_DEFINITIONS[code].code
         this.status = FEATURE_ERROR_DEFINITIONS[code].status
         this.field = options.field
+        this.data = options.data
         this.name = "AppError"
     }
 }

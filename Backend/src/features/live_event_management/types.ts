@@ -87,3 +87,18 @@ export type GetRoundResultsResponse = {
     data: GetRoundResultsDTO
     message: string
 }
+
+// Round Advancement
+export type AdvanceRoundRequestBody = {
+    selectedContestantIds?: unknown
+}
+export type AdvanceRoundInput = {
+    id: number
+    selectedContestantIds?: number[]
+}
+export type AdvanceRoundInputVariables = {
+    advanceRound: AdvanceRoundInput
+}
+export type AdvanceRoundResponse = {
+    message: string
+}

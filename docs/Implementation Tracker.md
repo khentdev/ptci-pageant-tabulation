@@ -146,12 +146,12 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [x] Get judge submissions API — per-judge per-category submission flags, `fullySubmittedCount`, `totalJudges`, `allJudgesSubmitted` (API contract: [[live-event/live-judge-submissions]] — `GET /live-event/round-results/:id`)
 - [x] Get round results API — rankings, `allJudgesSubmitted`, `isCompleted`, `canAdvance`, `canAdvanceReason`, `nextRound`, `advancement`, `canDeclareWinners`, `winnersDeclaredAt` (API contract: [[live-event/live-round-results]] — `GET /live-event/round-results/:id/advancement`)
 - [x] Tie detection on round results fetch — cutoff straddle; `overallScore` rounded to 2 dp (same endpoint)
-- [ ] Advancement API — no body when no tie (backend picks top N); with tie, `{ selectedContestantIds }` merged with auto-included; validate `canAdvance` and count matches next round's `contestant_limit`
+- [x] Advancement API — no body when no tie; with tie `{ selectedContestantIds }` merged with auto-included; validates `canAdvance` (API contract: [[live-event/live-round-advance]] — POST /live-event/round-results/:id/advancement)
 - [ ] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance for final ranking; results fetch returns `canDeclareWinners` and `winnersDeclaredAt`
 
 ### Frontend
 
-_Build order (Wireframe §6): sidebar → Round Results page shell → judge submissions (API ready) → rankings & advancement (rankings API ready — [[live-event/live-round-results]])._
+_Build order (Wireframe §6): sidebar → Round Results page shell → judge submissions (API ready) → rankings & advancement read APIs ready; advance POST API ready — [[live-event/live-round-advance]]._
 
 - [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order (API contract: [[live-event/live-results-sidebar]] — reuses `GET /rounds`)
 - [ ] Round Results page (shared component, driven by round ID — two sections: Judge Submissions on top, Rankings below)
