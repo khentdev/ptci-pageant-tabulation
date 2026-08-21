@@ -10,7 +10,7 @@ const authStore = useAuthStore();
   >
     <a href="/admin/live/results" class="flex items-center text-sm font-bold sm:text-2xl">
       <p class="text-black/70">Ms & Mr.</p>
-      <a class="text-main-dark-brown">PTCI</a>
+      <span class="text-main-dark-brown">PTCI</span>
       <img src="../assets/imgs/PTCI.png" alt="" class="ml-2 h-8 w-10" />
     </a>
     <div class="flex items-center gap-2 text-sm sm:gap-4 sm:text-base">
