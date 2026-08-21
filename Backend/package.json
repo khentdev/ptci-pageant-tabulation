@@ -6,6 +6,8 @@
     "build": "npx prisma generate && tsc -p tsconfig.build.json",
     "start": "npx prisma migrate deploy && node dist/src/server.js",
     "seed:admin": "tsx prisma/seeds/admin.ts",
+    "seed:dev": "tsx prisma/seeds/dev.ts",
+    "seed:all": "npm run seed:admin && npm run seed:dev",
     "db:reset": "prisma migrate reset --force",
     "db:dev": "npx prisma migrate deploy && npx prisma generate",
     "db:migrate": "npx prisma migrate dev",
