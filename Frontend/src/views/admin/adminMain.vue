@@ -3,20 +3,23 @@ import NavMain from '@/components/navMain.vue';
 import { ref } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
+import AddRounds from '@/components/admin/rounds/addRounds.vue';
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
-  return savedState ? JSON.parse(savedState) : null;
+  return savedState ? JSON.parse(savedState) : false;
 };
 
 const isDropDownClick = ref(getDropDownState());
 const toggleDropDown = () => {
   isDropDownClick.value = !isDropDownClick.value;
+
   localStorage.setItem('toggleDropDown', JSON.stringify(isDropDownClick.value));
 };
 </script>
 
 <template>
+  <AddRounds></AddRounds>
   <NavMain class=""></NavMain>
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">

@@ -1,5 +1,13 @@
 <script setup lang="ts">
+import RoundsTable from '@/components/admin/rounds/roundsTable.vue';
 import { Plus } from '@lucide/vue';
+import { useModalStore } from '@/stores/modals/modalStore';
+import { onMounted } from 'vue';
+import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+const modalStore = useModalStore();
+const roundStore = useRoundStore();
+
+
 </script>
 
 <template>
@@ -9,6 +17,7 @@ import { Plus } from '@lucide/vue';
     <div class="flex w-full justify-between gap-2">
       <p class="font-semibold text-black/70 sm:text-2xl">Round Management</p>
       <button
+        @click="modalStore.toggleAddRoundsModal()"
         class="bg-jungle-green-800 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
       >
         <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8"></Plus> Add Rounds
@@ -26,12 +35,7 @@ import { Plus } from '@lucide/vue';
           </tr>
         </thead>
         <tbody class="w-full">
-          <tr class="w-screen flex">
-            <td class="border px-2">Preliminary</td>
-            <td class="justify-center border">1</td>
-            <td class="border">Unlimited</td>
-            <td class="border flex"><button>Edit</button><button>Delete</button></td>
-          </tr>
+          <RoundsTable></RoundsTable>
         </tbody>
       </table>
     </div>
