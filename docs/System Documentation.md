@@ -256,7 +256,7 @@ Judges only see the fields they fill in. No totals, no running math, no score fe
 
 **Results Fetch Payload (page mount and manual refresh only — no auto-polling)**
 
-Frontend does not compute submission state, ties, or whether Advance is allowed. Backend sends flags on every `GET` round results fetch. Admin refreshes the page (or navigates back to the round) to see updated scores.
+Frontend does not compute submission state, ties, or whether Advance is allowed. Backend sends flags on every round-results fetch. The Round Results page uses **two GETs** on mount / manual refresh / round change: [[live-event/live-judge-submissions]] for the judge matrix and [[live-event/live-round-results]] for rankings and advancement flags. Admin refreshes the page (or navigates back to the round) to see updated scores.
 
 | Field                            | Purpose                                                                                                                                                                                                           |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -265,7 +265,7 @@ Frontend does not compute submission state, ties, or whether Advance is allowed.
 | `rankings`                       | Contestant rows with category averages + overall score (see partial rules above)                                                                                                                                  |
 | `isCompleted`                    | `true` when the next round already has contestants in `round_contestants` (i.e. this round was already advanced). Page is read-only history (State 3). Frontend **hides** Advance button and tie-resolution panel |
 | `canAdvance`                     | `true` only when Advance is allowed (all conditions below met). When `false`, Advance stays hidden if `isCompleted` is `true`; otherwise disabled with helper from `canAdvanceReason`                             |
-| `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
+| `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `CURRENT_ROUND_NO_CATEGORIES`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
 | `advancement.hasTie`             | `true` only if a tie straddles the next round's cutoff — frontend shows tie-resolution panel below the full rankings table                                                                                        |
 | `advancement.requiredSelections` | How many tied contestants admin must pick (`N - A`). `0` if no tie                                                                                                                                                |
 | `advancement.included`           | Auto-included contestants: `id`, `name`, `overallScore`                                                                                                                                                           |
@@ -276,9 +276,10 @@ Frontend does not compute submission state, ties, or whether Advance is allowed.
 
 1. This round is not completed (`isCompleted` is `false`)
 2. Not the final round (`nextRound` is not `null` for Advance; final round uses Declare Winners)
-3. `allJudgesSubmitted` is `true`
-4. Next round has no contestants in `round_contestants` yet
-5. Next round has at least one category (`nextRound.categoryCount > 0`)
+3. Current round has at least one category
+4. `allJudgesSubmitted` is `true`
+5. Next round has no contestants in `round_contestants` yet
+6. Next round has at least one category (`nextRound.categoryCount > 0`) and a positive `contestantLimit`
 
 Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCompleted` is `false`. While judges are still scoring, send empty `included` / `tied` arrays and `hasTie: false`.
 

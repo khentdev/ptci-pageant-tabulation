@@ -8,7 +8,7 @@ Returns the **Judge Submissions** matrix for one round: per-judge, per-category 
 
 **Related docs:** [[live-event/live-results-sidebar]] (sidebar navigation) · [[Wireframe & Flows]] §6 (Judge Submissions UI) · [[System Documentation]] §3 (business rules)
 
-**Scope note:** This endpoint currently returns judge-submission data only. Rankings, `canAdvance`, `advancement`, and `nextRound` are planned for a future round-results fetch — not included here.
+**Scope note:** This endpoint returns judge-submission data only. Rankings, `canAdvance`, `advancement`, `nextRound`, and related flags are served by [[live-event/live-round-results]] (`GET /live-event/round-results/:id/advancement`). Fetch both endpoints on page mount / refresh / round change.
 
 ## Consumers
 
