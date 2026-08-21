@@ -62,4 +62,9 @@ Login redirect and mount guard both target Preliminary (`phaseOrder === 1`). If 
 
 ## Round selection → main content
 
-Clicking a sidebar item navigates to that round's results page. The main content area fetches round results separately (not covered here). See [[Wireframe & Flows]] §6 and Implementation Tracker — "Round results API".
+Clicking a sidebar item navigates to that round's results page. The main content area fetches data separately (page mount / manual refresh only).
+
+| Section | Endpoint | Contract |
+|---------|----------|----------|
+| Judge Submissions | `GET /live-event/round-results/:id` | [[live-event/live-judge-submissions]] |
+| Rankings, Advance, tie resolution | *(planned — not implemented yet)* | See [[Wireframe & Flows]] §6 and Implementation Tracker |

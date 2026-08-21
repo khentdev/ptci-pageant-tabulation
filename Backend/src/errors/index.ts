@@ -5,6 +5,7 @@ import { SESSION_ERROR_CODES, SESSION_ERROR_DEF } from '../features/session/erro
 import { CATEGORY_ERROR_CODES, CATEGORY_ERROR_DEF } from "../features/category_management/error.js";
 import { CONTESTANT_ERROR_CODES, CONTESTANT_ERROR_DEF } from "../features/contestants_management/error.js";
 import { JUDGE_ERROR_CODES, JUDGE_ERROR_DEF } from "../features/judge_management/error.js";
+import { LIVE_EVENT_ERROR_CODES, LIVE_EVENT_ERROR_DEF } from "../features/live_event_management/error.js";
 
 export type ErrorDefinitions = {
     code: ErrorCodes,
@@ -27,6 +28,7 @@ export const FEATURE_ERROR_CODES = {
     ...CATEGORY_ERROR_CODES,
     ...CONTESTANT_ERROR_CODES,
     ...JUDGE_ERROR_CODES,
+    ...LIVE_EVENT_ERROR_CODES,
     SERVER_ERROR: "SERVER_ERROR",
     TOKEN_INVALID: "TOKEN_INVALID",
     TOKEN_EXPIRED: "TOKEN_EXPIRED",
@@ -44,6 +46,7 @@ export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
     ...CATEGORY_ERROR_DEF,
     ...CONTESTANT_ERROR_DEF,
     ...JUDGE_ERROR_DEF,
+    ...LIVE_EVENT_ERROR_DEF,
     TOKEN_INVALID: {
         code: "TOKEN_INVALID",
         status: 401,
