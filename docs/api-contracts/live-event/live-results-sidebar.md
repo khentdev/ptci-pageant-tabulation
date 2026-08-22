@@ -17,13 +17,15 @@ Used on Admin Live Event → Round Results sidebar. Populates one navigation ite
 
 ## Fields used
 
-| Field | Sidebar use |
-|-------|-------------|
-| `data[].id` | Route param for `/admin/live/results/:roundId` |
-| `data[].name` | Navigation item label |
-| `data[].phaseOrder` | Display order (API already returns ascending) |
+Consumes `GetRoundsListDTO[]` from [[rounds/rounds-list]].
 
-`data[].contestantLimit` is not shown in the sidebar.
+| Field | Type | Sidebar use |
+|-------|------|-------------|
+| `data[].id` | `number` | Route param for `/admin/live/results/:roundId` |
+| `data[].name` | `string` | Navigation item label |
+| `data[].phaseOrder` | `number` | Display order (API already returns ascending) |
+
+`data[].contestantLimit` (`number | null`) is not shown in the sidebar.
 
 ## Default round on login
 

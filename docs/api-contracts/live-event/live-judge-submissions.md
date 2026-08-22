@@ -153,18 +153,44 @@ Returns the **Judge Submissions** matrix for one round: per-judge, per-category 
 |-------|------|-------|
 | `data` | `GetJudgeSubmissionsDTO` | Judge submission matrix for the requested round |
 | `data.judgeSubmissions` | `JudgeSubmission[]` | One row per judge (`role === JUDGE`). Ordered by judge `name` ascending |
-| `data.judgeSubmissions[].judge` | `{ id, name }` | Judge identity for the row label |
-| `data.judgeSubmissions[].judge.id` | `number` | Judge user ID |
-| `data.judgeSubmissions[].judge.name` | `string` | Judge display name |
-| `data.judgeSubmissions[].categories` | `CategorySubmission[]` | One column per category in this round. Ordered by category `name` ascending |
-| `data.judgeSubmissions[].categories[].id` | `number` | Category ID |
-| `data.judgeSubmissions[].categories[].name` | `string` | Category name (column header) |
-| `data.judgeSubmissions[].categories[].submitted` | `boolean` | `true` when any score exists for this judge + category in this round. Frontend renders ✓ / ✗ from this only — do not infer submission state client-side |
-| `data.judgeSubmissions[].fullySubmitted` | `boolean` | `true` when every category in this row has `submitted: true` (Done? column). If the round has zero categories, this is `true` for every judge row |
 | `data.fullySubmittedCount` | `number` | Count of judge rows where `fullySubmitted === true`. Use with `totalJudges` for "X of Y judges fully submitted" |
 | `data.totalJudges` | `number` | Total judges in the system (`role === JUDGE`) |
 | `data.allJudgesSubmitted` | `boolean` | `true` only when every judge has submitted every category in this round. `false` when there are zero judges |
 | `message` | `string` | Success message |
+
+### Types
+
+**`GetJudgeSubmissionsDTO`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `judgeSubmissions` | `JudgeSubmission[]` | One row per judge |
+| `fullySubmittedCount` | `number` | Count of rows where `fullySubmitted === true` |
+| `totalJudges` | `number` | Total judges in the system (`role === JUDGE`) |
+| `allJudgesSubmitted` | `boolean` | `true` when every judge submitted every category |
+
+**`JudgeSubmission`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `judge` | `JudgeRef` | Judge identity for the row label |
+| `categories` | `CategorySubmission[]` | One column per category in this round. Ordered by category `name` ascending |
+| `fullySubmitted` | `boolean` | `true` when every category in this row has `submitted: true` (Done? column). If the round has zero categories, this is `true` for every judge row |
+
+**`JudgeRef`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Judge user ID |
+| `name` | `string` | Judge display name |
+
+**`CategorySubmission`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Category ID |
+| `name` | `string` | Category name (column header) |
+| `submitted` | `boolean` | `true` when any score exists for this judge + category in this round. Frontend renders ✓ / ✗ from this only — do not infer submission state client-side |
 
 ### Empty / edge cases
 

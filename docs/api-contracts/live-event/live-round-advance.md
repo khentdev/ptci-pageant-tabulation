@@ -53,7 +53,7 @@ Optional. Omit body or send `{}` when there is no tie.
 | Case | Body | Notes |
 |------|------|-------|
 | No tie | Omit or `{}` | Backend uses `advancement.included` from a fresh `canAdvance` check. Do **not** send `selectedContestantIds` |
-| Tie at cutoff | `{ "selectedContestantIds": number[] }` | IDs from `advancement.tied` only. Length must equal `advancement.requiredSelections`. Merged with `advancement.included` |
+| Tie at cutoff | `AdvanceRoundRequestBody` | IDs from `advancement.tied` only. Length must equal `advancement.requiredSelections`. Merged with `advancement.included` |
 | Eligible ≤ limit | Omit or `{}` | May advance fewer than `nextRound.contestantLimit` when fewer contestants have scores |
 
 ```json
@@ -61,6 +61,10 @@ Optional. Omit body or send `{}` when there is no tie.
   "selectedContestantIds": [3, 7]
 }
 ```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `selectedContestantIds` | `number[]` | No | Required only when resolving a tie. IDs from `advancement.tied` only. Length must equal `advancement.requiredSelections` |
 
 ## Response
 
@@ -72,7 +76,25 @@ Optional. Omit body or send `{}` when there is no tie.
 }
 ```
 
+| Field | Type | Notes |
+|-------|------|-------|
+| `message` | `string` | Success message |
+
 No `data` field. Refetch `GET /live-event/round-results/:id/advancement` to see `isCompleted: true` and updated state.
+
+### Types
+
+**`AdvanceRoundRequestBody`**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `selectedContestantIds` | `number[]` | No | Tie-resolution selections from `advancement.tied`. Omit when `advancement.hasTie` is `false` |
+
+**`AdvanceRoundResponse`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `message` | `string` | Success message |
 
 ## Business rules
 

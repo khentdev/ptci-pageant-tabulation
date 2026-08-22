@@ -102,42 +102,94 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 }
 ```
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `data` | `GetRoundResultsDTO` | Rankings and round-state flags for the requested round |
-| `data.rankings` | `RankingRow[]` | One row per contestant in the round's contestant pool. Sorted by `overallScore` descending; `null` overall scores last; ties broken by `candidateNumber` ascending |
-| `data.rankings[].contestant` | `{ id, candidateNumber, name }` | Contestant identity for the row |
-| `data.rankings[].contestant.id` | `number` | Contestant ID |
-| `data.rankings[].contestant.candidateNumber` | `number` | Display number |
-| `data.rankings[].contestant.name` | `string` | Display name |
-| `data.rankings[].categories` | `RankingCategoryScore[]` | One column per category in this round. Ordered by category `name` ascending |
-| `data.rankings[].categories[].id` | `number` | Category ID |
-| `data.rankings[].categories[].name` | `string` | Category name (column header) |
-| `data.rankings[].categories[].avgScore` | `number \| null` | Average of judges who submitted for this contestant in this category. `null` → render `—` in UI. Rounded to 2 decimal places |
-| `data.rankings[].overallScore` | `number \| null` | Average of non-null category averages for this contestant. `null` when no category has a score. Rounded to 2 decimal places |
-| `data.rankings[].rank` | `number \| null` | `1..N` by `overallScore` descending; `null` when `overallScore` is `null` |
-| `data.allJudgesSubmitted` | `boolean` | `true` when every judge has submitted every category in this round. `false` when zero judges. Vacuously `true` when the round has zero categories but judges exist |
-| `data.isCompleted` | `boolean` | `true` when the next round already has rows in `round_contestants` (this round was advanced). Page is read-only history (Wireframe State 3) |
-| `data.canAdvance` | `boolean` | `true` only when Advance is allowed. `canAdvance` may be `true` while `advancement.hasTie` is `true` — frontend disables Advance until tie selections match |
-| `data.canAdvanceReason` | `CanAdvanceReason \| null` | When `canAdvance` is `false`, code for disabled helper text. `null` when `canAdvance` is `true`, or on the final round |
-| `data.canDeclareWinners` | `boolean` | Final round only. `true` when all judges submitted, no cutoff tie, and winners not yet declared |
-| `data.winnersDeclaredAt` | `string \| null` | ISO timestamp when winners were declared on the final round; `null` otherwise |
-| `data.nextRound` | `object \| null` | Next round metadata. `null` on the final round |
-| `data.nextRound.id` | `number` | Next round ID |
-| `data.nextRound.name` | `string` | Next round name (Advance button label) |
-| `data.nextRound.contestantLimit` | `number \| null` | How many contestants advance into the next round |
-| `data.nextRound.categoryCount` | `number` | Number of categories configured on the next round |
-| `data.advancement` | `AdvancementPreview` | Advancement preview — populated only when `allJudgesSubmitted` is `true`, `isCompleted` is `false`, current round has categories, and a positive advancement limit exists |
-| `data.advancement.hasTie` | `boolean` | `true` when tied contestants straddle the cutoff (Wireframe State 2b) |
-| `data.advancement.requiredSelections` | `number` | How many tied contestants admin must pick (`N - included.length`). `0` when no tie |
-| `data.advancement.included` | `AdvancementContestant[]` | Auto-included contestants above the cutoff |
-| `data.advancement.included[].id` | `number` | Contestant ID |
-| `data.advancement.included[].name` | `string` | Contestant name |
-| `data.advancement.included[].overallScore` | `number` | Overall score (2 dp) |
-| `data.advancement.tied` | `AdvancementContestant[]` | Tied contestants at the cutoff for admin selection |
-| `message` | `string` | Success message |
+| Field                                 | Type                       | Notes                                                                                                                                                                     |
+| ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                                | `GetRoundResultsDTO`       | Rankings and round-state flags for the requested round                                                                                                                    |
+| `data.rankings`                       | `RankingRow[]`             | One row per contestant in the round's contestant pool. Sorted by `overallScore` descending; `null` overall scores last; ties broken by `candidateNumber` ascending        |
+| `data.allJudgesSubmitted`             | `boolean`                  | `true` when every judge has submitted every category in this round. `false` when zero judges. Vacuously `true` when the round has zero categories but judges exist        |
+| `data.isCompleted`                    | `boolean`                  | `true` when the next round already has rows in `round_contestants` (this round was advanced). Page is read-only history (Wireframe State 3)                               |
+| `data.canAdvance`                     | `boolean`                  | `true` only when Advance is allowed. `canAdvance` may be `true` while `advancement.hasTie` is `true` — frontend disables Advance until tie selections match               |
+| `data.canAdvanceReason`               | `CanAdvanceReason \| null` | When `canAdvance` is `false`, code for disabled helper text. `null` when `canAdvance` is `true`, or on the final round                                                    |
+| `data.canDeclareWinners`              | `boolean`                  | Final round only. `true` when all judges submitted, no cutoff tie, and winners not yet declared                                                                           |
+| `data.winnersDeclaredAt`              | `string \| null`           | ISO timestamp when winners were declared on the final round; `null` otherwise                                                                                             |
+| `data.nextRound`                      | `NextRoundSummary \| null` | Next round metadata. `null` on the final round                                                                                                                            |
+| `data.advancement`                    | `AdvancementPreview`       | Advancement preview — populated only when `allJudgesSubmitted` is `true`, `isCompleted` is `false`, current round has categories, and a positive advancement limit exists |
+| `data.advancement.hasTie`             | `boolean`                  | `true` when tied contestants straddle the cutoff (Wireframe State 2b)                                                                                                     |
+| `data.advancement.requiredSelections` | `number`                   | How many tied contestants admin must pick (`N - included.length`). `0` when no tie                                                                                        |
+| `data.advancement.included`         | `AdvancementContestant[]`  | Contestants above the cutoff who advance automatically                                                                                                                    |
+| `data.advancement.tied`             | `AdvancementContestant[]`  | Tied contestants at the cutoff for admin selection                                                                                                                        |
+| `message`                             | `string`                   | Success message                                                                                                                                                           |
 
-### Rankings rules
+### Types
+
+**`GetRoundResultsDTO`**
+
+| Field                | Type                       | Notes                                        |
+| -------------------- | -------------------------- | -------------------------------------------- |
+| `rankings`           | `RankingRow[]`             | Rankings table rows                          |
+| `allJudgesSubmitted` | `boolean`                  | All judges finished scoring                  |
+| `isCompleted`        | `boolean`                  | Round already advanced                       |
+| `canAdvance`         | `boolean`                  | Advance button allowed                       |
+| `canAdvanceReason`   | `CanAdvanceReason \| null` | Disabled reason when `canAdvance` is `false` |
+| `canDeclareWinners`  | `boolean`                  | Declare Winners button allowed (final round) |
+| `winnersDeclaredAt`  | `string \| null`           | ISO timestamp when winners declared          |
+| `nextRound`          | `NextRoundSummary \| null` | Next round metadata                          |
+| `advancement`        | `AdvancementPreview`       | Advancement preview                          |
+
+**`RankingRow`**
+
+| Field           | Type                       | Notes |
+| --------------- | -------------------------- | ----- |
+| `contestant`    | `RankingContestant`        | Contestant identity for the row |
+| `categories`    | `RankingCategoryScore[]`   | One column per category in this round. Ordered by category `name` ascending |
+| `overallScore`  | `number \| null`           | Average of non-null category averages. `null` when no category has a score. Rounded to 2 decimal places |
+| `rank`          | `number \| null`           | `1..N` by `overallScore` descending; `null` when `overallScore` is `null` |
+
+**`RankingContestant`**
+
+| Field              | Type     | Notes |
+| ------------------ | -------- | ----- |
+| `id`               | `number` | Contestant ID |
+| `candidateNumber`  | `number` | Display number |
+| `name`             | `string` | Display name |
+
+**`RankingCategoryScore`**
+
+| Field       | Type               | Notes |
+| ----------- | ------------------ | ----- |
+| `id`        | `number`           | Category ID |
+| `name`      | `string`           | Category name (column header) |
+| `avgScore`  | `number \| null`   | Average of judges who submitted for this contestant in this category. `null` → render `—` in UI. Rounded to 2 decimal places |
+
+**`NextRoundSummary`**
+
+| Field               | Type               | Notes |
+| ------------------- | ------------------ | ----- |
+| `id`                | `number`           | Next round ID |
+| `name`              | `string`           | Next round name (Advance button label) |
+| `contestantLimit`   | `number \| null`   | How many contestants advance into the next round |
+| `categoryCount`     | `number`           | Number of categories configured on the next round |
+
+**`AdvancementPreview`**
+
+| Field                 | Type                      | Notes |
+| --------------------- | ------------------------- | ----- |
+| `hasTie`              | `boolean`                 | `true` when tied contestants straddle the cutoff |
+| `requiredSelections`  | `number`                  | How many tied contestants admin must pick (`N - included.length`). `0` when no tie |
+| `included`            | `AdvancementContestant[]` | Contestants above the cutoff who advance automatically |
+| `tied`                | `AdvancementContestant[]` | Tied contestants at the cutoff for admin selection |
+
+**`AdvancementContestant`**
+
+| Field            | Type     | Notes |
+| ---------------- | -------- | ----- |
+| `id`             | `number` | Contestant ID |
+| `name`           | `string` | Contestant name |
+| `overallScore`   | `number` | Overall score (2 dp) |
+
+**`CanAdvanceReason`**
+
+`"ROUND_COMPLETED" | "JUDGES_NOT_COMPLETE" | "CURRENT_ROUND_NO_CATEGORIES" | "NEXT_ROUND_ALREADY_FILLED" | "NEXT_ROUND_NO_CATEGORIES"`
 
 | Rule | Behavior |
 |------|----------|
