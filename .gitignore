@@ -1,3 +1,5 @@
 pageant-tabulation-niel/
-.env
+
 docs/.obsidian/
+node_modules
+.env
