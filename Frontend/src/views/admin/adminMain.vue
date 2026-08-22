@@ -19,7 +19,6 @@ const toggleDropDown = () => {
 </script>
 
 <template>
-  <AddRounds></AddRounds>
   <NavMain class=""></NavMain>
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">

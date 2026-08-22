@@ -24,14 +24,14 @@ const roundStore = useRoundStore();
       </button>
     </div>
 
-    <div class="flex h-full w-full">
-      <table class="w-full table-fixed">
-        <thead class="rounded-xl">
-          <tr class="bg-main-dark-brown text-sm text-white sm:h-20 sm:text-xl">
-            <th>Name</th>
-            <th>Phase Order</th>
-            <th>Contestant Limit</th>
-            <th>Action</th>
+    <div class="md:h-[calc(100dvh-100px)]  w-full overflow-y-auto">
+  <table class="relative w-full">
+        <thead class="rounded-xl sticky top-0 z-20 h-full">
+          <tr class="bg-main-dark-brown text-sm text-left h-10 text-white sm:h-20 sm:text-xl">
+            <th class="px-4 text-nowrap">Name</th>
+            <th class="px-4 text-nowrap">Phase Order</th>
+            <th class="px-4 text-nowrap">Contestant Limit</th>
+            <th class="px-4">Action</th>
           </tr>
         </thead>
         <tbody class="w-full">

@@ -1,12 +1,12 @@
 <template>
   <tr class="font-poppins" v-for="item in roundStore.roundList" :key="item.id">
-    <td class="border px-2">{{ item.name }}</td>
-    <td class="border px-2">{{ item.phaseOrder }}</td>
-    <td class="border px-2">{{ item.contestantLimit }}</td>
-    <td class="w-full border px-2">
-      <div class="flex">
-        <button @click="editRound(item.id)" class="w-full bg-amber-300">Edit</button
-        ><button @click="deleteRound(item.id)" class="w-full bg-amber-600">Delete</button>
+    <td class="border px-2 text-nowrap">{{ item.name }}</td>
+    <td class="border px-2 text-nowrap">{{ item.phaseOrder }}</td>
+    <td class="border px-2 text-nowrap">{{ item.contestantLimit }}</td>
+    <td class="border px-2">
+      <div class="flex items-center justify-center gap-4 h-12">
+        <button @click="editRound(item.id)" class="px-6 h-10 rounded-xl bg-amber-300">Edit</button
+        ><button @click="deleteRound(item.id)" class="px-6 h-10 rounded-xl bg-amber-600">Delete</button>
       </div>
     </td>
   </tr>
