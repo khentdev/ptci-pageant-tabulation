@@ -13,28 +13,45 @@
         <div class="w-full">
           <p>Rounds Name</p>
           <input
+            @input="clearError"
             v-model="newRoundsName"
             type="text"
             name=""
             id=""
             class="h-10 w-full flex-1 border border-black"
           />
+
+          <div v-if="roundStore.isRoundNameInvalid" class="mt-1 flex h-full w-full justify-start">
+            <p class="flex gap-1 px-1 text-sm text-red-500 sm:gap-2 sm:text-base">
+              <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
+              >{{ roundStore.isRoundNameInvalid }}
+            </p>
+          </div>
         </div>
 
         <div class="w-full">
           <p>Phase Order</p>
           <input
+            @input="clearError"
             v-model="newRoundsPhase"
             type="number"
             name=""
             id=""
             class="h-10 w-full border border-black"
           />
+
+          <div v-if="roundStore.isRoundPhaseInvalid" class="mt-1 flex h-full w-full justify-start">
+            <p class="flex gap-1 px-1 text-sm text-red-500 sm:gap-2 sm:text-base">
+              <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
+              >{{ roundStore.isRoundPhaseInvalid }}
+            </p>
+          </div>
         </div>
 
         <div class="w-full">
           <p>Contestant Limit</p>
           <input
+            @input="clearError"
             :readonly="newRoundsPhase === 1"
             v-model="newRoundsLimit"
             type="number"
@@ -42,6 +59,12 @@
             id=""
             class="h-10 w-full border border-black"
           />
+          <div v-if="roundStore.isRoundLimitInvalid" class="mt-1 flex h-full w-full justify-start">
+            <p class="flex gap-1 px-1 text-sm text-red-500 sm:gap-2 sm:text-base">
+              <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
+              >{{ roundStore.isRoundLimitInvalid }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -60,6 +83,7 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import { ref } from 'vue';
 import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
 import type { AddRoundInput } from '@/types/admin/adminSetup/rounds';
+import { CircleAlert } from '@lucide/vue';
 
 const roundStore = useRoundStore();
 const modalStore = useModalStore();
@@ -71,10 +95,19 @@ const newRoundsName = ref('');
 const newRoundsPhase = ref(0);
 const newRoundsLimit = ref(null);
 
-const addRounds = () => {
-  if (newRoundsName.value === '' || newRoundsPhase.value === 0 || newRoundsLimit.value === 0) {
-    return;
+const clearError = () => {
+  if (roundStore.isRoundNameInvalid) {
+    roundStore.isRoundNameInvalid = '';
+  } else if (roundStore.isRoundPhaseInvalid) {
+    roundStore.isRoundPhaseInvalid = '';
+  } else if (roundStore.isRoundLimitInvalid) {
+    roundStore.isRoundLimitInvalid = '';
   }
+};
+const addRounds = () => {
+  /*if (newRoundsName.value === '' || newRoundsPhase.value === 0 || newRoundsLimit.value === 0) {
+    return;
+  }*/
 
   const rounds: AddRoundInput = {
     name: newRoundsName.value,
@@ -87,6 +120,5 @@ const addRounds = () => {
   newRoundsName.value = '';
   newRoundsPhase.value = 0;
   newRoundsLimit.value = null;
-  modalStore.toggleAddRoundsModal();
 };
 </script>

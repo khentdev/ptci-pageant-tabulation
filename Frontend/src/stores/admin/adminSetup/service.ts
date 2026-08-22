@@ -7,6 +7,7 @@ import {
   type EditRoundInput,
   type EditRoundResponse,
   type DeleteRoundPhaseInput,
+  type DeleteRoundPhaseResponse,
 } from '@/types/admin/adminSetup/rounds';
 
 export const GetTypeResponse = <T>(res: unknown): T => res as T;
@@ -32,8 +33,8 @@ export const roundService = {
     return GetTypeResponse<EditRoundResponse>(res);
   },
 
-  deleteRound: async (id: number) => {
+  deleteRound: async (id: DeleteRoundPhaseInput) => {
     const res = await axiosInstance.delete(`/rounds/${id}`);
-    return GetTypeResponse<DeleteRoundPhaseInput>(res);
+    return GetTypeResponse<DeleteRoundPhaseResponse>(res);
   },
 };

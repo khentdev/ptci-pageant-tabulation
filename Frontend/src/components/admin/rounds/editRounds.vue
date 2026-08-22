@@ -13,6 +13,7 @@
         <div class="w-full">
           <p>Rounds Name</p>
           <input
+            @input="clearError"
             v-model="newRoundName"
             :placeholder="`${roundStore.roundId?.name}`"
             type="text"
@@ -20,6 +21,12 @@
             id=""
             class="h-10 w-full flex-1 border border-black"
           />
+          <div v-if="roundStore.isRoundNameInvalid" class="mt-1 flex h-full w-full justify-start">
+            <p class="flex gap-1 px-1 text-sm text-red-500 sm:gap-2 sm:text-base">
+              <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
+              >{{ roundStore.isRoundNameInvalid }}
+            </p>
+          </div>
         </div>
 
         <div class="w-full">
@@ -37,6 +44,7 @@
         <div class="w-full">
           <p>Contestant Limit</p>
           <input
+            @input="clearError"
             v-model="newRoundLimit"
             :readonly="roundStore.roundId?.isLimitLocked || roundStore.roundId?.phaseOrder === 1"
             :placeholder="`${roundStore.roundId?.contestantLimit}`"
@@ -45,6 +53,12 @@
             id=""
             class="h-10 w-full border border-black"
           />
+          <div v-if="roundStore.isRoundLimitInvalid" class="mt-1 flex h-full w-full justify-start">
+            <p class="flex gap-1 px-1 text-sm text-red-500 sm:gap-2 sm:text-base">
+              <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
+              >{{ roundStore.isRoundLimitInvalid }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -63,6 +77,7 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
 import { ref, onUnmounted, onMounted } from 'vue';
 import type { EditRoundInput } from '@/types/admin/adminSetup/rounds';
+import { CircleAlert } from '@lucide/vue';
 
 const roundStore = useRoundStore();
 const modalStore = useModalStore();
@@ -73,10 +88,20 @@ const props = defineProps<{
 const newRoundName = ref('');
 const newRoundLimit = ref(null);
 
-const editRound = async () => {
-  if (newRoundName.value === '') {
-    return;
+const clearError = () => {
+  if (roundStore.isRoundNameInvalid) {
+    roundStore.isRoundNameInvalid = '';
+  } else if (roundStore.isRoundPhaseInvalid) {
+    roundStore.isRoundPhaseInvalid = '';
+  } else if (roundStore.isRoundLimitInvalid) {
+    roundStore.isRoundLimitInvalid = '';
   }
+};
+
+const editRound = async () => {
+  /* if (newRoundName.value === '') {
+    return;
+  }*/
 
   const rawRoundId = localStorage.getItem('round-id');
   const storedRoundId = rawRoundId !== null ? Number(JSON.parse(rawRoundId)) : 0;
@@ -90,6 +115,5 @@ const editRound = async () => {
   roundStore.editRound(round);
   newRoundName.value = '';
   newRoundLimit.value = null;
-  modalStore.toggleEditRoundsModal();
 };
 </script>
