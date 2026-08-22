@@ -102,3 +102,25 @@ export type AdvanceRoundInputVariables = {
 export type AdvanceRoundResponse = {
     message: string
 }
+
+// Declare Winners
+export type CanDeclareReason =
+    | "NOT_FINAL_ROUND"
+    | "JUDGES_NOT_COMPLETE"
+    | "CURRENT_ROUND_NO_CATEGORIES"
+    | "WINNERS_ALREADY_DECLARED"
+    | "NO_ELIGIBLE_CONTESTANTS"
+
+export type DeclareWinnersRequestBody = {
+    selectedContestantIds?: unknown
+}
+export type DeclareWinnersInput = {
+    id: number
+    selectedContestantIds?: number[]
+}
+export type DeclareWinnersInputVariables = {
+    declareWinners: DeclareWinnersInput
+}
+export type DeclareWinnersResponse = {
+    message: string
+}

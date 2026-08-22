@@ -757,7 +757,7 @@ See **§6 State 2b** for layout. Flow summary:
 │                                                               │
 │  (tie-resolution panel below rankings if cutoff tie exists)   │
 │                                                               │
-│         [ 🏆 Declare Winners ]  ← enabled when canDeclare     │
+│         [ 🏆 Declare Winners ]  ← no tie: enabled when canDeclareWinners; tie: disabled until tie picks complete │
 └──────────────────────────────────────────────────────────────┘
 ```
 

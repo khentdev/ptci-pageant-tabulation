@@ -6,7 +6,7 @@ Admin only.
 
 Returns **rankings**, advancement preview, and round-state flags for one round. Used for the Rankings section, Advance button, tie-resolution panel, and Declare Winners on the Admin Live Event → Round Results page.
 
-**Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`).
+**Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`). Declaring winners on the final round is [[live-event/live-round-declare-winners]] (`POST /live-event/round-results/:id/declare-winners`).
 
 **Does not include** `judgeSubmissions` — fetch that separately via [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`).
 
@@ -241,6 +241,7 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Zero judges | `allJudgesSubmitted: false` |
 | Zero categories | `allJudgesSubmitted: true` (vacuous); `canAdvanceReason: CURRENT_ROUND_NO_CATEGORIES` |
 | Final round | `nextRound: null`, `canAdvance: false`, `canAdvanceReason: null` |
+| Final round declared | `winnersDeclaredAt` ISO timestamp, `canDeclareWinners: false` |
 
 ## Frontend UI rules
 
@@ -254,7 +255,7 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Advance button | Hidden when `isCompleted`; enabled when `canAdvance`; disabled helper from `canAdvanceReason`. On click, POST [[live-event/live-round-advance]] |
 | Advance label | `Advance to ${nextRound.name}` when `nextRound` is set |
 | Tie panel | Show when `advancement.hasTie === true` |
-| Declare Winners | Final round; enabled when `canDeclareWinners === true` |
+| Declare Winners | Final round only (`nextRound === null`). **No tie:** enabled when `canDeclareWinners === true`; POST [[live-event/live-round-declare-winners]] with empty body. **Tie:** `canDeclareWinners === false` — show disabled Declare + tie panel; enable locally when selection count === `requiredSelections`; POST with `{ selectedContestantIds }`. Hidden when `winnersDeclaredAt` is set |
 | Refetch | Page mount and manual browser refresh only — no auto-polling |
 
 ## Errors

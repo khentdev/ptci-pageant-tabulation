@@ -13,6 +13,9 @@ export const LIVE_EVENT_ERROR_CODES = {
     ADVANCE_NOT_ALLOWED: "ADVANCE_NOT_ALLOWED",
     ADVANCE_CONTESTANT_COUNT_MISMATCH: "ADVANCE_CONTESTANT_COUNT_MISMATCH",
     ROUND_ADVANCEMENT_ERROR: "ROUND_ADVANCEMENT_ERROR",
+    DECLARE_NOT_ALLOWED: "DECLARE_NOT_ALLOWED",
+    DECLARE_WINNER_COUNT_MISMATCH: "DECLARE_WINNER_COUNT_MISMATCH",
+    DECLARE_WINNERS_ERROR: "DECLARE_WINNERS_ERROR",
 } as const
 
 export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions> = {
@@ -74,6 +77,21 @@ export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions>
     ROUND_ADVANCEMENT_ERROR: {
         code: "ROUND_ADVANCEMENT_ERROR",
         message: "Unable to advance round.",
+        status: 500
+    },
+    DECLARE_NOT_ALLOWED: {
+        code: "DECLARE_NOT_ALLOWED",
+        message: "Winners cannot be declared at this time.",
+        status: 409
+    },
+    DECLARE_WINNER_COUNT_MISMATCH: {
+        code: "DECLARE_WINNER_COUNT_MISMATCH",
+        message: "Declared winner count does not match the round limit.",
+        status: 400
+    },
+    DECLARE_WINNERS_ERROR: {
+        code: "DECLARE_WINNERS_ERROR",
+        message: "Unable to declare winners.",
         status: 500
     }
 }

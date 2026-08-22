@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
-import type { AdvanceRoundInput, CanAdvanceReason, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
 import { Role } from "../../../generated/prisma/enums.js";
 
 type JudgeRow = { id: number, name: string }
@@ -429,6 +429,165 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
                 roundId: nextRound.id,
                 contestantId,
             })),
+        })
+    })
+}
+
+type RankingRowForDeclare = {
+    contestant: { id: number, candidateNumber: number }
+    overallScore: number | null
+}
+
+function buildDeclaredWinnerRows(
+    winningContestantIds: number[],
+    rankings: RankingRowForDeclare[],
+) {
+    const rankingByContestantId = new Map(
+        rankings.map(row => [row.contestant.id, row]),
+    )
+
+    const winnerRows = winningContestantIds.map(contestantId => {
+        const row = rankingByContestantId.get(contestantId)
+        if (!row || row.overallScore === null) return null
+        return row
+    })
+
+    if (winnerRows.some(row => row === null)) {
+        throw new AppError("DECLARE_NOT_ALLOWED", {
+            data: { reason: "NO_ELIGIBLE_CONTESTANTS" },
+        })
+    }
+
+    const sorted = [...winnerRows as RankingRowForDeclare[]].sort((a, b) => {
+        if (b.overallScore! !== a.overallScore!) return b.overallScore! - a.overallScore!
+        return a.contestant.candidateNumber - b.contestant.candidateNumber
+    })
+
+    return sorted.map((row, index) => ({
+        contestantId: row.contestant.id,
+        placement: index + 1,
+        overallScore: row.overallScore!,
+    }))
+}
+
+export async function declareWinners({ id, selectedContestantIds }: DeclareWinnersInput) {
+    return prisma.$transaction(async (tx) => {
+        const currentRound = await tx.round.findUnique({
+            where: { id },
+            select: {
+                phaseOrder: true,
+                contestantLimit: true,
+                winnersDeclaredAt: true,
+                _count: { select: { categories: true } },
+            },
+        })
+        if (!currentRound) throw new AppError("ROUND_PHASE_NOT_FOUND")
+
+        const results = await getRoundResultsInTx(tx, {
+            id,
+            phaseOrder: currentRound.phaseOrder,
+        })
+
+        if (results.nextRound !== null) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "NOT_FINAL_ROUND" },
+            })
+        }
+
+        if (currentRound.winnersDeclaredAt !== null || results.winnersDeclaredAt !== null) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "WINNERS_ALREADY_DECLARED" },
+            })
+        }
+
+        const existingWinnerCount = await tx.roundWinner.count({ where: { roundId: id } })
+        if (existingWinnerCount > 0) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "WINNERS_ALREADY_DECLARED" },
+            })
+        }
+
+        if (currentRound._count.categories === 0) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "CURRENT_ROUND_NO_CATEGORIES" },
+            })
+        }
+
+        if (!results.allJudgesSubmitted) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "JUDGES_NOT_COMPLETE" },
+            })
+        }
+
+        const { advancement } = results
+        let winningContestantIds: number[]
+
+        if (!advancement.hasTie) {
+            if (selectedContestantIds !== undefined) {
+                throw new AppError("SELECTED_CONTESTANT_IDS_NOT_ALLOWED", {
+                    field: "declare_winners_input_selected_contestant_ids",
+                })
+            }
+
+            winningContestantIds = advancement.included.map(contestant => contestant.id)
+        } else {
+            if (!selectedContestantIds) {
+                throw new AppError("SELECTED_CONTESTANT_IDS_REQUIRED", {
+                    field: "declare_winners_input_selected_contestant_ids",
+                })
+            }
+
+            if (selectedContestantIds.length !== advancement.requiredSelections) {
+                throw new AppError("SELECTED_CONTESTANT_IDS_COUNT_INVALID", {
+                    field: "declare_winners_input_selected_contestant_ids",
+                })
+            }
+            
+            const tiedIds = new Set(advancement.tied.map(contestant => contestant.id))
+            if (!selectedContestantIds.every(contestantId => tiedIds.has(contestantId))) {
+                throw new AppError("SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP", {
+                    field: "declare_winners_input_selected_contestant_ids",
+                })
+            }
+
+            winningContestantIds = [
+                ...advancement.included.map(contestant => contestant.id),
+                ...selectedContestantIds,
+            ]
+
+            if (
+                currentRound.contestantLimit !== null
+                && winningContestantIds.length !== currentRound.contestantLimit
+            ) {
+                throw new AppError("DECLARE_WINNER_COUNT_MISMATCH", {
+                    field: "declare_winners_input_selected_contestant_ids",
+                })
+            }
+        }
+
+        if (winningContestantIds.length === 0) {
+            throw new AppError("DECLARE_NOT_ALLOWED", {
+                data: { reason: "NO_ELIGIBLE_CONTESTANTS" },
+            })
+        }
+
+        const declaredWinnerRows = buildDeclaredWinnerRows(
+            winningContestantIds,
+            results.rankings,
+        )
+
+        await tx.roundWinner.createMany({
+            data: declaredWinnerRows.map(row => ({
+                roundId: id,
+                contestantId: row.contestantId,
+                placement: row.placement,
+                overallScore: row.overallScore,
+            })),
+        })
+
+        await tx.round.update({
+            where: { id },
+            data: { winnersDeclaredAt: new Date() },
         })
     })
 }

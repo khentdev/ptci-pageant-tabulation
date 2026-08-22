@@ -358,11 +358,12 @@ Admin must pick exactly (N - A) from the T tied contestants
 **Business Rules**
 
 - The round with the highest `phase_order` is treated as the final round — no "Advance" button, only "Declare Winners"
-- Declaring winners sets `winners_declared_at` timestamp on that round — this is the lock mechanism
+- Declaring winners sets `winners_declared_at` on that round and inserts `RoundWinner` rows in the same transaction — lock plus official podium snapshot (`placement`, `contestantId`, `overallScore`)
+- Official declared podium (placement + score snapshot) is stored in `RoundWinner` rows at declare time — sorted by score then `candidateNumber` at write; separate from score-based `rankings` on the round results page
 - Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display, and no further changes are possible
 - Declaring winners is irreversible — no undo
 - Final round uses the same cutoff tie UI when more contestants tie at the top-N cutoff than slots remain (e.g. top 3 with a tie at rank 3). Admin picks who is included in the ranked top 3; medals (1st / 2nd / 3rd) follow final ranking order after resolution
-- `canDeclareWinners` follows the same gating as `canAdvance` (all judges submitted, not already declared) plus any cutoff tie resolved
+- `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus cutoff tie must be resolved via local selection and POST body when `advancement.hasTie` is `true` — GET returns `canDeclareWinners: false` while a cutoff tie exists
 - Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
 

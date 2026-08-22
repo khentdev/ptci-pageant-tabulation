@@ -147,7 +147,8 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [x] Get round results API — rankings, `allJudgesSubmitted`, `isCompleted`, `canAdvance`, `canAdvanceReason`, `nextRound`, `advancement`, `canDeclareWinners`, `winnersDeclaredAt` (API contract: [[live-event/live-round-results]] — `GET /live-event/round-results/:id/advancement`)
 - [x] Tie detection on round results fetch — cutoff straddle; `overallScore` rounded to 2 dp (same endpoint)
 - [x] Advancement API — no body when no tie; with tie `{ selectedContestantIds }` merged with auto-included; validates `canAdvance` (API contract: [[live-event/live-round-advance]] — POST /live-event/round-results/:id/advancement)
-- [ ] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance for final ranking; results fetch returns `canDeclareWinners` and `winnersDeclaredAt`
+- [x] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance; persists `RoundWinner` rows + `winnersDeclaredAt` (API contract: [[live-event/live-round-declare-winners]] — `POST /live-event/round-results/:id/declare-winners`)
+- [ ] Get declared winners API — read official podium from `RoundWinner` after declare (follow-up plan)
 
 ### Frontend
 
@@ -165,8 +166,10 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
   - [ ] Tie-resolution panel rendered under table from `advancement.included` / `advancement.tied`
   - [ ] Selection counter ("Selected: X of Y required")
   - [ ] Disable extra checkboxes once required count is reached
-  - [ ] Advance button disabled until selection count matches required
-  - [ ] One click on enabled button advances all (auto + selected tied via `selectedContestantIds`)
+  - [ ] Advance button disabled until selection count matches required (non-final rounds)
+  - [ ] Declare Winners button disabled until selection count matches required (final round)
+  - [ ] One click on enabled Advance advances all (auto + selected tied via `selectedContestantIds`)
+  - [ ] One click on enabled Declare locks winners (auto + selected tied via `selectedContestantIds` on final round)
 - [ ] Final round view — "Declare Winners" button instead of Advance
   - [ ] Declare Winners confirmation modal (warn: irreversible)
   - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores)
