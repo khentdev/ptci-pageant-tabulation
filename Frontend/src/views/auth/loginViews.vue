@@ -3,6 +3,8 @@ import { CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
 import type { loginInput } from '@/types/auth/userAuth';
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+const roundStore = useRoundStore();
 
 const authStore = useAuthStore();
 const userName = ref('');
@@ -76,11 +78,8 @@ const loginFunction = () => {
             class="focus:border-jungle-green-900 h-15 w-full rounded-xl border-2 border-black/10 bg-white/20 px-13 shadow-sm shadow-black/10 focus:outline-none dark:border-gray-500/20"
           />
         </div>
-        <div
-          v-if="authStore.isInvalidCredentials"
-          class="flex h-full w-full justify-start"
-        >
-          <p class="flex px-6 text-sm text-red-500  gap-1 sm:gap-2 sm:text-base">
+        <div v-if="authStore.isInvalidCredentials" class="flex h-full w-full justify-start">
+          <p class="flex gap-1 px-6 text-sm text-red-500 sm:gap-2 sm:text-base">
             <CircleAlert class="stroke-red-500 stroke-2"></CircleAlert
             >{{ authStore.isInvalidCredentials }}
           </p>
@@ -92,9 +91,12 @@ const loginFunction = () => {
           type="submit"
           :disabled="authStore.loadingStates.isLoggingIn"
           @click="loginFunction"
-          class="bg-jungle-green-900 flex h-15 w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer items-center justify-center rounded-xl border-2 border-white/10 text-white"
+          class="bg-jungle-green-900 flex h-15 w-full cursor-pointer items-center justify-center rounded-xl border-2 border-white/10 text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <LoaderCircle v-if="authStore.loadingStates.isLoggingIn" class="animate-spin"></LoaderCircle>
+          <LoaderCircle
+            v-if="authStore.loadingStates.isLoggingIn"
+            class="animate-spin"
+          ></LoaderCircle>
           {{ authStore.loadingStates.isLoggingIn ? '' : 'Sign in' }}
         </button>
       </div>

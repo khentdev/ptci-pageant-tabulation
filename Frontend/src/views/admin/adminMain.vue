@@ -2,15 +2,23 @@
 import NavMain from '@/components/navMain.vue';
 import { ref } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
+import { RouterView } from 'vue-router';
 
-const isDropDownClick = ref(false);
+const getDropDownState = (): boolean | null => {
+  const savedState = localStorage.getItem('toggleDropDown');
+  return savedState ? JSON.parse(savedState) : false;
+};
+
+const isDropDownClick = ref(getDropDownState());
 const toggleDropDown = () => {
   isDropDownClick.value = !isDropDownClick.value;
+
+  localStorage.setItem('toggleDropDown', JSON.stringify(isDropDownClick.value));
 };
 </script>
 
 <template>
-  <NavMain class=""></NavMain>
+  <NavMain></NavMain>
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">
       <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>
@@ -53,12 +61,13 @@ const toggleDropDown = () => {
             </div>
 
             <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
-              <div
+              <a
+                href="/admin/live/results/rounds"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 duration-200 ease-in-out hover:bg-black/5 sm:p-4"
               >
                 <Calendar class="stroke stroke-custom-gray"></Calendar>
                 <p class="cursor-pointer text-black/70">Rounds</p>
-              </div>
+              </a>
 
               <div
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
@@ -98,9 +107,9 @@ const toggleDropDown = () => {
         :class="isDropDownClick === true ? 'hidden sm:block' : 'block'"
         class="h-full w-full p-4"
       >
-        <!--<div
-          class="bg-main-light-brown h-full rounded-xl border border-black/20 p-4 drop-shadow-sm drop-shadow-black/10"
-        ></div>-->
+        <div class="flex items-center justify-center h-[calc(100vh-2.2rem)] w-full">
+          <RouterView></RouterView>
+        </div>
       </div>
     </div>
   </div>
