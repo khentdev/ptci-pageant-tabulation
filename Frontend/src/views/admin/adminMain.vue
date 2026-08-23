@@ -3,7 +3,6 @@ import NavMain from '@/components/navMain.vue';
 import { ref } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
-import AddRounds from '@/components/admin/rounds/addRounds.vue';
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
@@ -19,7 +18,7 @@ const toggleDropDown = () => {
 </script>
 
 <template>
-  <NavMain class=""></NavMain>
+  <NavMain></NavMain>
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">
       <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>

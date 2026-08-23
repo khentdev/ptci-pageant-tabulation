@@ -62,13 +62,13 @@ Admin only.
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message | Notes |
-|--------|------|---------|-------|
-| `400` | `ROUND_NAME_INVALID` | Round name is required. | |
-| `400` | `ROUND_PHASE_ORDER_INVALID` | Phase order must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400` | `ROUND_PHASE_NO_PRELIMINARY_ROUND_EXISTS` | There is no preliminary round exists. Please create first round first. | |
-| `400` | `ROUND_PHASE_ORDER_ALREADY_EXISTS` | The first round has already been created. Please create a new round with a higher phase order. | |
-| `400` | `ROUND_PHASE_ORDER_DUPLICATE` | A round with this phase order already exists. Please use a different phase order. | |
-| `400` | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round. | |
-| `500` | `ROUND_PHASE_ADD_ERROR` | Unable to add round phase. Please try again later. | |
+| Status | Code                                      | Message                                                                                        | Notes                                                                          |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `400`  | `ROUND_NAME_INVALID`                      | Round name is required.                                                                        |                                                                                |
+| `400`  | `ROUND_PHASE_ORDER_INVALID`               | Phase order must be a positive whole number.                                                   | Backend API layer only. Normalize frontend input (positive whole number only). |
+| `400`  | `ROUND_CONTESTANT_LIMIT_INVALID`          | Contestant limit must be a positive whole number.                                              | Backend API layer only. Normalize frontend input (positive whole number only). |
+| `400`  | `ROUND_PHASE_NO_PRELIMINARY_ROUND_EXISTS` | There is no preliminary round exists. Please create first round first.                         |                                                                                |
+| `400`  | `ROUND_PHASE_ORDER_ALREADY_EXISTS`        | The first round has already been created. Please create a new round with a higher phase order. |                                                                                |
+| `400`  | `ROUND_PHASE_ORDER_DUPLICATE`             | A round with this phase order already exists. Please use a different phase order.              |                                                                                |
+| `400`  | `ROUND_CONTESTANT_LIMIT_REQUIRED`         | Contestant limit is required for rounds after the preliminary round.                           |                                                                                |
+| `500`  | `ROUND_PHASE_ADD_ERROR`                   | Unable to add round phase. Please try again later.                                             |                                                                                |

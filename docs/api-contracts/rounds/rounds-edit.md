@@ -169,13 +169,13 @@ Phase order is immutable after creation and is not accepted in the request body.
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-| Status | Code | Message | Notes |
-|--------|------|---------|-------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
-| `400` | `ROUND_NAME_INVALID` | Round name is required. | |
-| `400` | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round. | Returned when `phaseOrder > 1` and `contestantLimit` is omitted or `null`. |
-| `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400` | `ROUND_CONTESTANT_LIMIT_LOCKED` | Contestant limit cannot be changed after contestants have advanced into this round | |
-| `400` | `ROUND_PRELIMINARY_LIMIT_LOCKED` | Preliminary round contestant limit is always unlimited. | |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
-| `500` | `ROUND_PHASE_EDIT_ERROR` | Unable to edit round phase. Please try again later. | |
+| Status | Code                              | Message                                                                            | Notes                                                                          |
+| ------ | --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `400`  | `ROUND_ID_INVALID`                | Round ID must be a valid number.                                                   | Backend API layer only. Do not handle in frontend.                             |
+| `400`  | `ROUND_NAME_INVALID`              | Round name is required.                                                            |                                                                                |
+| `400`  | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round.               | Returned when `phaseOrder > 1` and `contestantLimit` is omitted or `null`.     |
+| `400`  | `ROUND_CONTESTANT_LIMIT_INVALID`  | Contestant limit must be a positive whole number.                                  | Backend API layer only. Normalize frontend input (positive whole number only). |
+| `400`  | `ROUND_CONTESTANT_LIMIT_LOCKED`   | Contestant limit cannot be changed after contestants have advanced into this round |                                                                                |
+| `404`  | `ROUND_PHASE_NOT_FOUND`           | Round phase not found.                                                             |                                                                                |
+| `400`  | `ROUND_PRELIMINARY_LIMIT_LOCKED`  | Preliminary round contestant limit is always unlimited.                            |                                                                                |
+| `500`  | `ROUND_PHASE_EDIT_ERROR`          | Unable to edit round phase. Please try again later.                                |                                                                                |
