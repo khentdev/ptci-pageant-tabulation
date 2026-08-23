@@ -61,14 +61,13 @@ const toggleDropDown = () => {
             </div>
 
             <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
-              <a
-                href="/admin/live/results/rounds"
+              <RouterLink
+                :to="{ name: 'rounds' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 duration-200 ease-in-out hover:bg-black/5 sm:p-4"
               >
                 <Calendar class="stroke stroke-custom-gray"></Calendar>
                 <p class="cursor-pointer text-black/70">Rounds</p>
-              </a>
-
+              </RouterLink>
               <div
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
@@ -107,7 +106,7 @@ const toggleDropDown = () => {
         :class="isDropDownClick === true ? 'hidden sm:block' : 'block'"
         class="h-full w-full p-4"
       >
-        <div class="flex items-center justify-center h-[calc(100vh-2.2rem)] w-full">
+        <div class="flex h-[calc(100vh-2.2rem)] w-full items-center justify-center">
           <RouterView></RouterView>
         </div>
       </div>
