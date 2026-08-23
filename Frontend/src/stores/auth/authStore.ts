@@ -38,14 +38,12 @@ export const useAuthStore = defineStore('auth', () => {
     loadingStates.isLoggingIn = true;
     try {
       const res = await authService.loginUser(user);
-      currentUser.value = res.data.user;
+      currentUser.value = { user: res.data.user };
       await router.push({ name: 'admin-homepage' });
-      console.log(res.data.user);
     } catch (error) {
       const { code, message, type } = errorHandler<AuthErrorCodes>(
         error as AxiosError<ErrorResponse<AuthErrorCodes>>,
       );
-      console.log(type);
       if (type === 'offline') {
         toast.warning('Please check your internet connection and try again.', {
           title: 'You are offline',

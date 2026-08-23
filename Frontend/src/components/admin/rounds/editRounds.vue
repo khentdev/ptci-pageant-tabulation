@@ -17,8 +17,18 @@
             <X />
           </button>
         </div>
-
-        <form @submit.prevent="editRound()" class="flex h-full w-full flex-col justify-start gap-4 p-4">
+        <FetchRoundByIdFetchOverlay v-if="roundStore.loadingStates.isFetchingRoundById" />
+        <ServerErrorOverlayModal
+          v-else-if="roundStore.errorStates.isFetchingRoundByIdError"
+          title="Failed to Load Round Details"
+          description="We couldn't load the round details. Please try again."
+          :onRetry="retryFetchRoundById"
+        />
+        <form
+          v-else
+          @submit.prevent="editRound()"
+          class="flex h-full w-full flex-col justify-start gap-4 p-4"
+        >
           <div class="flex flex-col">
             <p>Rounds Name</p>
             <input
@@ -29,7 +39,7 @@
               class="h-10 w-full border border-black px-3"
             />
             <div v-if="roundStore.formErrors.roundName" class="mt-1 flex w-full items-start gap-1">
-              <CircleAlert class="stroke-red-500 stroke-2 shrink-0" :size="18"></CircleAlert>
+              <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
               <p class="text-sm text-red-500">
                 {{ roundStore.formErrors.roundName }}
               </p>
@@ -45,7 +55,7 @@
               name="phaseOrder"
               id="phaseOrder"
               placeholder="Loading..."
-              class="h-10 w-full border border-black px-3 read-only:bg-gray-300 read-only:cursor-not-allowed"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
             />
           </div>
 
@@ -59,10 +69,10 @@
               placeholder="e.g. 10"
               name="contestantLimit"
               id="contestantLimit"
-              class="h-10 w-full border border-black px-3 read-only:bg-gray-300 read-only:cursor-not-allowed"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
             />
             <div v-if="roundStore.formErrors.roundLimit" class="mt-1 flex w-full items-start gap-1">
-              <CircleAlert class="stroke-red-500 stroke-2 shrink-0" :size="18"></CircleAlert>
+              <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
               <p class="text-sm text-red-500">
                 {{ roundStore.formErrors.roundLimit }}
               </p>
@@ -78,13 +88,11 @@
               Cancel
             </button>
             <button
-             type="submit"
+              type="submit"
               :disabled="roundStore.loadingStates.isEditingRound || !roundStore.roundId"
-              class="bg-jungle-green-800 w-full rounded-xl p-4 text-sm text-nowrap text-white hover:bg-jungle-green-900 disabled:opacity-50"
+              class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:opacity-50"
             >
-              {{
-                roundStore.loadingStates.isEditingRound ? 'Saving...' : 'Save Changes'
-              }}
+              {{ roundStore.loadingStates.isEditingRound ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>
         </form>
@@ -100,6 +108,8 @@ import { ref, watch } from 'vue';
 import type { EditRoundInput } from '@/types/admin/adminSetup/rounds/rounds';
 import { CircleAlert, X } from '@lucide/vue';
 import { useToast } from '@/composables/Toast/useToast';
+import FetchRoundByIdFetchOverlay from './FetchRoundByIdFetchOverlay.vue';
+import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 
 const roundStore = useRoundStore();
 const modalStore = useModalStore();
@@ -110,6 +120,20 @@ const props = defineProps<{
 
 const newRoundName = ref('');
 const newRoundLimit = ref('');
+
+const retryFetchRoundById = async () => {
+  const rawRoundId = localStorage.getItem('round-id');
+  if (rawRoundId === null) {
+    return;
+  }
+
+  const id = Number(JSON.parse(rawRoundId));
+  if (Number.isNaN(id)) {
+    return;
+  }
+
+  await roundStore.getRoundId(id);
+};
 
 const digitsOnly = (value: string) => value.replace(/\D/g, '');
 

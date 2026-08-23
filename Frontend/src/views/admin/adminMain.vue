@@ -107,7 +107,7 @@ const toggleDropDown = () => {
         :class="isDropDownClick === true ? 'hidden sm:block' : 'block'"
         class="h-full w-full p-4"
       >
-        <div class="h-[calc(100vh-2.2rem)] w-full">
+        <div class="flex items-center justify-center h-[calc(100vh-2.2rem)] w-full">
           <RouterView></RouterView>
         </div>
       </div>

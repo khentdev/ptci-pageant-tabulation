@@ -35,6 +35,13 @@ export const useRoundStore = defineStore('roundStore', () => {
     isAddingRound: false,
     isEditingRound: false,
     isDeletingRound: false,
+    isFetchingRounds: false,
+    isFetchingRoundById: false,
+  });
+
+  const errorStates = reactive({
+    isFetchingRoundsError: false,
+    isFetchingRoundByIdError: false,
   });
 
   const addRound = async (addRoundInput: AddRoundInput): Promise<boolean> => {
@@ -73,10 +80,6 @@ export const useRoundStore = defineStore('roundStore', () => {
         formErrors.roundLimit = message;
       }
 
-      if (code === 'ROUND_PHASE_ADD_ERROR') {
-        toast.error(message, { title: 'Error' });
-      }
-
       return false;
     } finally {
       loadingStates.isAddingRound = false;
@@ -84,34 +87,46 @@ export const useRoundStore = defineStore('roundStore', () => {
   };
 
   const getRound = async () => {
+    if (loadingStates.isFetchingRounds) {
+      return;
+    }
+
+    loadingStates.isFetchingRounds = true;
     try {
       const res = await roundService.getRound();
       roundList.value = res.data;
-      toast.success(res.message, { title: 'Success' });
+      errorStates.isFetchingRoundsError = false;
     } catch (error) {
-      const { code, message, type } = errorHandler<RoundErrorCodes>(
+      const { type } = errorHandler<RoundErrorCodes>(
         error as AxiosError<ErrorResponse<RoundErrorCodes>>,
       );
 
-      if (code === 'ROUND_PHASE_GET_LIST_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        errorStates.isFetchingRoundsError = true;
       }
+    } finally {
+      loadingStates.isFetchingRounds = false;
     }
   };
 
   const getRoundId = async (id: number) => {
+    if (loadingStates.isFetchingRoundById) {
+      return;
+    }
+    loadingStates.isFetchingRoundById = true;
     try {
       const res = await roundService.getRoundId(id);
       roundId.value = res.data;
-      //toast.success(res.message,{title: 'Success'})
+      errorStates.isFetchingRoundByIdError = false;
     } catch (error) {
-      const { code, message, type } = errorHandler<RoundErrorCodes>(
+      const { type } = errorHandler<RoundErrorCodes>(
         error as AxiosError<ErrorResponse<RoundErrorCodes>>,
       );
-
-      if (code === 'ROUND_PHASE_GET_BY_ID_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        errorStates.isFetchingRoundByIdError = true;
       }
+    } finally {
+      loadingStates.isFetchingRoundById = false;
     }
   };
 
@@ -147,12 +162,8 @@ export const useRoundStore = defineStore('roundStore', () => {
         toast.warning(message, { title: 'Contestant Limit Locked' });
       } else if (code === 'ROUND_PRELIMINARY_LIMIT_LOCKED') {
         toast.warning(message, { title: 'Preliminary Limit Locked' });
-      }
-
-      if (code === 'ROUND_PHASE_NOT_FOUND') {
+      } else if (code === 'ROUND_PHASE_NOT_FOUND') {
         toast.warning(message, { title: 'Round Phase Not Found' });
-      } else if (code === 'ROUND_PHASE_EDIT_ERROR') {
-        toast.error(message, { title: 'Something went wrong' });
       }
 
       return false;
@@ -184,8 +195,6 @@ export const useRoundStore = defineStore('roundStore', () => {
       } else if (code === 'ROUND_PHASE_NOT_FOUND') {
         toast.warning(message, { title: 'Round Phase Not Found' });
         await getRound();
-      } else if (code === 'ROUND_PHASE_DELETE_ERROR') {
-        toast.error(message, { title: 'Something went wrong' });
       }
     }
   };
@@ -200,5 +209,6 @@ export const useRoundStore = defineStore('roundStore', () => {
     loadingStates,
     formErrors,
     clearFormErrors,
+    errorStates,
   };
 });

@@ -14,22 +14,17 @@
 <script setup lang="ts">
 import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
 import { useModalStore } from '@/stores/modals/modalStore';
-import { onMounted } from 'vue';
 
 const modalStore = useModalStore();
 const roundStore = useRoundStore();
 
 const editRound = async (id: number) => {
-  modalStore.toggleEditRoundsModal();
-  roundStore.getRoundId(id);
   localStorage.setItem('round-id', JSON.stringify(id));
+  modalStore.toggleEditRoundsModal();
+  await roundStore.getRoundId(id);
 };
 
 const deleteRound = async (id: number) => {
   roundStore.deleteRound(id);
 };
-
-onMounted(async () => {
-  await roundStore.getRound();
-});
 </script>

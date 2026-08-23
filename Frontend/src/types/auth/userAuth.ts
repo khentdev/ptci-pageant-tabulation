@@ -3,20 +3,22 @@ export interface loginInput {
   password: string;
 }
 
+export type role = 'ADMIN' | 'JUDGE';
+
+export type UserDTO = {
+  id: number;
+  name: string;
+  username: string;
+  role: role;
+};
+
 export interface loginResponse {
   data: {
-    user: user;
+    user: UserDTO;
   };
   message: string;
 }
 
-export type role = 'ADMIN' | 'JUDGE';
-
 export type user = {
-  user: {
-    id: number;
-    name: string;
-    username: string;
-    role: role;
-  };
+  user: UserDTO;
 };
