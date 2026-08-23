@@ -1,6 +1,6 @@
 import type { Context } from "hono";
-import type { AdvanceRoundInputVariables, AdvanceRoundResponse, DeclareWinnersInputVariables, DeclareWinnersResponse, GetJudgeSubmissionsInputVariables, GetJudgeSubmissionsResponse, GetRoundResultsInputVariables, GetRoundResultsResponse } from "./types.js";
-import { advanceRoundService, declareWinnersService, getJudgeSubmissionsService, getRoundResultsByIdService } from "./service.js";
+import type { AdvanceRoundInputVariables, AdvanceRoundResponse, DeclareWinnersInputVariables, DeclareWinnersResponse, GetDeclaredWinnersInputVariables, GetDeclaredWinnersResponse, GetJudgeSubmissionsInputVariables, GetJudgeSubmissionsResponse, GetRoundResultsInputVariables, GetRoundResultsResponse } from "./types.js";
+import { advanceRoundService, declareWinnersService, getDeclaredWinnersService, getJudgeSubmissionsService, getRoundResultsByIdService } from "./service.js";
 import type { AppContext } from "../../types/context.js";
 
 export async function getJudgeSubmissionsController(c: Context<AppContext<GetJudgeSubmissionsInputVariables>>) {
@@ -35,4 +35,13 @@ export async function declareWinnersController(c: Context<AppContext<DeclareWinn
     return c.json<DeclareWinnersResponse>({
         message: "Winners declared successfully"
     }, 201)
+}
+
+export async function getDeclaredWinnersController(c: Context<AppContext<GetDeclaredWinnersInputVariables>>) {
+    const input = c.get("getDeclaredWinners")
+    const declaredWinners = await getDeclaredWinnersService(input)
+    return c.json<GetDeclaredWinnersResponse>({
+        data: declaredWinners,
+        message: "Declared winners fetched successfully"
+    }, 200)
 }

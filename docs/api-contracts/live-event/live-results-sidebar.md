@@ -70,5 +70,6 @@ Clicking a sidebar item navigates to that round's results page. The main content
 |---------|----------|----------|
 | Judge Submissions | `GET /live-event/round-results/:id` | [[live-event/live-judge-submissions]] |
 | Rankings preview, tie resolution | `GET /live-event/round-results/:id/advancement` | [[live-event/live-round-results]] |
+| Declared Winners podium | `GET /live-event/round-results/:id/declared-winners` | [[live-event/live-round-declared-winners]] — when `winnersDeclaredAt` is set (or after declare POST) |
 | Advance action | `POST /live-event/round-results/:id/advancement` | [[live-event/live-round-advance]] |
 | Declare winners | `POST /live-event/round-results/:id/declare-winners` | [[live-event/live-round-declare-winners]] |

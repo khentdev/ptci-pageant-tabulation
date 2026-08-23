@@ -6,11 +6,11 @@ Admin only.
 
 Returns **rankings**, advancement preview, and round-state flags for one round. Used for the Rankings section, Advance button, tie-resolution panel, and Declare Winners on the Admin Live Event → Round Results page.
 
-**Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`). Declaring winners on the final round is [[live-event/live-round-declare-winners]] (`POST /live-event/round-results/:id/declare-winners`).
+**Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`). Declaring winners on the final round is [[live-event/live-round-declare-winners]] (`POST /live-event/round-results/:id/declare-winners`). Official podium after declare is [[live-event/live-round-declared-winners]] (`GET /live-event/round-results/:id/declared-winners`).
 
-**Does not include** `judgeSubmissions` — fetch that separately via [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`).
+**Does not include** `judgeSubmissions` or `declaredWinners` — fetch judge matrix via [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`); fetch podium via [[live-event/live-round-declared-winners]] when `winnersDeclaredAt` is set.
 
-**Related docs:** [[live-event/live-results-sidebar]] (sidebar navigation) · [[live-event/live-judge-submissions]] (judge matrix) · [[Wireframe & Flows]] §6 (Rankings UI) · [[System Documentation]] §3.2 (business rules)
+**Related docs:** [[live-event/live-results-sidebar]] (sidebar navigation) · [[live-event/live-judge-submissions]] (judge matrix) · [[live-event/live-round-declared-winners]] (podium) · [[Wireframe & Flows]] §6 (Rankings UI) · [[System Documentation]] §3.2 (business rules)
 
 ## Consumers
 
@@ -25,7 +25,7 @@ Returns **rankings**, advancement preview, and round-state flags for one round. 
 | Sidebar round click (same page, new `roundId`) | Yes — refetch for the new round |
 | Auto-polling | No |
 
-Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round change. Two separate GETs — do not merge client-side.
+Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round change. When `winnersDeclaredAt` is set (or after Declare POST), also fetch [[live-event/live-round-declared-winners]] for the podium — three GETs total, not merged client-side.
 
 ## Request
 
@@ -256,6 +256,7 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Advance label | `Advance to ${nextRound.name}` when `nextRound` is set |
 | Tie panel | Show when `advancement.hasTie === true` |
 | Declare Winners | Final round only (`nextRound === null`). **No tie:** enabled when `canDeclareWinners === true`; POST [[live-event/live-round-declare-winners]] with empty body. **Tie:** `canDeclareWinners === false` — show disabled Declare + tie panel; enable locally when selection count === `requiredSelections`; POST with `{ selectedContestantIds }`. Hidden when `winnersDeclaredAt` is set |
+| Podium | When `winnersDeclaredAt` is set, show Declared Winners block from [[live-event/live-round-declared-winners]] — not `rankings[0..2]` |
 | Refetch | Page mount and manual browser refresh only — no auto-polling |
 
 ## Errors

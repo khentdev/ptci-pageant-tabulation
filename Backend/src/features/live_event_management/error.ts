@@ -16,6 +16,7 @@ export const LIVE_EVENT_ERROR_CODES = {
     DECLARE_NOT_ALLOWED: "DECLARE_NOT_ALLOWED",
     DECLARE_WINNER_COUNT_MISMATCH: "DECLARE_WINNER_COUNT_MISMATCH",
     DECLARE_WINNERS_ERROR: "DECLARE_WINNERS_ERROR",
+    DECLARED_WINNERS_GET_ERROR: "DECLARED_WINNERS_GET_ERROR",
 } as const
 
 export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions> = {
@@ -92,6 +93,11 @@ export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions>
     DECLARE_WINNERS_ERROR: {
         code: "DECLARE_WINNERS_ERROR",
         message: "Unable to declare winners.",
+        status: 500
+    },
+    DECLARED_WINNERS_GET_ERROR: {
+        code: "DECLARED_WINNERS_GET_ERROR",
+        message: "Unable to get declared winners.",
         status: 500
     }
 }

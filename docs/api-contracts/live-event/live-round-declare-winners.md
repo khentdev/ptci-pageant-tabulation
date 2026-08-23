@@ -82,7 +82,10 @@ Optional. Omit body or send `{}` when there is no tie.
 |-------|------|-------|
 | `message` | `string` | Success message |
 
-No `data` field. Refetch `GET /live-event/round-results/:id/advancement` to see `winnersDeclaredAt` set and `canDeclareWinners: false`. Official podium rows are stored in `RoundWinner` (read API is a follow-up).
+No `data` field. After success:
+
+1. Refetch `GET /live-event/round-results/:id/advancement` — `winnersDeclaredAt` set, `canDeclareWinners: false`
+2. Refetch `GET /live-event/round-results/:id/declared-winners` — official podium for UI ([[live-event/live-round-declared-winners]])
 
 ### Types
 
@@ -111,7 +114,7 @@ No `data` field. Refetch `GET /live-event/round-results/:id/advancement` to see 
 | Eligible ≤ limit | `included` may be shorter than N — valid declare with fewer scored contestants |
 | Idempotency | Second declare on same round → `DECLARE_NOT_ALLOWED` (`WINNERS_ALREADY_DECLARED`) — also rejected when `RoundWinner` rows already exist |
 | Irreversible | No undo endpoint |
-| Rankings | Not returned — `rankings` on GET round results stay score-based; official podium read API is follow-up |
+| Rankings | Not returned — `rankings` on GET round results stay score-based; official podium from [[live-event/live-round-declared-winners]] |
 
 ### `DECLARE_NOT_ALLOWED` — `error.data.reason`
 
@@ -133,7 +136,7 @@ Returned with HTTP `409` when declare is rejected.
 | Show button | Final round (`nextRound === null`); hide when `winnersDeclaredAt` is set |
 | No tie | Enable when `canDeclareWinners === true`; empty body or `{}` |
 | Tie | Show tie-resolution panel; **disable** Declare until local selection count === `requiredSelections`; then enable and POST `{ selectedContestantIds }` |
-| After success | Refetch GET round results for `winnersDeclaredAt`; clear local tie selection. Podium display will use GET declared-winners (follow-up) |
+| After success | Refetch advancement GET for `winnersDeclaredAt`; refetch [[live-event/live-round-declared-winners]] for podium; clear local tie selection |
 | Advance button | Never on final round (`canAdvance` is `false`) |
 
 ## Errors

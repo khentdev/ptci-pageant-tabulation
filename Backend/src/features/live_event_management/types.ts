@@ -124,3 +124,27 @@ export type DeclareWinnersInputVariables = {
 export type DeclareWinnersResponse = {
     message: string
 }
+
+// Declared Winners
+export type DeclaredWinnerRow = {
+    placement: number
+    contestant: {
+        id: number
+        candidateNumber: number
+        name: string
+    }
+    overallScore: number
+}
+export type GetDeclaredWinners = {
+    id: number
+}
+export type GetDeclaredWinnersInputVariables = {
+    getDeclaredWinners: GetDeclaredWinners
+}
+export type GetDeclaredWinnersDTO = {
+    declaredWinners: DeclaredWinnerRow[] | null
+}
+export type GetDeclaredWinnersResponse = {
+    data: GetDeclaredWinnersDTO
+    message: string
+}

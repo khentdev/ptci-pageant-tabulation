@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 21, 2026
+**Last synced with codebase:** Aug 23, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -148,7 +148,7 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 - [x] Tie detection on round results fetch — cutoff straddle; `overallScore` rounded to 2 dp (same endpoint)
 - [x] Advancement API — no body when no tie; with tie `{ selectedContestantIds }` merged with auto-included; validates `canAdvance` (API contract: [[live-event/live-round-advance]] — POST /live-event/round-results/:id/advancement)
 - [x] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance; persists `RoundWinner` rows + `winnersDeclaredAt` (API contract: [[live-event/live-round-declare-winners]] — `POST /live-event/round-results/:id/declare-winners`)
-- [ ] Get declared winners API — read official podium from `RoundWinner` after declare (follow-up plan)
+- [x] Get declared winners API — read official podium from `RoundWinner` after declare (API contract: [[live-event/live-round-declared-winners]] — `GET /live-event/round-results/:id/declared-winners`)
 
 ### Frontend
 
@@ -172,7 +172,7 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
   - [ ] One click on enabled Declare locks winners (auto + selected tied via `selectedContestantIds` on final round)
 - [ ] Final round view — "Declare Winners" button instead of Advance
   - [ ] Declare Winners confirmation modal (warn: irreversible)
-  - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores)
+  - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores) — consumes [[live-event/live-round-declared-winners]]; not `rankings[0..2]`
 - [ ] Past rounds remain visible and browsable after advancement (`isCompleted` — read-only)
 - [ ] Refetch on page mount and manual browser refresh only — no auto-polling
 

@@ -124,3 +124,14 @@ export async function validateDeclareWinners(c: Context, next: Next) {
 
     await next()
 }
+
+export async function validateGetDeclaredWinners(c: Context, next: Next) {
+    const id = c.req.param("id")
+    const parsedId = Number(id)
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        throw new AppError("ROUND_ID_INVALID", { field: "get_declared_winners_input_id" })
+    }
+
+    c.set("getDeclaredWinners", { id: parsedId })
+    await next()
+}

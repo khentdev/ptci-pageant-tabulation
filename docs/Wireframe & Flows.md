@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 17, 2026
+**Last synced with codebase:** Aug 23, 2026
 User flows and wireframes in plain English with ASCII layouts.
 See [[System Documentation]] for business rules.
 
@@ -499,18 +499,30 @@ Admin fills all fields at once. Running total updates live. Save is disabled unt
 
 Each round in the Live Event sidebar has its own page. The page always has two sections stacked vertically: **Judge Submissions** on top, **Rankings** below. Both are always visible — rankings show partial results as judges submit.
 
-On page mount and manual refresh only (no auto-polling), frontend fetches round results once. Backend returns:
+On page mount and manual refresh only (no auto-polling), frontend fetches:
+
+| Trigger | Judge GET | Advancement GET | Declared-winners GET |
+|---------|-----------|-----------------|----------------------|
+| Page mount / refresh / sidebar round change | Always | Always | Only when `winnersDeclaredAt` from advancement GET is set (or call always — `declaredWinners: null` when not declared) |
+| After Declare POST success | Refetch | Refetch | **Yes** |
+| Auto-polling | No | No | No |
+
+Judge submissions come from [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`). Rankings and flags come from [[live-event/live-round-results]] (`GET /live-event/round-results/:id/advancement`). Official podium after declare comes from [[live-event/live-round-declared-winners]] — not `rankings[0..2]`.
+
+Judge GET returns `judgeSubmissions` — frontend only paints ✓ / ✗ from this; it does not invent submitted state.
+
+Advancement GET returns:
 
 - `allJudgesSubmitted` — every judge has submitted every category in this round
 - `isCompleted` — `true` after this round was advanced (next round has `round_contestants` rows). Hides Advance and tie UI; read-only history (State 3)
 - `canAdvance` — gates the Advance button; `canAdvanceReason` when disabled (e.g. judges incomplete, next round already filled, next round has no categories)
-- `judgeSubmissions` — frontend only paints ✓ / ✗ from this; it does not invent submitted state
 - `rankings` — category averages + overall (`—` for categories with no submissions yet while judging is in progress)
 - `advancement.included` — auto-included contestants (`id`, `name`, `overallScore`)
 - `advancement.tied` — tied contestants to pick from (`id`, `name`, `overallScore`)
 - `advancement.requiredSelections` — how many tied contestants must be selected
 - `advancement.hasTie` — when `true`, show a tie-resolution panel **below** the full rankings table (do not replace or simplify the table)
 - `nextRound` — `{ id, name, contestantLimit, categoryCount }`; `null` on final round
+- `winnersDeclaredAt` — when set on final round, also fetch declared-winners GET for podium block
 
 Frontend never computes the cutoff tie itself. **No tie:** Advance sends an empty body — backend picks top N. **Tie:** Advance sends `selectedContestantIds` for tied picks only; backend merges with `included`. Tie equality uses `overallScore` rounded to 2 decimal places. Checkbox selection stays in local state until Advance succeeds.
 
@@ -740,14 +752,17 @@ See **§6 State 2b** for layout. Flow summary:
 
 **Flow**
 
-- Admin views the final round (highest phase_order)
-- All judges have submitted
-- Sees final rankings
-- Clicks "Declare Winners" → confirmation prompt → confirms
-- Rankings are permanently locked
-- Winners displayed with medal indicators
+1. Admin on final round (`nextRound === null`)
+2. Fetches judge submissions + round results (§6 fetch matrix)
+3. Tie resolution same as §6 State 2b when `advancement.hasTie`
+4. Declare Winners → confirmation → POST [[live-event/live-round-declare-winners]]
+5. Refetch round results (`winnersDeclaredAt` set) + GET [[live-event/live-round-declared-winners]]
+6. Replace Declare button with **Declared Winners** podium block (data from declared-winners GET, not `rankings[0..2]`)
+7. Rankings table may remain visible as score snapshot (optional; wireframe shows simplified after-declare layout)
 
 **Wireframe — Final Round Results (before declare)**
+
+Podium appears only after declare — no declared-winners GET while `winnersDeclaredAt` is `null`.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -767,11 +782,12 @@ See **§6 State 2b** for layout. Flow summary:
 ┌──────────────────────────────────────────────────────────────┐
 │ Round Results: Top 3                         ✓ Declared       │
 │                                                               │
-│  🥇  Lungcay, Keanna              95.00                       │
-│  🥈  Palay, Roldan                88.50                       │
-│  🥉  Badang, Ethel                84.00                       │
+│  🥇  declaredWinners[0].contestant.name    overallScore      │
+│  🥈  declaredWinners[1].contestant.name    overallScore      │
+│  🥉  declaredWinners[2].contestant.name    overallScore      │
+│       (placement 1..3 from GET — tie 3rd place = admin pick)  │
 │                                                               │
-│  (Declare button hidden — results locked)                     │
+│  (Declare hidden — fetch [[live-event/live-round-declared-winners]]) │
 └──────────────────────────────────────────────────────────────┘
 ```
 

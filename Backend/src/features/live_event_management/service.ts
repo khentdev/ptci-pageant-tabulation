@@ -1,8 +1,8 @@
 import { AppError } from "../../errors/appError.js";
 import logger from "../../infra/logger.js";
 import { prisma } from "../../infra/prisma.js";
-import { advanceRound, declareWinners, getJudgeSubmissions, getRoundResultsById } from "./data.js";
-import type { AdvanceRoundInput, DeclareWinnersInput, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import { advanceRound, declareWinners, getDeclaredWinners, getJudgeSubmissions, getRoundResultsById } from "./data.js";
+import type { AdvanceRoundInput, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
 
 export async function getJudgeSubmissionsService({ id }: GetJudgeSubmissions) {
     const roundExists = await prisma.round.findUnique({
@@ -82,5 +82,24 @@ export async function declareWinnersService({ id, selectedContestantIds }: Decla
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error declaring winners")
         throw new AppError("DECLARE_WINNERS_ERROR")
+    }
+}
+
+export async function getDeclaredWinnersService({ id }: GetDeclaredWinners) {
+    const round = await prisma.round.findUnique({
+        where: { id },
+        select: { id: true },
+    })
+    if (!round) {
+        logger.warn({ id }, "Round not found")
+        throw new AppError("ROUND_PHASE_NOT_FOUND")
+    }
+
+    try {
+        return await getDeclaredWinners({ id })
+    } catch (err) {
+        if (err instanceof AppError) throw err
+        logger.error({ err }, "Error getting declared winners")
+        throw new AppError("DECLARED_WINNERS_GET_ERROR")
     }
 }

@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
-import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
 import { Role } from "../../../generated/prisma/enums.js";
 
 type JudgeRow = { id: number, name: string }
@@ -590,4 +590,34 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
             data: { winnersDeclaredAt: new Date() },
         })
     })
+}
+
+export async function getDeclaredWinners({ id }: GetDeclaredWinners) {
+    const round = await prisma.round.findUnique({
+        where: { id },
+        select: { winnersDeclaredAt: true },
+    })
+    if (!round) throw new AppError("ROUND_PHASE_NOT_FOUND")
+
+    if (round.winnersDeclaredAt === null) {
+        return { declaredWinners: null }
+    }
+
+    const roundWinners = await prisma.roundWinner.findMany({
+        where: { roundId: id },
+        orderBy: { placement: "asc" },
+        include: {
+            contestant: { select: contestantSelect },
+        },
+    })
+
+    const roundTo2 = (value: number) => Math.round(value * 100) / 100
+
+    return {
+        declaredWinners: roundWinners.map(row => ({
+            placement: row.placement,
+            contestant: row.contestant,
+            overallScore: roundTo2(Number(row.overallScore)),
+        })),
+    }
 }
