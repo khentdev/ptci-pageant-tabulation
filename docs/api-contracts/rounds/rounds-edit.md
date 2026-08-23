@@ -136,7 +136,7 @@ Used when the admin submits the edit form.
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `name` | `string` | Yes | Non-empty after trim — always editable |
-| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Positive whole number for later rounds. Must match the existing value when `isLimitLocked = true`. |
+| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Required positive whole number for later rounds (`phaseOrder > 1`). Must match the existing value when `isLimitLocked = true`. |
 
 Phase order is immutable after creation and is not accepted in the request body.
 
@@ -173,6 +173,7 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 |--------|------|---------|-------|
 | `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
 | `400` | `ROUND_NAME_INVALID` | Round name is required. | |
+| `400` | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round. | Returned when `phaseOrder > 1` and `contestantLimit` is omitted or `null`. |
 | `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
 | `400` | `ROUND_CONTESTANT_LIMIT_LOCKED` | Contestant limit cannot be changed after contestants have advanced into this round | |
 | `400` | `ROUND_PRELIMINARY_LIMIT_LOCKED` | Preliminary round contestant limit is always unlimited. | |
