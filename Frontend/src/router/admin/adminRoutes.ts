@@ -10,6 +10,11 @@ export const adminRoutes: RouteRecordRaw[] = [
         name: 'rounds',
         component: () => import('../../views/admin/rounds/roundsMain.vue'),
       },
+      {
+        path: 'categories',
+        name: 'categories',
+        component: () => import('../../views/admin/categories/categoriesMain.vue'),
+      },
     ],
   },
 ];

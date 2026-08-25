@@ -33,7 +33,7 @@ export const roundService = {
     return GetTypeResponse<EditRoundResponse>(res);
   },
 
-  deleteRound: async (id: DeleteRoundPhaseInput) => {
+  deleteRound: async (id: number) => {
     const res = await axiosInstance.delete(`/rounds/${id}`);
     return GetTypeResponse<DeleteRoundPhaseResponse>(res);
   },
