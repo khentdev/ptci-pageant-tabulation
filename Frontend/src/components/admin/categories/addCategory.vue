@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import { onMounted, ref } from 'vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import type { AddCategoryInput } from '@/types/admin/adminSetup/category/categories';
 import { CircleAlert } from '@lucide/vue';
@@ -80,7 +80,6 @@ defineProps<{
 const newCategoryName = ref('');
 const selectedRound = ref('');
 
-console.log(selectedRound.value);
 const addCat = async () => {
   if (!selectedRound.value) {
     return;
@@ -91,8 +90,6 @@ const addCat = async () => {
   };
 
   await categoryStore.addCategory(category);
-
-  console.log(category);
 };
 
 onMounted(() => {

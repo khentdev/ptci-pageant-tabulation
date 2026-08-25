@@ -52,7 +52,9 @@
       </div>
 
       <div class="m-4 flex w-full items-start justify-center gap-4">
-        <button class="border border-black p-4">Cancel</button>
+        <button @click="modalStore.toggleEditCategory()" class="border border-black p-4">
+          Cancel
+        </button>
         <button @click="editCategory" class="border border-black p-4">Save Changes</button>
       </div>
     </div>

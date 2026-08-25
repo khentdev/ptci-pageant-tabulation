@@ -3,7 +3,6 @@ import {
   type AddCategoryInput,
   type GetCategoryByIdDTO,
   type EditCategoryInput,
-  type FieldRow,
   type GetCategoryFieldsDTO,
   type SaveCategoryFieldsInput,
   type CategoryFieldInput,

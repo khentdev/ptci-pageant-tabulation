@@ -8,7 +8,7 @@ import {
   type EditRoundResponse,
   type DeleteRoundPhaseInput,
   type DeleteRoundPhaseResponse,
-} from '@/types/admin/adminSetup/rounds';
+} from '@/types/admin/adminSetup/rounds/rounds';
 
 export const GetTypeResponse = <T>(res: unknown): T => res as T;
 
@@ -29,11 +29,12 @@ export const roundService = {
   },
 
   editRound: async (editRoundInput: EditRoundInput) => {
-    const res = await axiosInstance.patch(`/rounds/${editRoundInput.id}`, editRoundInput);
+    const { id, name, contestantLimit } = editRoundInput;
+    const res = await axiosInstance.patch(`/rounds/${id}`, { name, contestantLimit });
     return GetTypeResponse<EditRoundResponse>(res);
   },
 
-  deleteRound: async (id: number) => {
+  deleteRound: async ({ id }: DeleteRoundPhaseInput) => {
     const res = await axiosInstance.delete(`/rounds/${id}`);
     return GetTypeResponse<DeleteRoundPhaseResponse>(res);
   },

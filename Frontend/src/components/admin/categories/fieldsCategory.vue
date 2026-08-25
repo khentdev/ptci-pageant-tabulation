@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import { onMounted, ref, computed } from 'vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore.ts';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import type {
   AddCategoryInput,

@@ -379,6 +379,42 @@ describe("Edit Round Integration Test", () => {
             })
         })
 
+        it("should return ROUND_CONTESTANT_LIMIT_REQUIRED when clearing the contestant limit on a later round", async () => {
+            await seedRound({
+                name: "Preliminary",
+                phaseOrder: 1,
+                contestantLimit: null,
+            })
+            const round = await seedRound({
+                name: "Top 10",
+                phaseOrder: 2,
+                contestantLimit: 10,
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await patchEditRound(cookieHeader, csrfToken, round.id, {
+                name: "Top 10",
+                contestantLimit: null,
+            })
+            const json = await res.json() as { error: { code: string; message: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("ROUND_CONTESTANT_LIMIT_REQUIRED")
+            expect(json.error.message).toBe("Contestant limit is required for rounds after the preliminary round.")
+
+            const unchangedRound = await prisma.round.findUnique({
+                where: { id: round.id },
+                select: {
+                    name: true,
+                    contestantLimit: true,
+                },
+            })
+            expect(unchangedRound).toEqual({
+                name: "Top 10",
+                contestantLimit: 10,
+            })
+        })
+
         it("should return ROUND_PRELIMINARY_LIMIT_LOCKED when setting a contestant limit on the preliminary round", async () => {
             const round = await seedRound({
                 name: "Preliminary",
