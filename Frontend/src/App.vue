@@ -5,10 +5,10 @@ import VToast from './components/Toast/VToast.vue';
 </script>
 
 <template>
- <router-view v-slot="{ Component }">
+  <router-view v-slot="{ Component }">
     <VToast />
-        <BaseSessionOverlay>
-            <component :is="Component" />
-        </BaseSessionOverlay>
- </router-view>
+    <BaseSessionOverlay>
+      <component :is="Component" />
+    </BaseSessionOverlay>
+  </router-view>
 </template>
