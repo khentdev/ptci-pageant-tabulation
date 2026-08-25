@@ -84,13 +84,13 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
-- [ ] Create category form — round dropdown fetches all rounds live on open
-- [ ] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
-- [ ] Category field editor — batch form with dynamic rows ([ + Add Row ] / [ Remove ]); live running total; Save Fields disabled until total = 100
-- [ ] Fields auto-sorted by max_value descending on judge scoring screen
-- [ ] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
-- [ ] Category status indicator (✓ with field count if fields exist, "No fields" if empty)
+- [x] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
+- [x] Create category form — round dropdown fetches all rounds live on open
+- [x] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
+- [x] Category field editor — batch form with dynamic rows ([ + Add Row ] / [ Remove ]); live running total; Save Fields disabled until total = 100
+- [x] Fields auto-sorted by max_value descending on judge scoring screen
+- [x] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
+- [x] Category status indicator (✓ with field count if fields exist, "No fields" if empty)
 
 ---
 
