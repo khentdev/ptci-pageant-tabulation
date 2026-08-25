@@ -1,28 +1,16 @@
 <script setup lang="ts">
-import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore.ts';
-import { useModalStore } from '@/stores/modals/modalStore';
-import type {
-  DeleteCategoryInput,
-  GetCategoryFieldsInput,
-} from '@/types/admin/adminSetup/category/categories';
+import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import { Check } from '@lucide/vue';
+
 const categoryStore = useCategoryStore();
-const modalStore = useModalStore();
 
-const getCategoryId = async (id: number) => {
-  localStorage.setItem('category-id', JSON.stringify(id));
-  await categoryStore.getCategoryId(id);
-  modalStore.toggleEditCategory();
-};
+const emit = defineEmits<{
+  editCategory: [id: number];
+  openFields: [id: number];
+}>();
 
-const getCategoryFieldsId = async (categoryId: number) => {
-  categoryStore.selectedCategoryId = categoryId;
-  await categoryStore.getCategoryFieldsId(categoryId);
-  modalStore.toggleFieldCategory();
-};
-
-const handleDeleteCategory = (deleteCategoryInput: number) => {
-  categoryStore.deleteCategory(deleteCategoryInput);
+const handleDeleteCategory = (id: number) => {
+  void categoryStore.deleteCategory(id);
 };
 </script>
 
@@ -36,6 +24,12 @@ const handleDeleteCategory = (deleteCategoryInput: number) => {
       </tr>
     </thead>
     <tbody class="w-full">
+      <tr v-if="round.categories.length === 0" class="font-poppins">
+        <td colspan="3" class="border px-4 py-6 text-center">
+          <p class="text-sm text-black/70">No categories yet for this round.</p>
+          <p class="mt-1 text-xs text-black/50">Use Add Category above and select this round.</p>
+        </td>
+      </tr>
       <tr v-for="categories in round.categories" :key="categories.id" class="font-poppins">
         <td class="border px-2 text-nowrap">
           {{ categories.name }}
@@ -46,22 +40,26 @@ const handleDeleteCategory = (deleteCategoryInput: number) => {
             }}<Check
               v-if="categories.fieldCount > 0 && categories.totalScore === 100"
               class="stroke stroke-green-500"
-            ></Check>
+            />
           </div>
         </td>
         <td class="border px-2">
           <div class="flex h-12 items-center justify-center gap-4">
-            <button @click="getCategoryId(categories.id)" class="px-6 h-10 rounded-xl bg-amber-300 hover:bg-amber-400 text-black cursor-pointer">
+            <button
+              @click="emit('editCategory', categories.id)"
+              class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 hover:bg-amber-400"
+            >
               Edit
             </button>
             <button
-              @click="getCategoryFieldsId(categories.id)"
-              class="px-6 h-10 rounded-xl bg-amber-300 hover:bg-amber-400 text-black cursor-pointer"
+              @click="emit('openFields', categories.id)"
+              class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 hover:bg-amber-400"
             >
-              Fields</button
-            ><button
+              Fields
+            </button>
+            <button
               @click="handleDeleteCategory(categories.id)"
-              class="px-6 h-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
+              class="h-10 cursor-pointer rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
             >
               Delete
             </button>

@@ -5,7 +5,6 @@ import {
   type EditCategoryInput,
   type GetCategoryFieldsDTO,
   type SaveCategoryFieldsInput,
-  type CategoryFieldInput,
 } from '@/types/admin/adminSetup/category/categories';
 import { defineStore } from 'pinia';
 import { categoryService } from './service';
@@ -14,202 +13,277 @@ import type { CategoryErrorCodes } from '@/types/admin/adminSetup/category/error
 import { errorHandler } from '@/api/errors/errorHandler';
 import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
-import { ref, watch, computed } from 'vue';
+import { reactive, ref } from 'vue';
 
 const { toast } = useToast();
 
 export const useCategoryStore = defineStore('categoryStore', () => {
-  const isCategoryNameInvalid = ref('');
-  const isCategoryRoundInvalid = ref('');
   const categoryList = ref<GetCategoryListDTO[]>([]);
-  const categoryId = ref<GetCategoryByIdDTO | null>(null);
-  const categoryFields = ref<GetCategoryFieldsDTO | null>(null);
-  const categoryFieldInput = ref<CategoryFieldInput[]>([]);
-  const selectedCategoryId = ref<number>(0);
 
-  const buttonDisabled = computed(() => ['disabled:opacity-50', 'disabled:cursor-not-allowed']);
+  const formErrors = reactive({
+    categoryName: '',
+    categoryRound: '',
+  });
 
-  watch(
-    () => categoryFields.value?.fields,
-    (newFields) => {
-      if (newFields && newFields.length > 0) {
-        categoryFieldInput.value = newFields.map((f) => ({
-          name: f.name,
-          maxValue: String(f.maxValue),
-        }));
-      } else if (categoryFieldInput.value.length === 0) {
-        categoryFieldInput.value = [{ name: '', maxValue: '' }];
-      }
-    },
-    { immediate: true },
-  );
+  const clearFormErrors = () => {
+    formErrors.categoryName = '';
+    formErrors.categoryRound = '';
+  };
 
-  const addCategory = async (addCategoryInput: AddCategoryInput) => {
+  const loadingStates = reactive({
+    isAddingCategory: false,
+    isEditingCategory: false,
+    isDeletingCategory: false,
+    isFetchingCategoryList: false,
+    isFetchingCategoryById: false,
+    isFetchingCategoryFields: false,
+    isSavingCategoryFields: false,
+  });
+
+  const errorStates = reactive({
+    isFetchingCategoryListError: false,
+    isFetchingCategoryByIdError: false,
+    isFetchingCategoryFieldsError: false,
+  });
+
+  const addCategory = async (addCategoryInput: AddCategoryInput): Promise<boolean> => {
+    if (loadingStates.isAddingCategory) {
+      return false;
+    }
+
+    loadingStates.isAddingCategory = true;
     try {
       const res = await categoryService.addCategory(addCategoryInput);
       getCategoryList();
-      toast.success(res.message, { title: 'Success' });
+      toast.success(res.message);
+      return true;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { code, type, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      }
+      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
+      }
 
       if (code === 'CATEGORY_NAME_REQUIRED') {
-        isCategoryNameInvalid.value = message;
+        formErrors.categoryName = message;
       } else if (code === 'CATEGORY_ROUND_ID_REQUIRED') {
-        isCategoryRoundInvalid.value = message;
-      }
-
-      if (code === 'CATEGORY_ADD_ERROR') {
-        toast.error(message, { title: 'Error' });
+        formErrors.categoryRound = message;
       } else if (code === 'ROUND_PHASE_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
+        toast.warning(message, { title: 'Round Phase Not Found' });
       }
+      return false;
+    } finally {
+      loadingStates.isAddingCategory = false;
     }
   };
 
   const getCategoryList = async () => {
+    if (loadingStates.isFetchingCategoryList) {
+      return;
+    }
+
+    loadingStates.isFetchingCategoryList = true;
     try {
       const res = await categoryService.getCategoryList();
       categoryList.value = res.data;
-
-      toast.success(res.message, { title: 'Success' });
+      errorStates.isFetchingCategoryListError = false;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { type } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
-
-      if (code === 'CATEGORY_GET_LIST_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        errorStates.isFetchingCategoryListError = true;
       }
+
+    } finally {
+      loadingStates.isFetchingCategoryList = false;
     }
   };
 
-  const getCategoryId = async (id: number) => {
+  const getCategoryId = async (id: number, closeModal?: () => void): Promise<GetCategoryByIdDTO | null> => {
+    if (loadingStates.isFetchingCategoryById) {
+      return null;
+    }
+    loadingStates.isFetchingCategoryById = true;
     try {
       const res = await categoryService.getCategoryId(id);
-      categoryId.value = res.data;
-      //toast.success(res.message, { title: 'Success' });
-      console.log(res.data);
+      errorStates.isFetchingCategoryByIdError = false;
+      return res.data;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { code, type, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
-
-      if (code === 'CATEGORY_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_GET_BY_ID_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        errorStates.isFetchingCategoryByIdError = true;
       }
+      if (code === 'CATEGORY_NOT_FOUND') {
+        closeModal?.();
+        toast.warning(message, { title: 'Category Not Found' });
+      }
+      return null;
+    } finally {
+      loadingStates.isFetchingCategoryById = false;
     }
   };
 
-  const editCategory = async (editCategoryInput: EditCategoryInput) => {
+  const editCategory = async (editCategoryInput: EditCategoryInput): Promise<boolean> => {
+    if (loadingStates.isEditingCategory) {
+      return false;
+    }
+
+    loadingStates.isEditingCategory = true;
     try {
       const res = await categoryService.editCategory(editCategoryInput);
-      toast.success(res.message, { title: 'Success' });
-      console.log();
+      toast.success(res.message);
       await getCategoryList();
+      return true;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { type, code, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
-      if (code === 'CATEGORY_NAME_REQUIRED') {
-        isCategoryNameInvalid.value = message;
-      }
 
-      if (code === 'CATEGORY_LOCKED') {
-        toast.warning(message, { title: 'Warning' });
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      } else if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
+      } else if (code === 'CATEGORY_NAME_REQUIRED') {
+        formErrors.categoryName = message;
+      } else if (code === 'CATEGORY_LOCKED') {
+        toast.warning(message, { title: 'Category Locked' });
       } else if (code === 'CATEGORY_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_EDIT_ERROR') {
-        toast.error(message, { title: 'Error' });
+        toast.warning(message, { title: 'Category Not Found' });
       }
+      return false;
+    } finally {
+      loadingStates.isEditingCategory = false;
     }
   };
 
   const deleteCategory = async (id: number) => {
+    if (loadingStates.isDeletingCategory) {
+      return;
+    }
+
+    loadingStates.isDeletingCategory = true;
     try {
       const res = await categoryService.deleteCategory(id);
       await getCategoryList();
-      toast.success(res.message, { title: 'Success' });
+      toast.success(res.message);
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { type, code, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
-
-      if (code === 'CATEGORY_LOCKED') {
-        toast.warning(message, { title: 'Warning' });
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      } else if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
+      } else if (code === 'CATEGORY_LOCKED') {
+        toast.warning(message, { title: 'Category Locked' });
       } else if (code === 'CATEGORY_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_DELETE_ERROR') {
-        toast.error(message, { title: 'Error' });
+        toast.warning(message, { title: 'Category Not Found' });
+        await getCategoryList();
       }
+    } finally {
+      loadingStates.isDeletingCategory = false;
     }
   };
 
-  const getCategoryFieldsId = async (categoryFieldsInput: number) => {
+  const getCategoryFieldsId = async (
+    categoryFieldsInput: number,
+    closeModal?: () => void,
+  ): Promise<GetCategoryFieldsDTO | null> => {
+    if (loadingStates.isFetchingCategoryFields) {
+      return null;
+    }
+
+    loadingStates.isFetchingCategoryFields = true;
+    errorStates.isFetchingCategoryFieldsError = false;
     try {
       const res = await categoryService.getCategoryFields(categoryFieldsInput);
-      categoryFields.value = res.data;
-      toast.success(res.message, { title: 'Success' });
+      return res.data;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { type, code, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
 
-      if (code === 'CATEGORY_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELDS_GET_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      } else if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        errorStates.isFetchingCategoryFieldsError = true;
+      } else if (code === 'CATEGORY_NOT_FOUND') {
+        toast.warning(message, { title: 'Category Not Found' });
+        closeModal?.();
+        await getCategoryList();
       }
+      return null;
+    } finally {
+      loadingStates.isFetchingCategoryFields = false;
     }
   };
 
-  const saveCategoryFields = async (saveCategoryFieldInput: SaveCategoryFieldsInput) => {
+  const saveCategoryFields = async (
+    saveCategoryFieldInput: SaveCategoryFieldsInput,
+    closeModal?: () => void,
+  ): Promise<boolean> => {
+    if (loadingStates.isSavingCategoryFields) {
+      return false;
+    }
+
+    loadingStates.isSavingCategoryFields = true;
     try {
       const res = await categoryService.saveCategoryField(saveCategoryFieldInput);
-      toast.success(res.message, { title: 'Success' });
+      toast.success(res.message);
+      return true;
     } catch (error) {
-      const { code, message } = errorHandler<CategoryErrorCodes>(
+      const { type, code, message } = errorHandler<CategoryErrorCodes>(
         error as AxiosError<ErrorResponse<CategoryErrorCodes>>,
       );
 
-      if (code === 'CATEGORY_FIELDS_REQUIRED') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELD_NAME_REQUIRED') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELD_MAX_VALUE_REQUIRED') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELD_MAX_VALUE_INVALID') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELDS_TOTAL_INVALID') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_LOCKED') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_NOT_FOUND') {
-        toast.warning(message, { title: 'Warning' });
-      } else if (code === 'CATEGORY_FIELDS_SAVE_ERROR') {
-        toast.error(message, { title: 'Error' });
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      } else if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
       }
+      if (code === 'CATEGORY_FIELDS_REQUIRED') {
+        toast.warning(message);
+      } else if (code === 'CATEGORY_FIELD_NAME_REQUIRED') {
+        toast.warning(message);
+      } else if (code === 'CATEGORY_FIELD_MAX_VALUE_REQUIRED') {
+        toast.warning(message);
+      } else if (code === 'CATEGORY_FIELD_MAX_VALUE_INVALID') {
+        toast.warning(message);
+      } else if (code === 'CATEGORY_FIELDS_TOTAL_INVALID') {
+        toast.warning(message);
+      } else if (code === 'CATEGORY_LOCKED') {
+        toast.warning(message, { title: 'Category Locked' });
+      } else if (code === 'CATEGORY_NOT_FOUND') {
+        toast.warning(message, { title: 'Category Not Found' });
+        closeModal?.();
+        await getCategoryList();
+      }
+
+      return false;
+    } finally {
+      loadingStates.isSavingCategoryFields = false;
     }
   };
 
   return {
-    selectedCategoryId,
-    categoryFieldInput,
     saveCategoryFields,
-    categoryFields,
     getCategoryFieldsId,
     deleteCategory,
     editCategory,
     getCategoryId,
     addCategory,
-    isCategoryNameInvalid,
-    isCategoryRoundInvalid,
     getCategoryList,
     categoryList,
-    categoryId,
-    buttonDisabled,
+    loadingStates,
+    errorStates,
+    clearFormErrors,
+    formErrors,
   };
 });
