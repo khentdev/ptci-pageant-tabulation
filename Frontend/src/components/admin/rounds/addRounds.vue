@@ -99,7 +99,7 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import { ref, watch } from 'vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import type { AddRoundInput } from '@/types/admin/adminSetup/rounds/rounds';
 import { CircleAlert, X } from '@lucide/vue';
 

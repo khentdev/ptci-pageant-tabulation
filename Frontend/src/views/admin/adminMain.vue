@@ -68,12 +68,13 @@ const toggleDropDown = () => {
                 <Calendar class="stroke stroke-custom-gray"></Calendar>
                 <p class="cursor-pointer text-black/70">Rounds</p>
               </RouterLink>
-              <div
+              <RouterLink
+                :to="{ name: 'categories' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
                 <LayoutGrid class="stroke stroke-custom-gray"></LayoutGrid>
                 <p class="cursor-pointer text-black/70">Categories</p>
-              </div>
+              </RouterLink>
 
               <div
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"

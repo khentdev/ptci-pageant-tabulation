@@ -222,10 +222,14 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 - Selects round from dropdown (fetches all rounds live)
 - Enters category name
 - Saves → category created; now admin adds scoring fields
-- Admin clicks category → opens field editor
-- Adds fields one by one: field name, max score
-- Running total shown; error shown if total ≠ 100
-- Category shows as "Ready" when total = 100
+- Admin clicks [ Fields ] on a category → fetch `GET /categories/:id/fields` → opens field editor; existing fields are pre-filled as editable rows; empty row shown if no fields yet
+- Admin fills all fields in one form (field name + max score per row), adds rows with [ + Add Row ]
+- Clicking [ Remove ] on a row removes it from the form UI only — no API call yet
+- Running total updates live as admin types or removes rows; Save Fields button disabled until total === 100
+- Admin clicks Save Fields → all fields submitted as a batch in one request; backend deletes all existing fields for this category and inserts the new batch in one transaction
+- Validated server-side: total max_value must equal 100; rejected if not
+- Guard: Save Fields is rejected if scores already exist for this category (fields are locked once judging begins)
+- A category either has a complete set of fields (total = 100) or no fields — no partial states allowed in DB
 
 **Edit Category Flow**
 
@@ -243,18 +247,18 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 │ Categories                                     [ + Add Category ]      │
 │                                                                        │
 │  PRELIMINARY                                                           │
-│  ├── Swimwear      4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
-│  ├── Talent        4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
-│  ├── Formal Wear   4 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
-│  └── Production    3 fields  Total: 80 ⚠  [ Edit ] [ Fields ] [ Delete ]│
+│  ├── Swimwear      4 fields  ✓  [ Edit ] [ Fields ] [ Delete ]         │
+│  ├── Talent        4 fields  ✓  [ Edit ] [ Fields ] [ Delete ]         │
+│  ├── Formal Wear   4 fields  ✓  [ Edit ] [ Fields ] [ Delete ]         │
+│  └── Production    No fields    [ Edit ] [ Fields ] [ Delete ]         │
 │                                                                        │
 │  TOP 5                                                                 │
-│  └── Q&A Round     2 fields  Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  └── Q&A Round     2 fields  ✓  [ Edit ] [ Fields ] [ Delete ]         │
 │                                                                        │
 │  TOP 3                                                                 │
-│  └── Final Question 2 fields Total:100 ✓  [ Edit ] [ Fields ] [ Delete ]│
+│  └── Final Question 2 fields ✓  [ Edit ] [ Fields ] [ Delete ]         │
 │                                                                        │
-│  Edit and Delete disabled if scores already exist for that category    │
+│  Edit and Delete rejected by backend if scores exist for that category │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -297,7 +301,9 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 └──────────────────────────────────────────────────┘
 ```
 
-**Wireframe — Category Field Editor**
+**Wireframe — Category Field Editor (Batch Form)**
+
+Admin fills all fields at once. Running total updates live. Save is disabled until total = 100.
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -305,14 +311,35 @@ Contestant limit field is hidden entirely. Frontend omits it from the request.
 │                                                       │
 │  #   Field Name             Max Score   Actions       │
 │  ─   ─────────────────────  ─────────   ───────       │
-│  1   Stage Presence         40          [ Delete ]    │
-│  2   Figure & Fitness       30          [ Delete ]    │
-│  3   Poise & Bearing        20          [ Delete ]    │
-│  4   Overall Impact         10          [ Delete ]    │
+│  1   [ Stage Presence     ] [  40  ]    [ Remove ]    │
+│  2   [ Figure & Fitness   ] [  30  ]    [ Remove ]    │
+│  3   [ Poise & Bearing    ] [  20  ]    [ Remove ]    │
+│  4   [ Overall Impact     ] [  10  ]    [ Remove ]    │
 │                                                       │
-│  Running Total: 100 / 100  ✓                          │
+│  [ + Add Row ]                                        │
 │                                                       │
-│  [ + Add Field ]                                      │
+│  Total: 100 / 100  ✓                                  │
+│                                                       │
+│  [ Cancel ]              [ Save Fields ]  ← enabled   │
+└──────────────────────────────────────────────────────┘
+```
+
+```
+
+┌──────────────────────────────────────────────────────┐
+│ Swimwear — Scoring Fields                             │
+│                                                       │
+│  #   Field Name             Max Score   Actions       │
+│  ─   ─────────────────────  ─────────   ───────       │
+│  1   [ Stage Presence     ] [  40  ]    [ Remove ]    │
+│  2   [ Figure & Fitness   ] [  30  ]    [ Remove ]    │
+│  3   [ Poise & Bearing    ] [  20  ]    [ Remove ]    │
+│                                                       │
+│  [ + Add Row ]                                        │
+│                                                       │
+│  Total: 90 / 100  ⚠ Must equal 100                   │
+│                                                       │
+│  [ Cancel ]              [ Save Fields ]  ← disabled  │
 └──────────────────────────────────────────────────────┘
 ```
 

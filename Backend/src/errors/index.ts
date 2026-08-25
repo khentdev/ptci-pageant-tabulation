@@ -2,6 +2,7 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { AUTH_ERROR_CODES, AUTH_ERROR_DEF } from '../features/auth/errors.js';
 import { ROUND_ERROR_CODES, ROUND_ERROR_DEF } from '../features/rounds_management/error.js';
 import { SESSION_ERROR_CODES, SESSION_ERROR_DEF } from '../features/session/errors.js';
+import { CATEGORY_ERROR_CODES, CATEGORY_ERROR_DEF } from "../features/category_management/error.js";
 
 export type ErrorDefinitions = {
     code: ErrorCodes,
@@ -21,6 +22,7 @@ export const FEATURE_ERROR_CODES = {
     ...AUTH_ERROR_CODES,
     ...SESSION_ERROR_CODES,
     ...ROUND_ERROR_CODES,
+    ...CATEGORY_ERROR_CODES,
     SERVER_ERROR: "SERVER_ERROR",
     TOKEN_INVALID: "TOKEN_INVALID",
     TOKEN_EXPIRED: "TOKEN_EXPIRED",
@@ -35,6 +37,7 @@ export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
     ...AUTH_ERROR_DEF,
     ...SESSION_ERROR_DEF,
     ...ROUND_ERROR_DEF,
+    ...CATEGORY_ERROR_DEF,
     TOKEN_INVALID: {
         code: "TOKEN_INVALID",
         status: 401,

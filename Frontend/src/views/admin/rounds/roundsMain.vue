@@ -5,7 +5,7 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import AddRounds from '@/components/admin/rounds/addRounds.vue';
 import EditRounds from '@/components/admin/rounds/editRounds.vue';
 import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { onMounted } from 'vue';
 import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
 

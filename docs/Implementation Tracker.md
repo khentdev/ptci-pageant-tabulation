@@ -76,23 +76,21 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 ### Backend
 
 - [x] Create category (name, round — round_id selected from dropdown)
-- [ ] Edit category name (guard: reject if scores exist for this category)
-- [ ] List categories grouped by round
-- [ ] Add scoring field to category (field name, max_value)
-- [ ] Delete scoring field (guard: reject if any scores exist for this field)
-- [ ] Delete category (guard: reject if any scores exist for this category)
-- [ ] Validate field max_value sum === 100 on category activate / field add
+- [x] Edit category name (guard: reject if scores exist for this category)
+- [x] List categories grouped by round
+- [x] Get fields by category API — returns existing fields for a category (used to pre-fill the field editor on open)
+- [X] Add scoring fields to category — batch endpoint: receives array of fields, validates total max_value === 100, inserts all in one transaction; replaces existing fields if category already has them
+- [x] Delete category (guard: reject if any scores exist for this category)
 
 ### Frontend
 
-- [ ] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
-- [ ] Create category form — round dropdown fetches all rounds live on open
-- [ ] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
-- [ ] Category field editor — add fields (name + max score), running total shown, error if sum ≠ 100
-- [ ] Fields auto-sorted by max_value descending in editor and on judge screen
-- [ ] Delete field with confirmation — disabled if scores exist for that field
-- [ ] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
-- [ ] Category readiness indicator (✓ if sum = 100, ⚠ if not)
+- [x] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
+- [x] Create category form — round dropdown fetches all rounds live on open
+- [x] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
+- [x] Category field editor — batch form with dynamic rows ([ + Add Row ] / [ Remove ]); live running total; Save Fields disabled until total = 100
+- [x] Fields auto-sorted by max_value descending on judge scoring screen
+- [x] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
+- [x] Category status indicator (✓ with field count if fields exist, "No fields" if empty)
 
 ---
 
@@ -206,9 +204,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] JWT auth middleware — validate token on all protected routes
-- [ ] Role guard middleware — `adminOnly` and `judgeOnly` guards
-- [ ] Global error handler — consistent error response shape
+- [x] JWT auth middleware — validate token on all protected routes
+- [x] Role guard middleware — `adminOnly` and `judgeOnly` guards
+- [x] Global error handler — consistent error response shape
 - [ ] Input validation — field-level validation on all mutation endpoints
 
 ### Frontend

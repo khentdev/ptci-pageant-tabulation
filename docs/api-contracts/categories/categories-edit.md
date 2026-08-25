@@ -33,10 +33,10 @@ Used when the admin clicks **Edit** on a category row.
 
 **Cookies** *(auto-sent by browser with `credentials: 'include'`)*
 
-| Cookie | Required | Notes |
-|--------|----------|-------|
-| `sid` | Yes | Session cookie — browser sends automatically |
-| `csrfToken` | Yes | Browser sends automatically; frontend reads value for `X-CSRF-Token` header |
+| Cookie      | Required | Notes                                                                       |
+| ----------- | -------- | --------------------------------------------------------------------------- |
+| `sid`       | Yes      | Session cookie — browser sends automatically                                |
+| `csrfToken` | Yes      | Browser sends automatically; frontend reads value for `X-CSRF-Token` header |
 
 **Path params**
 
