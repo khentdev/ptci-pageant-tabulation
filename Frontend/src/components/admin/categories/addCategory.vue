@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import { onMounted, ref } from 'vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import type { AddCategoryInput } from '@/types/admin/adminSetup/category/categories';
 import { CircleAlert } from '@lucide/vue';

@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore.ts';
 import { ref, watch } from 'vue';
 import type { EditRoundInput } from '@/types/admin/adminSetup/rounds/rounds';
 import { CircleAlert, X } from '@lucide/vue';

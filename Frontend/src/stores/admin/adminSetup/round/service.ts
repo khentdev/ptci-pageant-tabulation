@@ -34,11 +34,7 @@ export const roundService = {
     return GetTypeResponse<EditRoundResponse>(res);
   },
 
-<<<<<<< HEAD
-  deleteRound: async ({ id }: DeleteRoundPhaseInput) => {
-=======
   deleteRound: async (id: number) => {
->>>>>>> eb592de7d5d18d16a5089091a79bec065bafb1f5
     const res = await axiosInstance.delete(`/rounds/${id}`);
     return GetTypeResponse<DeleteRoundPhaseResponse>(res);
   },

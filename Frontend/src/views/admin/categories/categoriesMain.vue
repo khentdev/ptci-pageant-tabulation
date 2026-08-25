@@ -2,7 +2,7 @@
 import RoundsTable from '@/components/admin/rounds/roundsTable.vue';
 import { Plus } from '@lucide/vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
 import { onMounted } from 'vue';
 import CategoriesTable from '@/components/admin/categories/categoriesTable.vue';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
