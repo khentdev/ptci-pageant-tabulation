@@ -39,6 +39,7 @@ model Round {
 
   categories       Category[]
   roundContestants RoundContestant[]
+  roundWinners     RoundWinner[]
 }
 
 model Category {
@@ -75,6 +76,7 @@ model Contestant {
   createdAt       DateTime @default(now())
 
   roundContestants RoundContestant[]
+  roundWinners     RoundWinner[]
   scores           Score[]
 }
 
@@ -87,6 +89,19 @@ model RoundContestant {
   contestant Contestant @relation(fields: [contestantId], references: [id])
 
   @@id([roundId, contestantId])
+}
+
+model RoundWinner {
+  roundId        Int
+  contestantId   Int
+  placement      Int
+  overallScore   Decimal @db.Decimal(5, 2)
+
+  round      Round      @relation(fields: [roundId], references: [id])
+  contestant Contestant @relation(fields: [contestantId], references: [id])
+
+  @@id([roundId, placement])
+  @@unique([roundId, contestantId])
 }
 
 model Score {

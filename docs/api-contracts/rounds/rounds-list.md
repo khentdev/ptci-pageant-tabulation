@@ -4,6 +4,12 @@
 
 Admin only.
 
+## Consumers
+
+- Admin Setup → Rounds list page
+- Admin Live Event → Round Results sidebar — see [[live-event/live-results-sidebar]]
+- Admin Setup → Add Category round dropdown — see [[categories/categories-add]]
+
 ## Request
 
 **Headers** *(frontend sets explicitly)*

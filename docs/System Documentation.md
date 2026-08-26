@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 17, 2026
+**Last synced with codebase:** Aug 23, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---
@@ -256,7 +256,7 @@ Judges only see the fields they fill in. No totals, no running math, no score fe
 
 **Results Fetch Payload (page mount and manual refresh only — no auto-polling)**
 
-Frontend does not compute submission state, ties, or whether Advance is allowed. Backend sends flags on every `GET` round results fetch. Admin refreshes the page (or navigates back to the round) to see updated scores.
+Frontend does not compute submission state, ties, or whether Advance is allowed. Backend sends flags on every round-results fetch. The Round Results page uses **two GETs always** on mount / manual refresh / round change: [[live-event/live-judge-submissions]] for the judge matrix and [[live-event/live-round-results]] for rankings and advancement flags. When `winnersDeclaredAt` is set (final round after declare), also fetch [[live-event/live-round-declared-winners]] for the official podium. Admin refreshes the page (or navigates back to the round) to see updated scores.
 
 | Field                            | Purpose                                                                                                                                                                                                           |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -265,7 +265,7 @@ Frontend does not compute submission state, ties, or whether Advance is allowed.
 | `rankings`                       | Contestant rows with category averages + overall score (see partial rules above)                                                                                                                                  |
 | `isCompleted`                    | `true` when the next round already has contestants in `round_contestants` (i.e. this round was already advanced). Page is read-only history (State 3). Frontend **hides** Advance button and tie-resolution panel |
 | `canAdvance`                     | `true` only when Advance is allowed (all conditions below met). When `false`, Advance stays hidden if `isCompleted` is `true`; otherwise disabled with helper from `canAdvanceReason`                             |
-| `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
+| `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `CURRENT_ROUND_NO_CATEGORIES`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
 | `advancement.hasTie`             | `true` only if a tie straddles the next round's cutoff — frontend shows tie-resolution panel below the full rankings table                                                                                        |
 | `advancement.requiredSelections` | How many tied contestants admin must pick (`N - A`). `0` if no tie                                                                                                                                                |
 | `advancement.included`           | Auto-included contestants: `id`, `name`, `overallScore`                                                                                                                                                           |
@@ -276,9 +276,10 @@ Frontend does not compute submission state, ties, or whether Advance is allowed.
 
 1. This round is not completed (`isCompleted` is `false`)
 2. Not the final round (`nextRound` is not `null` for Advance; final round uses Declare Winners)
-3. `allJudgesSubmitted` is `true`
-4. Next round has no contestants in `round_contestants` yet
-5. Next round has at least one category (`nextRound.categoryCount > 0`)
+3. Current round has at least one category
+4. `allJudgesSubmitted` is `true`
+5. Next round has no contestants in `round_contestants` yet
+6. Next round has at least one category (`nextRound.categoryCount > 0`) and a positive `contestantLimit`
 
 Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCompleted` is `false`. While judges are still scoring, send empty `included` / `tied` arrays and `hasTie: false`.
 
@@ -290,11 +291,11 @@ Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCo
 
 **Advance API**
 
-`POST /rounds/:id/advance`
+`POST /live-event/round-results/:id/advancement` — API contract: [[live-event/live-round-advance]]
 
 | Case | Request body | Backend behavior |
 | --- | --- | --- |
-| No tie | No body (or empty) | Backend takes top `N` from final rankings (`included` list) |
+| No tie | No body (or empty) | Backend takes contestants from `advancement.included` (top N by ranking, or all eligible when fewer than N have scores) |
 | Tie at cutoff | `{ selectedContestantIds: number[] }` — IDs from `advancement.tied` only | Backend merges `advancement.included` + `selectedContestantIds`; validates count === `nextRound.contestantLimit` |
 
 Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend keeps tie checkbox selection in local state until Advance succeeds (no auto-polling to reset it).
@@ -308,6 +309,7 @@ Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend k
 - If `allJudgesSubmitted` is `false`, Advance stays disabled (or hidden until all judges submit — same as State 1)
 - Advance is rejected if the next round has no categories — admin must add categories in Setup first
 - System determines how many to advance by reading the **next round's `contestant_limit`**
+- When fewer contestants have scores than the limit, advancement may include fewer than N — all eligible scored contestants advance
 - Contestants ranked above the cutoff are auto-advanced; no admin selection needed
 - A tie only requires admin resolution when it **straddles the cutoff line** — meaning some tied contestants fall above the cutoff and some below (not enough spots for all tied contestants)
 - A tie where all tied contestants are above the cutoff → all advance automatically, no issue
@@ -356,12 +358,14 @@ Admin must pick exactly (N - A) from the T tied contestants
 **Business Rules**
 
 - The round with the highest `phase_order` is treated as the final round — no "Advance" button, only "Declare Winners"
-- Declaring winners sets `winners_declared_at` timestamp on that round — this is the lock mechanism
-- Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display, and no further changes are possible
+- Declaring winners sets `winners_declared_at` on that round and inserts `RoundWinner` rows in the same transaction — lock plus official podium snapshot (`placement`, `contestantId`, `overallScore`)
+- Official declared podium (placement + score snapshot) is stored in `RoundWinner` rows at declare time — sorted by score then `candidateNumber` at write; separate from score-based `rankings` on the round results page
+- Read path: `GET /live-event/round-results/:id/declared-winners` returns `declaredWinners` from `RoundWinner` when `winners_declared_at` is set; `null` when not declared — frontend shows podium on the same Round Results page (`/admin/live/results/:roundId`), not a separate route
+- Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display (from declared-winners GET), and no further changes are possible
 - Declaring winners is irreversible — no undo
 - Final round uses the same cutoff tie UI when more contestants tie at the top-N cutoff than slots remain (e.g. top 3 with a tie at rank 3). Admin picks who is included in the ranked top 3; medals (1st / 2nd / 3rd) follow final ranking order after resolution
-- `canDeclareWinners` follows the same gating as `canAdvance` (all judges submitted, not already declared) plus any cutoff tie resolved
-- Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display
+- `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus cutoff tie must be resolved via local selection and POST body when `advancement.hasTie` is `true` — GET returns `canDeclareWinners: false` while a cutoff tie exists
+- Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display; podium rows come from [[live-event/live-round-declared-winners]] after declare
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
 
 ---
