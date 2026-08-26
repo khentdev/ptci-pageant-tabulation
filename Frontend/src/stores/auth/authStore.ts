@@ -38,15 +38,16 @@ export const useAuthStore = defineStore('auth', () => {
     loadingStates.isLoggingIn = true;
     try {
       const res = await authService.loginUser(user);
-      currentUser.value = res.data.user;
+      currentUser.value = { user: res.data.user };
       await router.push({ name: 'admin-homepage' });
     } catch (error) {
       const { code, message, type } = errorHandler<AuthErrorCodes>(
         error as AxiosError<ErrorResponse<AuthErrorCodes>>,
       );
-      console.log(type);
       if (type === 'offline') {
-        toast.warning('Please check your internet connection and try again.', { title: 'You are offline' });
+        toast.warning('Please check your internet connection and try again.', {
+          title: 'You are offline',
+        });
       }
       if (type === 'server_error' || type === 'unreachable' || type === 'timeout') {
         isInvalidCredentials.value = message;
@@ -75,13 +76,15 @@ export const useAuthStore = defineStore('auth', () => {
           currentUser.value = res;
           break;
         } catch (err) {
-          const { code, type } = errorHandler<AUTH_ERRORS.SessionErrorCodes>(err as AxiosError<ErrorResponse<AUTH_ERRORS.SessionErrorCodes>>);
+          const { code, type } = errorHandler<AUTH_ERRORS.SessionErrorCodes>(
+            err as AxiosError<ErrorResponse<AUTH_ERRORS.SessionErrorCodes>>,
+          );
           if (code === AUTH_ERRORS.SESSION_LOCK_IN_PROGRESS && attempt < MAX_RETRIES - 1) {
             const baseDelay = 500;
             const maxDelay = 3000;
-            const delay = Math.min(baseDelay * (2 ** attempt), maxDelay);
+            const delay = Math.min(baseDelay * 2 ** attempt, maxDelay);
             const jitter = Math.random() * 200;
-            await new Promise(r => setTimeout(r, delay + jitter));
+            await new Promise((r) => setTimeout(r, delay + jitter));
             continue;
           }
           if (isSessionFailureCode(code)) {
@@ -89,7 +92,12 @@ export const useAuthStore = defineStore('auth', () => {
             return;
           }
 
-          if (type === 'offline' || type === 'server_error' || type === 'unreachable' || type === 'timeout') {
+          if (
+            type === 'offline' ||
+            type === 'server_error' ||
+            type === 'unreachable' ||
+            type === 'timeout'
+          ) {
             // I-shoshow nito yung blocking error UI with retry button
             systemErrors.sessionError = true;
             return;

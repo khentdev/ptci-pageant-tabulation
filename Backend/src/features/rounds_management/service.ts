@@ -86,6 +86,9 @@ export async function editRoundService({ id, name, contestantLimit }: EditRoundI
     if (existingRound.phaseOrder === 1 && contestantLimit != null)
         throw new AppError("ROUND_PRELIMINARY_LIMIT_LOCKED")
 
+    if (existingRound.phaseOrder > 1 && contestantLimit == null)
+        throw new AppError("ROUND_CONTESTANT_LIMIT_REQUIRED")
+
     try {
         await editRound({
             id,
