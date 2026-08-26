@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router';
 import BaseSessionOverlay from './components/System/BaseSessionOverlay.vue';
 import VToast from './components/Toast/VToast.vue';
+<<<<<<< HEAD
 import AddRounds from './components/admin/rounds/addRounds.vue';
 import { useModalStore } from './stores/modals/modalStore.ts';
 import EditRounds from './components/admin/rounds/editRounds.vue';
@@ -22,6 +23,11 @@ const categoryStore = useCategoryStore();
     :showModal="modalStore.isFieldCategoryVisible"
     :categoryId="categoryStore.selectedCategoryId"
   ></FieldsCategory>
+=======
+</script>
+
+<template>
+>>>>>>> d807c4d3479698ae07c3cc4dbd0a88bb0d8f4953
   <router-view v-slot="{ Component }">
     <VToast />
     <BaseSessionOverlay>

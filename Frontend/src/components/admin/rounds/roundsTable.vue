@@ -21,7 +21,7 @@
   </tr>
 </template>
 <script setup lang="ts">
-import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { useModalStore } from '@/stores/modals/modalStore';
 
 const modalStore = useModalStore();

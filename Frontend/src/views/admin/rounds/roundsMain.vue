@@ -5,7 +5,11 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import AddRounds from '@/components/admin/rounds/addRounds.vue';
 import EditRounds from '@/components/admin/rounds/editRounds.vue';
 import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
+<<<<<<< HEAD
 import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
+=======
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
+>>>>>>> d807c4d3479698ae07c3cc4dbd0a88bb0d8f4953
 import { onMounted } from 'vue';
 import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
 

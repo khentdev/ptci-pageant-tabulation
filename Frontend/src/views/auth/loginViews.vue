@@ -3,7 +3,7 @@ import { CircleUser, Lock, CircleAlert, LoaderCircle } from '@lucide/vue';
 import type { loginInput } from '@/types/auth/userAuth';
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth/authStore';
-import { useRoundStore } from '@/stores/admin/adminSetup/roundStore';
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 const roundStore = useRoundStore();
 
 const authStore = useAuthStore();
