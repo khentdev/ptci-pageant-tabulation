@@ -325,6 +325,7 @@ Admin fills all fields at once. Running total updates live. Save is disabled unt
 ```
 
 ```
+
 ┌──────────────────────────────────────────────────────┐
 │ Swimwear — Scoring Fields                             │
 │                                                       │

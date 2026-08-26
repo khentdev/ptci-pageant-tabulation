@@ -125,7 +125,7 @@ export async function deleteCategoryService({ id }: DeleteCategoryInput) {
     const hasScores = await prisma.score.count({ where: { categoryId: id } })
     if (hasScores > 0) {
         logger.warn({ id }, "Category is locked because scores exist")
-        throw new AppError("CATEGORY_LOCKED")
+        throw new AppError("CATEGORY_LOCKED",{messageOverride: "Category cannot be deleted because scores already exist for this category."})
     }
 
     try {

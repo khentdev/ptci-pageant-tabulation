@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 17, 2026
+**Last synced with codebase:** Aug 26, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -62,10 +62,10 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Rounds list page (ordered by phase order, shows name + limit + Edit + Delete actions per row)
-- [ ] Create round form (name, phase order, contestant limit — blank = unlimited)
-- [ ] Edit round form — fetch lock state on open; name always editable; phase order read-only; limit editable or read-only based on `isLimitLocked`
-- [ ] Delete round with confirmation modal — button always visible; backend rejects with error toast if round has categories or scores
+- [x] Rounds list page (ordered by phase order, shows name + limit + Edit + Delete actions per row)
+- [x] Create round form (name, phase order, contestant limit — blank = unlimited)
+- [x] Edit round form — fetch lock state on open; name always editable; phase order read-only; limit editable or read-only based on `isLimitLocked`
+- [x] Delete round with confirmation modal — button always visible; backend rejects with error toast if round has categories or scores
 
 ---
 
@@ -84,13 +84,13 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Frontend
 
-- [ ] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
-- [ ] Create category form — round dropdown fetches all rounds live on open
-- [ ] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
-- [ ] Category field editor — batch form with dynamic rows ([ + Add Row ] / [ Remove ]); live running total; Save Fields disabled until total = 100
-- [ ] Fields auto-sorted by max_value descending on judge scoring screen
-- [ ] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
-- [ ] Category status indicator (✓ with field count if fields exist, "No fields" if empty)
+- [x] Categories list page (grouped by round, shows field count + sum status + Edit + Fields + Delete actions per row)
+- [x] Create category form — round dropdown fetches all rounds live on open
+- [x] Edit category form — fetch lock state on open (`isLocked` = scores exist); name editable or read-only based on lock state
+- [x] Category field editor — batch form with dynamic rows ([ + Add Row ] / [ Remove ]); live running total; Save Fields disabled until total = 100
+- [x] Fields auto-sorted by max_value descending on judge scoring screen
+- [x] Delete category with confirmation modal — button always visible; backend rejects with error toast if scores exist for that category
+- [x] Category status indicator (✓ with field count if fields exist, "No fields" if empty)
 
 ---
 
