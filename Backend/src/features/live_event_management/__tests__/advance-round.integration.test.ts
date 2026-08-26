@@ -293,6 +293,7 @@ describe("Advance Round Integration Test", () => {
         await prisma.contestant.deleteMany()
         await prisma.category.deleteMany()
         await prisma.round.deleteMany()
+        await prisma.user.deleteMany({ where: { role: "JUDGE" } })
         await prisma.user.deleteMany({
             where: { username: { in: testUsernames } },
         })
@@ -670,6 +671,30 @@ describe("Advance Round Integration Test", () => {
             expect(second.status).toBe(409)
             expect(json.error.code).toBe("ADVANCE_NOT_ALLOWED")
             expect(json.error.data.reason).toBe("ROUND_COMPLETED")
+        })
+
+        it("should advance from phase 1 to phase 3 when phase 2 does not exist", async () => {
+            const prelims = await seedRound({ name: "Preliminary", phaseOrder: 1 })
+            const top5 = await seedRound({ name: "Top 5", phaseOrder: 3, contestantLimit: 5 })
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+            const scores = [95, 90, 85, 80, 75, 74, 73]
+            const contestants = await seedScoredContestants(
+                category.id,
+                judgeOne.id,
+                judgeTwo.id,
+                scores,
+                2600,
+            )
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id)
+            expect(res.status).toBe(201)
+
+            const expectedIds = contestants.slice(0, 5).map((c) => c.id)
+            await expectRoundContestants(top5.id, expectedIds)
         })
     })
 

@@ -202,6 +202,7 @@ describe("Get Round Results Integration Test", () => {
         await prisma.contestant.deleteMany()
         await prisma.category.deleteMany()
         await prisma.round.deleteMany()
+        await prisma.user.deleteMany({ where: { role: "JUDGE" } })
         await prisma.user.deleteMany({
             where: { username: { in: testUsernames } },
         })
@@ -524,6 +525,33 @@ describe("Get Round Results Integration Test", () => {
         })
 
         it("should return nextRound null on the final round", async () => {
+            const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.nextRound).toBeNull()
+            expect(json.data.canAdvance).toBe(false)
+            expect(json.data.canAdvanceReason).toBeNull()
+        })
+
+        it("should find next round when phaseOrder has a gap (e.g. 1 → 3)", async () => {
+            const prelims = await seedRound({ name: "Preliminary", phaseOrder: 1 })
+            const top5 = await seedRound({ name: "Top 5", phaseOrder: 3, contestantLimit: 5 })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, prelims.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.isCompleted).toBe(false)
+            expect(json.data.nextRound).toEqual({
+                id: top5.id,
+                name: "Top 5",
+                contestantLimit: 5,
+                categoryCount: 1,
+            })
+        })
+
+        it("should treat highest phaseOrder as final round even with gaps", async () => {
             const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
             const json = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
