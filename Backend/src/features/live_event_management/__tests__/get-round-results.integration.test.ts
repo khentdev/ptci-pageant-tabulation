@@ -679,7 +679,7 @@ describe("Get Round Results Integration Test", () => {
         }
 
         it("should return empty advancement while judges are still scoring", async () => {
-            const { prelims, category } = await seedSevenContestantPrelims()
+            const { prelims } = await seedSevenContestantPrelims()
             await seedCategory({ name: "Talent", roundId: prelims.id })
 
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
