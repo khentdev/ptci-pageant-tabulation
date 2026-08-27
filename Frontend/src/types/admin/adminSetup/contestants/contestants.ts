@@ -7,7 +7,7 @@ export type AddContestantRequestBody = {
   teamColor: unknown;
 };
 export type AddContestantInput = {
-  candidateNumber: number;
+  candidateNumber: string;
   name: string;
   gender: Gender;
   teamName: string;

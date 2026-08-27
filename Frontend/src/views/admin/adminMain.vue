@@ -69,10 +69,6 @@ const toggleDropDown = () => {
                 <Calendar class="stroke stroke-custom-gray"></Calendar>
                 <p class="cursor-pointer text-black/70">Rounds</p>
               </RouterLink>
-<<<<<<< HEAD
-
-=======
->>>>>>> d807c4d3479698ae07c3cc4dbd0a88bb0d8f4953
               <RouterLink
                 :to="{ name: 'categories' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"

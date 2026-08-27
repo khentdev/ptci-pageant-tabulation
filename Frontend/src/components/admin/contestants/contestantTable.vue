@@ -48,7 +48,12 @@
             <td class="border">
               <div class="flex h-12 items-center justify-center gap-4">
                 <button class="h-10 rounded-xl bg-amber-300 px-6 hover:bg-amber-400">Edit</button>
-                <button class="h-10 rounded-xl bg-amber-600 px-6 hover:bg-amber-700">Delete</button>
+                <button
+                  @click="handleDeleteContestant(contestant.candidateNumber)"
+                  class="h-10 rounded-xl bg-amber-600 px-6 hover:bg-amber-700"
+                >
+                  Delete
+                </button>
               </div>
             </td>
           </tr>
@@ -66,6 +71,10 @@ import { watch } from 'vue';
 const router = useRouter();
 const route = useRoute();
 const contestantStore = useContestantStore();
+
+const handleDeleteContestant = async (id: number) => {
+  contestantStore.deleteContestant(id);
+};
 
 const applyFilter = (gender?: Gender) => {
   router.push({

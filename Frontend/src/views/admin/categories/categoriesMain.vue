@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-<<<<<<< HEAD
-import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
-import { onMounted } from 'vue';
-=======
 import { onMounted, ref } from 'vue';
->>>>>>> d807c4d3479698ae07c3cc4dbd0a88bb0d8f4953
 import CategoriesTable from '@/components/admin/categories/categoriesTable.vue';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import AddCategory from '@/components/admin/categories/addCategory.vue';

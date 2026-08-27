@@ -32,10 +32,7 @@
         >
           <div class="flex flex-col">
             <p>Round Name</p>
-            <select
-              v-model="selectedRound"
-              class="h-10 w-full border border-black px-3"
-            >
+            <select v-model="selectedRound" class="h-10 w-full border border-black px-3">
               <option :value="''" disabled>Select a round</option>
               <option v-for="item in roundStore.roundList" :key="item.id" :value="String(item.id)">
                 {{ item.name }}
@@ -86,9 +83,7 @@
               class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:opacity-50"
             >
               {{
-                categoryStore.loadingStates.isAddingCategory
-                  ? 'Adding category...'
-                  : 'Add Category'
+                categoryStore.loadingStates.isAddingCategory ? 'Adding category...' : 'Add Category'
               }}
             </button>
           </div>
@@ -100,10 +95,9 @@
 
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
-import { ref, watch } from 'vue';
+
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
-import { onMounted, ref } from 'vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/round/roundStore';
+import { onMounted, ref, watch } from 'vue';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import type { AddCategoryInput } from '@/types/admin/adminSetup/category/categories';
 import { CircleAlert, X } from '@lucide/vue';

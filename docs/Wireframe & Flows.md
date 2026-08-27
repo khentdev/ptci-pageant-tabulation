@@ -921,18 +921,18 @@ See **§6 State 2b** for layout. Flow summary:
 
 ## Page & Route Map
 
-| Route                         | Access   | Description                              |
-| ----------------------------- | -------- | ---------------------------------------- |
-| `/`                           | Public   | Redirects to `/login`                    |
-| `/candidates`                 | Public   | Candidate photo grid                     |
-| `/login`                      | Public   | Shared login page                        |
-| `/admin/setup/rounds`         | Admin    | Create and manage rounds                 |
-| `/admin/setup/categories`     | Admin    | Create categories and scoring fields     |
-| `/admin/setup/contestants`    | Admin    | Add and manage contestants               |
-| `/admin/setup/judges`         | Admin    | Add and manage judge accounts            |
-| `/admin/live/results/:roundId`| Admin    | Round results, advancement, tie resolution |
-| `/judge/scoring`              | Judge    | Scoring interface — redirects to first available category |
-| `/judge/scoring/:categoryId`  | Judge    | Scoring grid for a specific category; categoryId in URL persists on refresh |
+| Route                          | Access | Description                                                                 |
+| ------------------------------ | ------ | --------------------------------------------------------------------------- |
+| `/`                            | Public | Redirects to `/login`                                                       |
+| `/candidates`                  | Public | Candidate photo grid                                                        |
+| `/login`                       | Public | Shared login page                                                           |
+| `/admin/setup/rounds`          | Admin  | Create and manage rounds                                                    |
+| `/admin/setup/categories`      | Admin  | Create categories and scoring fields                                        |
+| `/admin/setup/contestants`     | Admin  | Add and manage contestants                                                  |
+| `/admin/setup/judges`          | Admin  | Add and manage judge accounts                                               |
+| `/admin/live/results/:roundId` | Admin  | Round results, advancement, tie resolution                                  |
+| `/judge/scoring`               | Judge  | Scoring interface — redirects to first available category                   |
+| `/judge/scoring/:categoryId`   | Judge  | Scoring grid for a specific category; categoryId in URL persists on refresh |
 
 ---
 
