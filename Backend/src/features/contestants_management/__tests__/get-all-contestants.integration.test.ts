@@ -121,6 +121,7 @@ describe("Get All Contestants Integration Test", () => {
 
     const expectedMixedContestants = [
         {
+            id: expect.any(Number),
             candidateNumber: 1,
             name: "Aniar, Andrea Mae",
             gender: "FEMALE",
@@ -128,6 +129,7 @@ describe("Get All Contestants Integration Test", () => {
             teamColor: "Yellow",
         },
         {
+            id: expect.any(Number),
             candidateNumber: 2,
             name: "Santos, Juan",
             gender: "MALE",
@@ -135,6 +137,7 @@ describe("Get All Contestants Integration Test", () => {
             teamColor: "Blue",
         },
         {
+            id: expect.any(Number),
             candidateNumber: 3,
             name: "Dela Cruz, Christine",
             gender: "FEMALE",
@@ -226,6 +229,7 @@ describe("Get All Contestants Integration Test", () => {
             const json = await res.json() as GetAllContestantsResponse
             expect(json.data).toEqual([
                 {
+                    id: expect.any(Number),
                     candidateNumber: 2,
                     name: "Santos, Juan",
                     gender: "MALE",
@@ -245,6 +249,7 @@ describe("Get All Contestants Integration Test", () => {
             const json = await res.json() as GetAllContestantsResponse
             expect(json.data).toEqual([
                 {
+                    id: expect.any(Number),
                     candidateNumber: 1,
                     name: "Aniar, Andrea Mae",
                     gender: "FEMALE",
@@ -252,6 +257,7 @@ describe("Get All Contestants Integration Test", () => {
                     teamColor: "Yellow",
                 },
                 {
+                    id: expect.any(Number),
                     candidateNumber: 3,
                     name: "Dela Cruz, Christine",
                     gender: "FEMALE",
@@ -296,7 +302,7 @@ describe("Get All Contestants Integration Test", () => {
             expect(json.data.map((contestant) => contestant.candidateNumber)).toEqual([1, 2, 3])
         })
 
-        it("should return only public fields and exclude internal database id", async () => {
+        it("should return public fields including the internal database id", async () => {
             await seedMixedContestants()
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
@@ -305,13 +311,14 @@ describe("Get All Contestants Integration Test", () => {
 
             const json = await res.json() as GetAllContestantsResponse
             expect(json.data[0]).toEqual({
+                id: expect.any(Number),
                 candidateNumber: expect.any(Number),
                 name: expect.any(String),
                 gender: expect.any(String),
                 teamName: expect.any(String),
                 teamColor: expect.any(String),
             })
-            expect(json.data[0]).not.toHaveProperty("id")
+            expect(json.data[0]).toHaveProperty("id")
         })
 
         it("should return an empty array when filter matches no contestants", async () => {

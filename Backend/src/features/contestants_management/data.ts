@@ -21,6 +21,7 @@ export async function getAllContestants({ filter = undefined }: GetAllContestant
     const contestants = await prisma.contestant.findMany({
         where: filter ? { gender: filter } : undefined,
         select: {
+            id:true,
             candidateNumber: true,
             name: true,
             gender: true,

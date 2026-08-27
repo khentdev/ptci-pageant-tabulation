@@ -4,7 +4,7 @@
 
 Admin only.
 
-Returns all contestants, optionally filtered by gender. Used on the Admin Setup → Contestants list page. Does not include internal database IDs.
+Returns all contestants, optionally filtered by gender. Used on the Admin Setup → Contestants list page.
 
 **Frontend filter rules**
 
@@ -44,6 +44,7 @@ Returns all contestants, optionally filtered by gender. Used on the Admin Setup 
 {
   "data": [
     {
+      "id": 1,
       "candidateNumber": 1,
       "name": "Aniar, Andrea Mae",
       "gender": "FEMALE",
@@ -51,6 +52,7 @@ Returns all contestants, optionally filtered by gender. Used on the Admin Setup 
       "teamColor": "Yellow"
     },
     {
+      "id": 2,
       "candidateNumber": 2,
       "name": "Santos, Juan",
       "gender": "MALE",
@@ -58,6 +60,7 @@ Returns all contestants, optionally filtered by gender. Used on the Admin Setup 
       "teamColor": "Blue"
     },
     {
+      "id": 3,
       "candidateNumber": 3,
       "name": "Dela Cruz, Christine",
       "gender": "FEMALE",
@@ -72,6 +75,7 @@ Returns all contestants, optionally filtered by gender. Used on the Admin Setup 
 | Field | Type | Notes |
 |-------|------|-------|
 | `data` | `GetAllContestantsDTO[]` | Ordered by `candidateNumber` ascending |
+| `data[].id` | `number` | Internal database ID |
 | `data[].candidateNumber` | `number` | Unique contestant number |
 | `data[].name` | `string` | Contestant name |
 | `data[].gender` | `"MALE" \| "FEMALE"` | Contestant gender |
