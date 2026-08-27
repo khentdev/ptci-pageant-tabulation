@@ -1,7 +1,9 @@
 import {
   type AddContestantInput,
+  type EditContestantInput,
   type Gender,
   type GetAllContestantsDTO,
+  type GetContestantByIdDTO,
 } from '@/types/admin/adminSetup/contestants/contestants';
 import { defineStore } from 'pinia';
 import { ref, reactive } from 'vue';
@@ -11,9 +13,12 @@ import { errorHandler } from '@/api/errors/errorHandler';
 import type { ContestantsErrorCodes } from '@/types/admin/adminSetup/contestants/error';
 import { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
+import { useRoute, useRouter } from 'vue-router';
 
 export const useContestantStore = defineStore('contestantStore', () => {
   const { toast } = useToast();
+  const router = useRouter();
+  const route = useRoute();
   const contestantList = ref<GetAllContestantsDTO[]>([]);
 
   const formErrors = reactive({
@@ -33,12 +38,15 @@ export const useContestantStore = defineStore('contestantStore', () => {
 
   const loadingStates = reactive({
     isFetchingContestantList: false,
+    isFetchingContestantId: false,
     isAddingContestants: false,
+    isEditingContestants: false,
     isDeletingContestant: false,
   });
 
   const errorStates = reactive({
     isFetchingContestantListError: false,
+    isFetchingContestantIdError: false,
   });
 
   const getContestants = async (filter?: Gender) => {
@@ -80,7 +88,7 @@ export const useContestantStore = defineStore('contestantStore', () => {
     try {
       const res = await contestantService.addContestant(contestantInput);
       await getContestants();
-      await toast.success(res.message);
+      toast.success(res.message);
       return true;
     } catch (error) {
       const { code, type, message } = errorHandler<ContestantsErrorCodes>(
@@ -119,6 +127,79 @@ export const useContestantStore = defineStore('contestantStore', () => {
     }
   };
 
+  const editContestant = async (contestantInput: EditContestantInput): Promise<boolean> => {
+    if (loadingStates.isEditingContestants) {
+      return false;
+    }
+
+    loadingStates.isEditingContestants = true;
+    try {
+      const res = await contestantService.editContestant(contestantInput);
+      await getContestants();
+      toast.success(res.message);
+      return true;
+    } catch (error) {
+      const { code, type, message } = errorHandler<ContestantsErrorCodes>(
+        error as AxiosError<ErrorResponse<ContestantsErrorCodes>>,
+      );
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      }
+      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
+      }
+
+      if (code === 'CONTESTANT_CANDIDATE_NUMBER_REQUIRED') {
+        formErrors.contestantNumber = message;
+      } else if (code === 'CONTESTANT_NAME_REQUIRED') {
+        formErrors.contestantName = message;
+      } else if (code === 'CONTESTANT_GENDER_REQUIRED') {
+        formErrors.contestantGender = message;
+      } else if (code === 'CONTESTANT_TEAM_NAME_REQUIRED') {
+        formErrors.contestantTeamName = message;
+      } else if (code === 'CONTESTANT_TEAM_COLOR_REQUIRED') {
+        formErrors.contestantTeamColor = message;
+      }
+      return false;
+    } finally {
+      loadingStates.isEditingContestants = false;
+    }
+  };
+
+  const getContestantsId = async (
+    contestantId: number,
+    closeModal?: () => void,
+  ): Promise<GetContestantByIdDTO | null> => {
+    if (loadingStates.isFetchingContestantId) {
+      return null;
+    }
+    loadingStates.isFetchingContestantId = true;
+    try {
+      const res = await contestantService.getContestantsId(contestantId);
+      errorStates.isFetchingContestantIdError = false;
+      return res.data;
+    } catch (error) {
+      const { code, type, message } = errorHandler<ContestantsErrorCodes>(
+        error as AxiosError<ErrorResponse<ContestantsErrorCodes>>,
+      );
+      if (type === 'offline') {
+        toast.warning(message, { title: 'You are Offline' });
+      }
+      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+        toast.error(message, { title: 'Server Error' });
+      }
+
+      if (code === 'CONTESTANT_NOT_FOUND') {
+        toast.warning(message);
+      } else if (code === 'CONTESTANT_GET_BY_ID_ERROR') {
+        toast.error(message);
+      }
+      return null;
+    } finally {
+      loadingStates.isFetchingContestantId = false;
+    }
+  };
+
   const deleteContestant = async (id: number) => {
     if (loadingStates.isDeletingContestant) {
       return;
@@ -142,13 +223,26 @@ export const useContestantStore = defineStore('contestantStore', () => {
         toast.warning(message);
       } else if (code === 'CONTESTANT_NOT_FOUND') {
         toast.warning(message);
+      } else if (code === 'CONTESTANT_DELETE_ERROR') {
+        toast.error(message);
       }
     } finally {
       loadingStates.isDeletingContestant = false;
     }
   };
 
+  const applyFilter = (gender?: Gender) => {
+    router.push({
+      query: {
+        ...route.query,
+        filter: gender || undefined,
+      },
+    });
+  };
+
   return {
+    applyFilter,
+    getContestantsId,
     deleteContestant,
     contestantList,
     getContestants,
@@ -157,5 +251,6 @@ export const useContestantStore = defineStore('contestantStore', () => {
     formErrors,
     clearFormErrors,
     addContestant,
+    editContestant,
   };
 });

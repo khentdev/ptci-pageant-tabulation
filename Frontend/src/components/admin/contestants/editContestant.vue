@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <div
-      @click.self="modalStore.toggleAddContestant()"
+      @click.self="modalStore.toggleEditContestant()"
       v-if="props.showModal"
       class="font-poppins fixed inset-0 z-90 flex h-dvh items-center justify-center bg-black/50 p-4 py-10"
     >
@@ -9,9 +9,9 @@
         class="flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl bg-amber-200 sm:w-lg md:h-auto"
       >
         <div class="flex w-full items-center justify-between px-4 text-2xl">
-          <p>Add Contestant</p>
+          <p>Edit Contestant</p>
           <button
-            @click="modalStore.toggleAddCategory()"
+            @click="modalStore.toggleEditContestant()"
             class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-black/10"
           >
             <X />
@@ -26,10 +26,12 @@
             <p>Contestant No.</p>
             <input
               v-model="newContestantNumber"
+              :readonly="contestant?.isLocked"
               type="number"
               name="contestantNumber"
               id="contestantNumber"
-              class="h-10 w-full border border-black px-3"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+              :placeholder="contestant?.candidateNumber ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantNumber"
@@ -46,10 +48,12 @@
             <p>Name</p>
             <input
               v-model="newContestantName"
+              :readonly="contestant?.isLocked === true"
               type="text"
               name="contestantName"
               id="contestantName"
-              class="h-10 w-full border border-black px-3"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+              :placeholder="contestant?.name ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantName"
@@ -64,7 +68,11 @@
 
           <div class="h-full w-full">
             <p>Gender</p>
-            <select v-model="selectedGender" class="h-10 w-full border border-black px-3">
+            <select
+              v-model="selectedGender"
+              class="h-10 w-full border border-black px-3 disabled:cursor-not-allowed disabled:bg-gray-300"
+              :disabled="contestant?.isLocked === true"
+            >
               <option :value="undefined" disabled>Select a gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
@@ -84,10 +92,12 @@
             <p>Team Name</p>
             <input
               v-model="newContestantTeamName"
+              :readonly="contestant?.isLocked === true"
               type="text"
               name="contestantTeamName"
               id="contestantTeamName"
-              class="h-10 w-full border border-black px-3"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+              :placeholder="contestant?.teamName ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantTeamName"
@@ -104,10 +114,12 @@
             <p>Team Color</p>
             <input
               v-model="newContestantTeamColor"
+              :readonly="contestant?.isLocked === true"
               type="text"
               name="contestantTeamColor"
               id="contestantTeamColor"
-              class="h-10 w-full border border-black px-3"
+              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+              :placeholder="contestant?.teamColor ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantTeamColor"
@@ -129,13 +141,13 @@
             </button>
             <button
               type="submit"
-              :disabled="contestantStore.loadingStates.isAddingContestants"
+              :disabled="contestantStore.loadingStates.isEditingContestants"
               class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:opacity-50"
             >
               {{
-                contestantStore.loadingStates.isAddingContestants
-                  ? 'Saving contestant...'
-                  : 'Save Contestant'
+                contestantStore.loadingStates.isEditingContestants
+                  ? 'Saving changes...'
+                  : 'Save Changes'
               }}
             </button>
           </div>
@@ -161,8 +173,11 @@
 <script setup lang="ts">
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import { useModalStore } from '@/stores/modals/modalStore';
-import type { AddContestantInput } from '@/types/admin/adminSetup/contestants/contestants';
-import type { Gender } from '@/types/admin/adminSetup/contestants/contestants';
+import {
+  type GetContestantByIdDTO,
+  type AddContestantInput,
+} from '@/types/admin/adminSetup/contestants/contestants';
+import type { EditContestantInput, Gender } from '@/types/admin/adminSetup/contestants/contestants';
 import { X, CircleAlert } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -176,16 +191,23 @@ const newContestantName = ref('');
 const selectedGender = ref<Gender | undefined>(undefined);
 const newContestantTeamName = ref('');
 const newContestantTeamColor = ref('');
+const contestant = ref<GetContestantByIdDTO | null>(null);
 
+const props = defineProps<{
+  showModal: boolean;
+  contestantId: number;
+}>();
 const saveContestant = async () => {
   if (!selectedGender.value) {
     return;
-  }
-  if (!newContestantNumber.value) {
+  } else if (!newContestantNumber.value) {
+    return;
+  } else if (!contestant.value?.id) {
     return;
   }
 
-  const payload: AddContestantInput = {
+  const payload: EditContestantInput = {
+    id: contestant.value?.id,
     candidateNumber: String(newContestantNumber.value),
     name: newContestantName.value.trim(),
     gender: selectedGender.value,
@@ -194,9 +216,10 @@ const saveContestant = async () => {
   };
   console.log(payload);
 
-  const success = await contestantStore.addContestant(payload);
+  const success = await contestantStore.editContestant(payload);
   if (success) {
-    modalStore.toggleAddContestant();
+    modalStore.toggleEditContestant();
+
     ((newContestantNumber.value = ''),
       (selectedGender.value = undefined),
       (newContestantName.value = ''),
@@ -212,7 +235,25 @@ watch(
   },
 );
 
-const props = defineProps<{
-  showModal: boolean;
-}>();
+const loadContestant = async () => {
+  if (!props.contestantId) {
+    return;
+  }
+
+  contestantStore.clearFormErrors();
+  const fetchedCategory = await contestantStore.getContestantsId(props.contestantId, () =>
+    modalStore.toggleEditContestant(),
+  );
+  contestant.value = fetchedCategory;
+};
+
+watch(
+  () => [props.showModal, props.contestantId] as const,
+  ([isOpen]) => {
+    if (isOpen) {
+      void loadContestant();
+    }
+  },
+  { immediate: true },
+);
 </script>

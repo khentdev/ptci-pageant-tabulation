@@ -28,6 +28,7 @@ export type GetAllContestantsParamsVariables = {
   getAllContestantsParams: GetAllContestantsParams;
 };
 export type GetAllContestantsDTO = {
+  id: number;
   candidateNumber: number;
   name: string;
   gender: Gender;
@@ -48,7 +49,7 @@ export type GetContestantByIdInputVariables = {
 };
 export type GetContestantByIdDTO = {
   id: number;
-  candidateNumber: number;
+  candidateNumber: string;
   name: string;
   gender: Gender;
   teamName: string;
@@ -70,7 +71,7 @@ export type EditContestantRequestBody = {
 };
 export type EditContestantInput = {
   id: number;
-  candidateNumber: number;
+  candidateNumber: string;
   name: string;
   gender: Gender;
   teamName: string;

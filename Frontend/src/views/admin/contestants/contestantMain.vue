@@ -2,6 +2,10 @@
   <AddContestant
     :showModal="modalStore.contestantModalStates.isAddContestantVisible"
   ></AddContestant>
+  <EditContestant
+    :showModal="modalStore.contestantModalStates.isEditContestantVisible"
+    :contestantId="selectedContestantid"
+  ></EditContestant>
   <div
     class="bg-main-light-brown font-poppins flex h-full w-full flex-col items-center gap-2 rounded-xl border border-black/20 px-6 py-4 drop-shadow-sm drop-shadow-black/10"
   >
@@ -24,7 +28,7 @@
         description="We couldn't load the contestants. Please try again."
         :onRetry="contestantStore.getContestants"
       />-->
-      <ContestantTable></ContestantTable>
+      <ContestantTable @editContestant="openEditCategory"></ContestantTable>
     </div>
   </div>
 </template>
@@ -34,7 +38,17 @@ import { Plus } from '@lucide/vue';
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import AddContestant from '@/components/admin/contestants/addContestant.vue';
 import { useModalStore } from '@/stores/modals/modalStore';
+import EditContestant from '@/components/admin/contestants/editContestant.vue';
+import { ref } from 'vue';
 
 const contestantStore = useContestantStore();
 const modalStore = useModalStore();
+
+const selectedContestantid = ref(0);
+
+const openEditCategory = (id: number) => {
+  localStorage.setItem('contestant-id', JSON.stringify(id));
+  selectedContestantid.value = id;
+  modalStore.toggleEditContestant();
+};
 </script>
