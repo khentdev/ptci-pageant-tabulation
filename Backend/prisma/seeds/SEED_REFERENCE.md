@@ -4,6 +4,12 @@ Quick reference for frontend and manual testing after running the dev seed.
 
 ## How to run
 
+On `feat/admin-live-results`, apply migrations first (includes `RoundWinner` table):
+
+```bash
+npm run db:dev
+```
+
 ```bash
 # First time (creates admin from .env)
 npm run seed:admin
@@ -15,7 +21,7 @@ npm run seed:dev
 npm run seed:all
 ```
 
-**Warning:** `seed:dev` deletes all judges, contestants, rounds, categories, and scores. The admin account is preserved.
+**Warning:** `seed:dev` deletes all judges, contestants, rounds, categories, scores, and declared winners (`RoundWinner`). The admin account is preserved.
 
 ---
 
@@ -48,9 +54,9 @@ Round IDs vary after each seed — use `GET /rounds` or the seed log. Names are 
 | Round | phaseOrder | Limit | Live-event state | Notes |
 |-------|------------|-------|------------------|-------|
 | **Preliminary** | 1 | unlimited | **State 3** — `isCompleted: true` | All judges submitted; already advanced top 10 |
-| **Top 10** | 2 | 10 | **State 1** — `allJudgesSubmitted: false` | Maria done; Juan partial; Ana none; limit locked |
+| **Top 10** | 2 | 10 | **State 1** — `allJudgesSubmitted: false` | Maria done; Juan partial; limit locked |
 | **Top 5** | 3 | 5 | **State 2b** — `hasTie: true`, `canAdvance: true` | Tie at cutoff advancing to Top 3 (pick 1 of 3 tied) |
-| **Top 3** | 4 | 3 | Final — empty pool | Categories ready; awaiting advance from Top 5 |
+| **Top 3** | 4 | 3 | **Final — declared** — `winnersDeclaredAt` set, podium rows | All judges submitted; Declare hidden; use declared-winners GET for podium |
 | **Spare Round** | 5 | 5 | N/A | Empty — **safe to delete** |
 | **Advancement Only** | 6 | 2 | N/A | 2 contestants, no categories — delete → `ROUND_PHASE_HAS_CONTESTANTS` |
 
@@ -62,17 +68,31 @@ Advancing to Top 3 (limit 3):
 - **Tied at cutoff:** #103, #104, #105 (all 88.00) — admin picks exactly **1**
 - `advancement.requiredSelections` = 1
 
+**Note:** Top 3 pool in seed is pre-filled (#101, #102, #103) as if advance from Top 5 already happened (tie pick #103). Use **Top 5** in the UI to test advance + tie resolution from scratch.
+
+### Top 3 declared winners (podium)
+
+Open **Top 3** in Admin Live Results after seed — `GET declared-winners` returns:
+
+| Placement | Contestant # | Name | overallScore |
+|-----------|--------------|------|--------------|
+| 1 | 101 | Keanna Reyes | 95.00 |
+| 2 | 102 | Marcus Lin | 88.00 |
+| 3 | 103 | Sofia Mendoza | 82.00 |
+
+To test **Declare Winners** flow from scratch: re-run `npm run seed:dev`, advance from **Top 5** (resolve tie), then score Top 3 via judge UI or manual API before declare.
+
 ---
 
 ## Error-toast cheat sheet
 
 | Action | Target | Expected code |
 |--------|--------|---------------|
-| Delete round | Preliminary / Top 10 / Top 5 | `ROUND_PHASE_CATEGORY_LOCKED` |
+| Delete round | Preliminary / Top 10 / Top 5 / Top 3 | `ROUND_PHASE_CATEGORY_LOCKED` |
 | Delete round | Advancement Only | `ROUND_PHASE_HAS_CONTESTANTS` |
 | Delete round | Spare Round | Success |
 | Edit round limit | Top 10 | `ROUND_CONTESTANT_LIMIT_LOCKED` |
-| Edit round limit | Top 3 | Editable (no contestants yet) |
+| Edit round limit | Top 3 | `ROUND_CONTESTANT_LIMIT_LOCKED` |
 | Delete category | Preliminary Swimwear | `CATEGORY_LOCKED` |
 | Delete category | Top 10 Q&A (empty) | Success |
 | Edit category name | Preliminary Swimwear | `CATEGORY_LOCKED` |
@@ -86,7 +106,7 @@ Advancing to Top 3 (limit 3):
 
 ## Safe to delete during manual testing
 
-Re-run `npm run seed:dev` to reset after experimenting.
+Re-run `npm run seed:dev` to reset after experimenting (including after declare winners).
 
 - **Spare Round** (entire round)
 - **Top 10 → Q&A** category (empty, no fields)
@@ -101,5 +121,5 @@ Re-run `npm run seed:dev` to reset after experimenting.
 | Preliminary | Swimwear, Talent, Evening Gown (all with fields, scored) |
 | Top 10 | Production Number, Formal Wear (scored, partial); Q&A (empty) |
 | Top 5 | Swimwear, Talent (fully scored, tie scenario) |
-| Top 3 | Evening Wear, Q&A (fields, no scores) |
+| Top 3 | Evening Wear, Q&A (fields, fully scored; winners declared) |
 | Spare / Advancement Only | none |

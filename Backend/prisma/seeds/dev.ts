@@ -122,9 +122,43 @@ async function seedDev() {
         }
     }
 
-    // --- Top 3: categories ready, empty pool ---
-    await createCategoryWithFields(top3.id, "Evening Wear", SINGLE_FIELD)
-    await createCategoryWithFields(top3.id, "Q&A", SINGLE_FIELD)
+    // --- Top 3: final round — pool filled, fully scored, winners declared ---
+    const top3EveningWear = await createCategoryWithFields(top3.id, "Evening Wear", SINGLE_FIELD)
+    const top3Qa = await createCategoryWithFields(top3.id, "Q&A", SINGLE_FIELD)
+
+    const topThreeIds = [101, 102, 103].map(number => byNumber.get(number)!.id)
+    await insertRoundContestants(top3.id, topThreeIds)
+
+    const top3ScoreMap = [
+        { number: 101, total: 95 },
+        { number: 102, total: 88 },
+        { number: 103, total: 82 },
+    ]
+
+    for (const category of [top3EveningWear, top3Qa]) {
+        for (const judge of [judgeMaria, judgeJuan]) {
+            await submitSingleFieldScores(
+                judge.id,
+                category,
+                top3ScoreMap.map(({ number, total }) => ({
+                    contestantId: byNumber.get(number)!.id,
+                    total,
+                })),
+            )
+        }
+    }
+
+    await prisma.round.update({
+        where: { id: top3.id },
+        data: { winnersDeclaredAt: new Date() },
+    })
+    await prisma.roundWinner.createMany({
+        data: [
+            { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
+            { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
+            { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
+        ],
+    })
 
     // --- Advancement Only: contestants without categories (delete guard test) ---
     await insertRoundContestants(advancementOnly.id, [

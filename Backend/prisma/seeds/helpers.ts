@@ -35,6 +35,7 @@ export async function wipeDevData() {
         await tx.score.deleteMany()
         await tx.criteriaField.deleteMany()
         await tx.category.deleteMany()
+        await tx.roundWinner.deleteMany()
         await tx.roundContestant.deleteMany()
         await tx.round.deleteMany()
         await tx.contestant.deleteMany()
