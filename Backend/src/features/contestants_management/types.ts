@@ -28,6 +28,7 @@ export type GetAllContestantsParamsVariables = {
     getAllContestantsParams: GetAllContestantsParams
 }
 export type GetAllContestantsDTO = {
+    id: number;
     candidateNumber: number;
     name: string;
     gender: Gender;
