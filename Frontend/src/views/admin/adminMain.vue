@@ -3,6 +3,7 @@ import NavMain from '@/components/navMain.vue';
 import { ref } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
+import type router from '@/router';
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');

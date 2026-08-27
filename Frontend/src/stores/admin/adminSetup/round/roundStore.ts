@@ -184,7 +184,7 @@ export const useRoundStore = defineStore('roundStore', () => {
 
   const deleteRound = async (id: number) => {
     try {
-      const res = await roundService.deleteRound({ id });
+      const res = await roundService.deleteRound(id);
       await getRound();
       toast.success(res.message);
     } catch (error) {
