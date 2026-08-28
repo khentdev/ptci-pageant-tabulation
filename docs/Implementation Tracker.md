@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 26, 2026
+**Last synced with codebase:** Aug 28, 2026
 Task checklist for build progress. Each module links to its flow in [[Wireframe & Flows]]. Product rules in [[System Documentation]].
 
 **How to use this tracker**
@@ -100,18 +100,18 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Add contestant (candidate number, name, gender, team name, team color)
-- [ ] List contestants (filter by gender)
-- [ ] Edit contestant (guard: reject if any scores exist for this contestant)
-- [ ] Delete contestant (guard: reject if any scores exist)
-- [ ] Candidate number unique constraint enforced
+- [X] Add contestant (candidate number, name, gender, team name, team color)
+- [x] List contestants (filter by gender)
+- [x] Edit contestant (guard: reject if any scores exist for this contestant)
+- [x] Delete contestant (guard: reject if any scores exist)
+- [x] Candidate number unique constraint enforced
 
 ### Frontend
 
-- [ ] Contestants list page (gender filter: All · Male · Female)
-- [ ] Add contestant form
-- [ ] Edit contestant form — fetch lock state on open; fields read-only when scores exist
-- [ ] Delete contestant with confirmation modal — button always visible; backend rejects with error toast if scores exist
+- [x] Contestants list page (gender filter: All · Male · Female)
+- [x] Add contestant form
+- [x] Edit contestant form — fetch lock state on open; fields read-only when scores exist
+- [x] Delete contestant with confirmation modal — button always visible; backend rejects with error toast if scores exist
 
 ---
 

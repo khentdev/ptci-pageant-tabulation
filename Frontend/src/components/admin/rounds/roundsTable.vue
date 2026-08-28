@@ -4,9 +4,18 @@
     <td class="border px-2 text-nowrap">{{ item.phaseOrder }}</td>
     <td class="border px-2 text-nowrap">{{ item.contestantLimit }}</td>
     <td class="border px-2">
-      <div class="flex items-center justify-center gap-4 h-12">
-        <button @click="editRound(item.id)" class="px-6 h-10 rounded-xl bg-amber-300 hover:bg-amber-400 text-black cursor-pointer">Edit</button
-        ><button @click="deleteRound(item.id)" class="px-6 h-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white cursor-pointer">Delete</button>
+      <div class="flex h-12 items-center justify-center gap-4">
+        <button
+          @click="editRound(item.id)"
+          class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 text-black hover:bg-amber-400"
+        >
+          Edit</button
+        ><button
+          @click="deleteRound(item.id)"
+          class="h-10 cursor-pointer rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
+        >
+          Delete
+        </button>
       </div>
     </td>
   </tr>

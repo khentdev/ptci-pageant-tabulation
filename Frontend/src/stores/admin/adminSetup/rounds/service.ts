@@ -33,7 +33,6 @@ export const roundService = {
     const res = await axiosInstance.patch(`/rounds/${id}`, { name, contestantLimit });
     return GetTypeResponse<EditRoundResponse>(res);
   },
-
   deleteRound: async ({ id }: DeleteRoundPhaseInput) => {
     const res = await axiosInstance.delete(`/rounds/${id}`);
     return GetTypeResponse<DeleteRoundPhaseResponse>(res);

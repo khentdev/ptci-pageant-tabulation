@@ -101,7 +101,12 @@ export const useRoundStore = defineStore('roundStore', () => {
         error as AxiosError<ErrorResponse<RoundErrorCodes>>,
       );
 
-      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+      if (
+        type === 'offline' ||
+        type === 'server_error' ||
+        type === 'timeout' ||
+        type === 'unreachable'
+      ) {
         errorStates.isFetchingRoundsError = true;
       }
     } finally {
@@ -122,7 +127,12 @@ export const useRoundStore = defineStore('roundStore', () => {
       const { type } = errorHandler<RoundErrorCodes>(
         error as AxiosError<ErrorResponse<RoundErrorCodes>>,
       );
-      if (type === 'offline' || type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+      if (
+        type === 'offline' ||
+        type === 'server_error' ||
+        type === 'timeout' ||
+        type === 'unreachable'
+      ) {
         errorStates.isFetchingRoundByIdError = true;
       }
     } finally {

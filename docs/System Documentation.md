@@ -155,6 +155,7 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - Add contestant: candidate number, name, gender (Male / Female), team color, team name
 - View list of all contestants with filter by gender
 - Edit contestant details (only if no scores exist)
+- Delete contestant (only if no scores exist)
 
 **Business Rules**
 

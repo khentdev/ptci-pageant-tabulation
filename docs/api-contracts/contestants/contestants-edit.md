@@ -1,27 +1,29 @@
-# Edit Round
+# Edit Contestant
 
 Admin only.
 
-The edit round flow uses two endpoints on the same resource:
+The edit contestant flow uses two endpoints on the same resource:
 
-1. `GET /rounds/:id` — fetch current values and lock state when opening the edit form
-2. `PATCH /rounds/:id` — save changes
+1. `GET /contestants/:id` — fetch current values and lock state when opening the edit form
+2. `PATCH /contestants/:id` — save changes
 
 **Frontend form rules**
 
 | Field | Rule |
 |-------|------|
-| Name | Always editable |
-| Phase order | Always read-only (display only — not sent on save) |
-| Contestant limit | Hidden when `phaseOrder === 1` (omit from request or send `null`); editable when `phaseOrder > 1` and `isLimitLocked = false`; read-only when `isLimitLocked = true` |
+| Candidate No. | Required — positive whole number; editable when `isLocked = false`; read-only when `isLocked = true` |
+| Name | Required — non-empty after trim; editable when `isLocked = false`; read-only when `isLocked = true` |
+| Gender | Required — `MALE` or `FEMALE`; editable when `isLocked = false`; read-only when `isLocked = true` |
+| Team Name | Required — non-empty after trim; editable when `isLocked = false`; read-only when `isLocked = true` |
+| Team Color | Required — non-empty after trim; editable when `isLocked = false`; read-only when `isLocked = true` |
 
 ---
 
-## Get Round By Id
+## Get Contestant By Id
 
-`GET /rounds/:id`
+`GET /contestants/:id`
 
-Used when the admin clicks **Edit** on a round row.
+Used when the admin clicks **Edit** on a contestant row.
 
 ### Request
 
@@ -34,16 +36,16 @@ Used when the admin clicks **Edit** on a round row.
 
 **Cookies** *(auto-sent by browser with `credentials: 'include'`)*
 
-| Cookie | Required | Notes |
-|--------|----------|-------|
-| `sid` | Yes | Session cookie — browser sends automatically |
-| `csrfToken` | Yes | Browser sends automatically; frontend reads value for `X-CSRF-Token` header |
+| Cookie      | Required | Notes                                                                       |
+| ----------- | -------- | --------------------------------------------------------------------------- |
+| `sid`       | Yes      | Session cookie — browser sends automatically                                |
+| `csrfToken` | Yes      | Browser sends automatically; frontend reads value for `X-CSRF-Token` header |
 
 **Path params**
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `id` | `number` | Yes | Round ID — positive whole number |
+| `id` | `number` | Yes | Contestant ID — positive whole number |
 
 ### Response
 
@@ -52,24 +54,28 @@ Used when the admin clicks **Edit** on a round row.
 ```json
 {
   "data": {
-    "id": 2,
-    "phaseOrder": 2,
-    "name": "Top 10",
-    "contestantLimit": 10,
-    "isLimitLocked": false
+    "id": 1,
+    "candidateNumber": 1,
+    "name": "Aniar, Andrea Mae",
+    "gender": "FEMALE",
+    "teamName": "Yellow Team",
+    "teamColor": "Yellow",
+    "isLocked": false
   },
-  "message": "Round retrieved successfully"
+  "message": "Contestant retrieved successfully"
 }
 ```
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `data` | `GetRoundByIdDTO` | Round details for the edit form |
-| `data.id` | `number` | Round ID |
-| `data.phaseOrder` | `number` | Round sequence order — always read-only in the edit form |
-| `data.name` | `string` | Round name |
-| `data.contestantLimit` | `number \| null` | `null` = unlimited (preliminary round) |
-| `data.isLimitLocked` | `boolean` | `true` when contestants have already advanced into this round |
+| `data` | `GetContestantByIdDTO` | Contestant details for the edit form |
+| `data.id` | `number` | Contestant ID |
+| `data.candidateNumber` | `number` | Candidate number |
+| `data.name` | `string` | Contestant name |
+| `data.gender` | `string` | `MALE` or `FEMALE` |
+| `data.teamName` | `string` | Team name |
+| `data.teamColor` | `string` | Team color |
+| `data.isLocked` | `boolean` | `true` when scores already exist for this contestant |
 | `message` | `string` | Success message |
 
 ### Errors
@@ -89,15 +95,15 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 
 | Status | Code | Message | Notes |
 |--------|------|---------|-------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
-| `500` | `ROUND_PHASE_GET_BY_ID_ERROR` | Unable to get round phase. Please try again later. | |
+| `400` | `CONTESTANT_ID_INVALID` | Contestant ID must be a positive whole number. | Backend API layer only. Do not handle in frontend. |
+| `404` | `CONTESTANT_NOT_FOUND` | Contestant not found. | |
+| `500` | `CONTESTANT_GET_BY_ID_ERROR` | Unable to get contestant by id. | |
 
 ---
 
-## Save Round
+## Save Contestant
 
-`PATCH /rounds/:id`
+`PATCH /contestants/:id`
 
 Used when the admin submits the edit form.
 
@@ -122,23 +128,27 @@ Used when the admin submits the edit form.
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `id` | `number` | Yes | Round ID — positive whole number |
+| `id` | `number` | Yes | Contestant ID — positive whole number |
 
 **Body**
 
 ```json
 {
-  "name": "string",
-  "contestantLimit": 10
+  "candidateNumber": "1",
+  "name": "Aniar, Andrea Mae",
+  "gender": "FEMALE",
+  "teamName": "Yellow Team",
+  "teamColor": "Yellow"
 }
 ```
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `name` | `string` | Yes | Non-empty after trim — always editable |
-| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Required positive whole number for later rounds (`phaseOrder > 1`). Must match the existing value when `isLimitLocked = true`. |
-
-Phase order is immutable after creation and is not accepted in the request body.
+| `candidateNumber` | `string` | Yes | Non-empty string that parses to a positive whole number — editable only when `isLocked = false` |
+| `name` | `string` | Yes | Non-empty after trim — editable only when `isLocked = false` |
+| `gender` | `string` | Yes | `MALE` or `FEMALE` (case-insensitive; backend normalizes to uppercase) — editable only when `isLocked = false` |
+| `teamName` | `string` | Yes | Non-empty after trim — editable only when `isLocked = false` |
+| `teamColor` | `string` | Yes | Non-empty after trim — editable only when `isLocked = false` |
 
 ### Response
 
@@ -146,7 +156,7 @@ Phase order is immutable after creation and is not accepted in the request body.
 
 ```json
 {
-  "message": "Round edited successfully"
+  "message": "Contestant updated successfully"
 }
 ```
 
@@ -169,25 +179,17 @@ Phase order is immutable after creation and is not accepted in the request body.
 
 See [[global/errors]] for shared error codes handled by the axios interceptor.
 
-<<<<<<< HEAD
 | Status | Code | Message | Notes |
 |--------|------|---------|-------|
-| `400` | `ROUND_ID_INVALID` | Round ID must be a valid number. | Backend API layer only. Do not handle in frontend. |
-| `400` | `ROUND_NAME_INVALID` | Round name is required. | |
-| `400` | `ROUND_CONTESTANT_LIMIT_INVALID` | Contestant limit must be a positive whole number. | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400` | `ROUND_CONTESTANT_LIMIT_LOCKED` | Contestant limit cannot be changed after contestants have advanced into this round | |
-| `400` | `ROUND_PRELIMINARY_LIMIT_LOCKED` | Preliminary round contestant limit is always unlimited. | |
-| `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | |
-| `500` | `ROUND_PHASE_EDIT_ERROR` | Unable to edit round phase. Please try again later. | |
-=======
-| Status | Code                              | Message                                                                            | Notes                                                                          |
-| ------ | --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `400`  | `ROUND_ID_INVALID`                | Round ID must be a valid number.                                                   | Backend API layer only. Do not handle in frontend.                             |
-| `400`  | `ROUND_NAME_INVALID`              | Round name is required.                                                            |                                                                                |
-| `400`  | `ROUND_CONTESTANT_LIMIT_REQUIRED` | Contestant limit is required for rounds after the preliminary round.               | Returned when `phaseOrder > 1` and `contestantLimit` is omitted or `null`.     |
-| `400`  | `ROUND_CONTESTANT_LIMIT_INVALID`  | Contestant limit must be a positive whole number.                                  | Backend API layer only. Normalize frontend input (positive whole number only). |
-| `400`  | `ROUND_CONTESTANT_LIMIT_LOCKED`   | Contestant limit cannot be changed after contestants have advanced into this round |                                                                                |
-| `404`  | `ROUND_PHASE_NOT_FOUND`           | Round phase not found.                                                             |                                                                                |
-| `400`  | `ROUND_PRELIMINARY_LIMIT_LOCKED`  | Preliminary round contestant limit is always unlimited.                            |                                                                                |
-| `500`  | `ROUND_PHASE_EDIT_ERROR`          | Unable to edit round phase. Please try again later.                                |                                                                                |
->>>>>>> 9ed4ddc85566284c5cfcb59398be4e8112211ecd
+| `400` | `CONTESTANT_ID_INVALID` | Contestant ID must be a positive whole number. | Backend API layer only. Do not handle in frontend. |
+| `400` | `CONTESTANT_CANDIDATE_NUMBER_REQUIRED` | Candidate number is required. | |
+| `400` | `CONTESTANT_CANDIDATE_NUMBER_INVALID` | Candidate number must be a positive whole number. | Backend API layer only. Do not handle in frontend. |
+| `400` | `CONTESTANT_CANDIDATE_NUMBER_DUPLICATE` | Candidate number is already in use. | |
+| `400` | `CONTESTANT_NAME_REQUIRED` | Contestant name is required. | |
+| `400` | `CONTESTANT_GENDER_REQUIRED` | Gender is required. | |
+| `400` | `CONTESTANT_GENDER_INVALID` | Gender must be Male or Female. | |
+| `400` | `CONTESTANT_TEAM_NAME_REQUIRED` | Team name is required. | |
+| `400` | `CONTESTANT_TEAM_COLOR_REQUIRED` | Team color is required. | |
+| `400` | `CONTESTANT_LOCKED` | Contestant cannot be edited because it has scores already. | |
+| `404` | `CONTESTANT_NOT_FOUND` | Contestant not found. | |
+| `500` | `CONTESTANT_EDIT_ERROR` | Unable to edit contestant. | |
