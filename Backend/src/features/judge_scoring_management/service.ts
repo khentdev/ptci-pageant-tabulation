@@ -112,10 +112,12 @@ export async function submitCategoryScoresService({ id, judgeId, scores }: Submi
         throw new AppError("SCORING_ROUND_LOCKED")
     }
 
-    const laterRoundHasContestants = await prisma.roundContestant.count({
-        where: { round: { phaseOrder: { gt: round.phaseOrder } } },
+    const nextRound = await prisma.round.findFirst({
+        where: { phaseOrder: { gt: round.phaseOrder } },
+        orderBy: { phaseOrder: "asc" },
+        select: { _count: { select: { roundContestants: true } } },
     })
-    if (laterRoundHasContestants > 0) {
+    if (nextRound && nextRound._count.roundContestants > 0) {
         logger.warn({ id, roundId: round.id }, "Round is already completed")
         throw new AppError("SCORING_ROUND_COMPLETED")
     }
