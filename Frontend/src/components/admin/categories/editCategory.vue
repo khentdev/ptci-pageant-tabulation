@@ -18,9 +18,7 @@
           </button>
         </div>
 
-        <ModalFetchOverlay
-          v-if="categoryStore.loadingStates.isFetchingCategoryById"
-        />
+        <ModalFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryById" />
         <ServerErrorOverlayModal
           v-else-if="categoryStore.errorStates.isFetchingCategoryByIdError"
           title="Failed to Load Category Details"
@@ -78,13 +76,9 @@
               :disabled="
                 categoryStore.loadingStates.isEditingCategory || !category || category.isLocked
               "
-              class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap disabled:cursor-not-allowed text-white disabled:opacity-50"
+              class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {{
-                categoryStore.loadingStates.isEditingCategory
-                  ? 'Saving...'
-                  : 'Save Changes'
-              }}
+              {{ categoryStore.loadingStates.isEditingCategory ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>
         </form>
@@ -102,7 +96,7 @@ import type {
 } from '@/types/admin/adminSetup/category/categories';
 import { ref, watch } from 'vue';
 import { CircleAlert, X } from '@lucide/vue';
-import ModalFetchOverlay from './ModalFetchOverlay.vue';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 import { useToast } from '@/composables/Toast/useToast';
 
@@ -124,9 +118,8 @@ const loadCategory = async () => {
   }
 
   categoryStore.clearFormErrors();
-  const fetchedCategory = await categoryStore.getCategoryId(
-    props.categoryId,
-    () => modalStore.toggleEditCategory(),
+  const fetchedCategory = await categoryStore.getCategoryId(props.categoryId, () =>
+    modalStore.toggleEditCategory(),
   );
   category.value = fetchedCategory;
   newCategoryName.value = fetchedCategory?.name ?? '';

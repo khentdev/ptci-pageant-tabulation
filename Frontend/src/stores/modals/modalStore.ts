@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 
 export const useModalStore = defineStore('modalStore', () => {
   // Round
@@ -10,6 +10,11 @@ export const useModalStore = defineStore('modalStore', () => {
   const isAddCategoryVisible = ref(false);
   const isEditCategoryVisible = ref(false);
   const isFieldCategoryVisible = ref(false);
+
+  const contestantModalStates = reactive({
+    isAddContestantVisible: false,
+    isEditContestantVisible: false,
+  });
 
   const toggleAddRoundsModal = () => {
     isAddRoundsVisible.value = !isAddRoundsVisible.value;
@@ -32,7 +37,17 @@ export const useModalStore = defineStore('modalStore', () => {
     isFieldCategoryVisible.value = !isFieldCategoryVisible.value;
   };
 
+  const toggleAddContestant = () => {
+    contestantModalStates.isAddContestantVisible = !contestantModalStates.isAddContestantVisible;
+  };
+
+  const toggleEditContestant = () => {
+    contestantModalStates.isEditContestantVisible = !contestantModalStates.isEditContestantVisible;
+  };
+
   return {
+    toggleEditContestant,
+    toggleAddContestant,
     isFieldCategoryVisible,
     toggleFieldCategory,
     isAddRoundsVisible,
@@ -43,5 +58,6 @@ export const useModalStore = defineStore('modalStore', () => {
     toggleAddCategory,
     isEditCategoryVisible,
     toggleEditCategory,
+    contestantModalStates,
   };
 });
