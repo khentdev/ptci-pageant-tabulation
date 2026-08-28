@@ -49,7 +49,7 @@ export type GetContestantByIdInputVariables = {
 };
 export type GetContestantByIdDTO = {
   id: number;
-  candidateNumber: string;
+  candidateNumber: number;
   name: string;
   gender: Gender;
   teamName: string;

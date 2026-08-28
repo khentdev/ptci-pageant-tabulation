@@ -2,16 +2,13 @@ import { axiosInstance } from '@/api/axios/axiosConfig';
 import type {
   AddContestantInput,
   AddContestantResponse,
-  DeleteContestantInput,
   DeleteContestantResponse,
   EditContestantInput,
   EditContestantResponse,
   GetAllContestantsParams,
   GetAllContestantsResponse,
-  GetContestantByIdInput,
   GetContestantByIdResponse,
 } from '@/types/admin/adminSetup/contestants/contestants';
-import axios from 'axios';
 
 export const GetTypeResponse = <T>(res: unknown): T => res as T;
 

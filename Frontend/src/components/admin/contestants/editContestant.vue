@@ -18,7 +18,15 @@
           </button>
         </div>
 
+        <ModalFetchOverlay v-if="contestantStore.loadingStates.isFetchingContestantId" />
+        <ServerErrorOverlayModal
+          v-else-if="contestantStore.errorStates.isFetchingContestantIdError"
+          title="Failed to Load Contestant Details"
+          description="We couldn't load the contestant details. Please try again."
+          :onRetry="retryFetchContestantById"
+        />
         <form
+          v-else
           @submit.prevent="saveContestant()"
           class="flex h-full w-full flex-col justify-start gap-4 p-4"
         >
@@ -27,11 +35,12 @@
             <input
               v-model="newContestantNumber"
               :readonly="contestant?.isLocked"
-              type="number"
+              type="text"
+              inputmode="numeric"
+              placeholder="e.g. 1"
               name="contestantNumber"
               id="contestantNumber"
               class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :placeholder="contestant?.candidateNumber ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantNumber"
@@ -50,10 +59,10 @@
               v-model="newContestantName"
               :readonly="contestant?.isLocked === true"
               type="text"
+              placeholder="e.g. Dela Cruz, Juan"
               name="contestantName"
               id="contestantName"
               class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :placeholder="contestant?.name ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantName"
@@ -74,8 +83,8 @@
               :disabled="contestant?.isLocked === true"
             >
               <option :value="undefined" disabled>Select a gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
             </select>
             <div
               v-if="contestantStore.formErrors.contestantGender"
@@ -94,10 +103,10 @@
               v-model="newContestantTeamName"
               :readonly="contestant?.isLocked === true"
               type="text"
+              placeholder="e.g. Yellow Team"
               name="contestantTeamName"
               id="contestantTeamName"
               class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :placeholder="contestant?.teamName ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantTeamName"
@@ -116,10 +125,10 @@
               v-model="newContestantTeamColor"
               :readonly="contestant?.isLocked === true"
               type="text"
+              placeholder="e.g. Yellow"
               name="contestantTeamColor"
               id="contestantTeamColor"
               class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :placeholder="contestant?.teamColor ?? ''"
             />
             <div
               v-if="contestantStore.formErrors.contestantTeamColor"
@@ -134,14 +143,14 @@
           <div class="mt-auto flex w-full items-center justify-between gap-2 md:gap-4">
             <button
               type="button"
-              @click="modalStore.toggleAddContestant()"
+              @click="modalStore.toggleEditContestant()"
               class="w-full rounded-xl border border-black p-4 text-sm hover:bg-black/10"
             >
               Cancel
             </button>
             <button
               type="submit"
-              :disabled="contestantStore.loadingStates.isEditingContestants"
+              :disabled="contestantStore.loadingStates.isEditingContestants || contestant?.isLocked"
               class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:opacity-50"
             >
               {{
@@ -153,19 +162,6 @@
           </div>
         </form>
       </div>
-
-      <!--<ModalFetchOverlay v-if="roundStore.loadingStates.isFetchingRounds" />-->
-      <!-- <ServerErrorOverlayModal
-          v-else-if="roundStore.errorStates.isFetchingRoundsError"
-          title="Failed to Load Rounds"
-          description="We couldn't load the rounds. Please try again."
-          :onRetry="loadRounds"
-        />
-        <form
-          v-else
-          @submit.prevent="addCategory()"
-          class="flex h-full w-full flex-col justify-start gap-4 p-4"
-        >-->
     </div>
   </teleport>
 </template>
@@ -175,15 +171,16 @@ import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contes
 import { useModalStore } from '@/stores/modals/modalStore';
 import {
   type GetContestantByIdDTO,
-  type AddContestantInput,
 } from '@/types/admin/adminSetup/contestants/contestants';
 import type { EditContestantInput, Gender } from '@/types/admin/adminSetup/contestants/contestants';
 import { X, CircleAlert } from '@lucide/vue';
 import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
+import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
+import { useToast } from '@/composables/Toast/useToast';
 
-const router = useRouter();
 const contestantStore = useContestantStore();
+const {toast}= useToast();
 const modalStore = useModalStore();
 
 const newContestantNumber = ref('');
@@ -192,39 +189,33 @@ const selectedGender = ref<Gender | undefined>(undefined);
 const newContestantTeamName = ref('');
 const newContestantTeamColor = ref('');
 const contestant = ref<GetContestantByIdDTO | null>(null);
-
 const props = defineProps<{
   showModal: boolean;
   contestantId: number;
 }>();
 const saveContestant = async () => {
-  if (!selectedGender.value) {
-    return;
-  } else if (!newContestantNumber.value) {
-    return;
-  } else if (!contestant.value?.id) {
+  if (!hasChanges()) {
+    toast.info('No changes detected.');
     return;
   }
 
   const payload: EditContestantInput = {
-    id: contestant.value?.id,
+    id: contestant.value?.id!,
     candidateNumber: String(newContestantNumber.value),
     name: newContestantName.value.trim(),
-    gender: selectedGender.value,
+    gender: selectedGender.value!,
     teamName: newContestantTeamName.value.trim(),
     teamColor: newContestantTeamColor.value.trim(),
   };
-  console.log(payload);
 
   const success = await contestantStore.editContestant(payload);
   if (success) {
     modalStore.toggleEditContestant();
-
-    ((newContestantNumber.value = ''),
-      (selectedGender.value = undefined),
-      (newContestantName.value = ''),
-      (newContestantTeamName.value = ''),
-      (newContestantTeamColor.value = ''));
+    newContestantNumber.value = '';
+    selectedGender.value = undefined;
+    newContestantName.value = '';
+    newContestantTeamName.value = '';
+    newContestantTeamColor.value = '';
   }
 };
 
@@ -235,16 +226,48 @@ watch(
   },
 );
 
+const digitsOnly = (value: string) => value.replace(/\D/g, '');
+
+watch(newContestantNumber, (value) => {
+  const cleaned = digitsOnly(value);
+  if (cleaned !== value) {
+    newContestantNumber.value = cleaned;
+  }
+});
+
+const hasChanges = ()=>{
+  if(!contestant.value) {
+    return false;
+  }
+  return selectedGender.value !== contestant.value?.gender ||
+  newContestantName.value !== contestant.value?.name ||
+  newContestantNumber.value !== String(contestant.value?.candidateNumber) ||
+    newContestantTeamName.value !== contestant.value?.teamName ||
+     newContestantTeamColor.value !== contestant.value?.teamColor;
+};
+
 const loadContestant = async () => {
   if (!props.contestantId) {
     return;
   }
 
   contestantStore.clearFormErrors();
-  const fetchedCategory = await contestantStore.getContestantsId(props.contestantId, () =>
+  const fetchedContestant = await contestantStore.getContestantsId(props.contestantId, () =>
     modalStore.toggleEditContestant(),
   );
-  contestant.value = fetchedCategory;
+  contestant.value = fetchedContestant;
+
+  if (fetchedContestant) {
+    newContestantNumber.value = String(fetchedContestant.candidateNumber);
+    newContestantName.value = fetchedContestant.name;
+    selectedGender.value = fetchedContestant.gender as Gender;
+    newContestantTeamName.value = fetchedContestant.teamName;
+    newContestantTeamColor.value = fetchedContestant.teamColor;
+  }
+};
+
+const retryFetchContestantById = async () => {
+  await loadContestant();
 };
 
 watch(
