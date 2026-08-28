@@ -352,6 +352,38 @@ describe("Delete Contestant Integration Test", () => {
                 name: "Dela Cruz, Christine",
             })
         })
+
+        it("should delete a contestant that has been assigned to a round but has no scores", async () => {
+            const contestant = await seedContestant({
+                candidateNumber: 1,
+                name: "Aniar, Andrea Mae",
+                gender: "FEMALE",
+                teamName: "Yellow Team",
+                teamColor: "Yellow",
+            })
+            const round = await seedRound({ name: "Preliminary", phaseOrder: 1 })
+            await prisma.roundContestant.create({
+                data: { roundId: round.id, contestantId: contestant.id },
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await deleteContestant(cookieHeader, csrfToken, contestant.id)
+            const json = await res.json() as DeleteContestantResponse
+
+            expect(res.status).toBe(200)
+            expect(json.message).toBe("Contestant deleted successfully")
+
+            const deletedContestant = await prisma.contestant.findUnique({
+                where: { id: contestant.id },
+                select: { id: true },
+            })
+            expect(deletedContestant).toBeNull()
+
+            const orphanedEntry = await prisma.roundContestant.findUnique({
+                where: { roundId_contestantId: { roundId: round.id, contestantId: contestant.id } },
+            })
+            expect(orphanedEntry).toBeNull()
+        })
     })
 
     describe("business rules", () => {

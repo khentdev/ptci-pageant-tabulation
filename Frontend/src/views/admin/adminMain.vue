@@ -77,12 +77,13 @@ const toggleDropDown = () => {
                 <p class="cursor-pointer text-black/70">Categories</p>
               </RouterLink>
 
-              <div
+              <RouterLink
+                :to="{ name: 'contestants' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
                 <Users class="stroke stroke-custom-gray"></Users>
                 <p class="cursor-pointer text-black/70">Contestants</p>
-              </div>
+              </RouterLink>
 
               <div
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"

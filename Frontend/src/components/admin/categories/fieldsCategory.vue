@@ -86,7 +86,7 @@ import type {
 } from '@/types/admin/adminSetup/category/categories';
 import { Check, TriangleAlert } from '@lucide/vue';
 import FieldTable from './fieldTable.vue';
-import ModalFetchOverlay from './ModalFetchOverlay.vue';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 import { useToast } from '@/composables/Toast/useToast';
 
