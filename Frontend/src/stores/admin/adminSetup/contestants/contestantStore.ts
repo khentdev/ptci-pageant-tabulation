@@ -58,22 +58,24 @@ export const useContestantStore = defineStore('contestantStore', () => {
       const params = filter ? { filter } : undefined;
       const res = await contestantService.getContestants(params);
       contestantList.value = res.data;
-      //toast.success(res.message);
+      errorStates.isFetchingContestantListError = false;
     } catch (error) {
       const { code, type, message } = errorHandler<ContestantsErrorCodes>(
         error as AxiosError<ErrorResponse<ContestantsErrorCodes>>,
       );
-      if (type === 'offline') {
-        toast.warning(message, { title: 'You are Offline' });
-      }
-      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
-        toast.error(message, { title: 'Server Error' });
+      if (
+        type === 'offline' ||
+        type === 'server_error' ||
+        type === 'timeout' ||
+        type === 'unreachable'
+      ) {
+        errorStates.isFetchingContestantListError = true;
       }
 
       if (code === 'CONTESTANT_FILTER_INVALID') {
         toast.warning(message);
       } else if (code === 'CONTESTANT_GET_ALL_ERROR') {
-        toast.error(message);
+        errorStates.isFetchingContestantListError = true;
       }
     } finally {
       loadingStates.isFetchingContestantList = false;
@@ -151,14 +153,23 @@ export const useContestantStore = defineStore('contestantStore', () => {
 
       if (code === 'CONTESTANT_CANDIDATE_NUMBER_REQUIRED') {
         formErrors.contestantNumber = message;
+      } else if (code === 'CONTESTANT_CANDIDATE_NUMBER_DUPLICATE') {
+        formErrors.contestantNumber = message;
       } else if (code === 'CONTESTANT_NAME_REQUIRED') {
         formErrors.contestantName = message;
       } else if (code === 'CONTESTANT_GENDER_REQUIRED') {
         formErrors.contestantGender = message;
+      } else if (code === 'CONTESTANT_GENDER_INVALID') {
+        formErrors.contestantGender = message;
       } else if (code === 'CONTESTANT_TEAM_NAME_REQUIRED') {
-        formErrors.contestantTeamName = message;
+        formErrors.contestantGender = message;
       } else if (code === 'CONTESTANT_TEAM_COLOR_REQUIRED') {
         formErrors.contestantTeamColor = message;
+      } else if (code === 'CONTESTANT_LOCKED') {
+        toast.warning(message, { title: 'Contestant Locked' });
+      } else if (code === 'CONTESTANT_NOT_FOUND') {
+        toast.warning(message, { title: 'Contestant Not Found' });
+        await getContestants();
       }
       return false;
     } finally {
@@ -168,7 +179,6 @@ export const useContestantStore = defineStore('contestantStore', () => {
 
   const getContestantsId = async (
     contestantId: number,
-    closeModal?: () => void,
   ): Promise<GetContestantByIdDTO | null> => {
     if (loadingStates.isFetchingContestantId) {
       return null;
@@ -182,17 +192,20 @@ export const useContestantStore = defineStore('contestantStore', () => {
       const { code, type, message } = errorHandler<ContestantsErrorCodes>(
         error as AxiosError<ErrorResponse<ContestantsErrorCodes>>,
       );
-      if (type === 'offline') {
-        toast.warning(message, { title: 'You are Offline' });
-      }
-      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
-        toast.error(message, { title: 'Server Error' });
+      if (
+        type === 'offline' ||
+        type === 'server_error' ||
+        type === 'timeout' ||
+        type === 'unreachable'
+      ) {
+        errorStates.isFetchingContestantIdError = true;
       }
 
       if (code === 'CONTESTANT_NOT_FOUND') {
         toast.warning(message);
+        await getContestants();
       } else if (code === 'CONTESTANT_GET_BY_ID_ERROR') {
-        toast.error(message);
+        errorStates.isFetchingContestantIdError = true;
       }
       return null;
     } finally {
@@ -207,6 +220,7 @@ export const useContestantStore = defineStore('contestantStore', () => {
     loadingStates.isDeletingContestant = true;
     try {
       const res = await contestantService.deleteContestant(id);
+      await getContestants();
       toast.success(res.message);
     } catch (error) {
       const { code, type, message } = errorHandler<ContestantsErrorCodes>(
@@ -223,25 +237,14 @@ export const useContestantStore = defineStore('contestantStore', () => {
         toast.warning(message);
       } else if (code === 'CONTESTANT_NOT_FOUND') {
         toast.warning(message);
-      } else if (code === 'CONTESTANT_DELETE_ERROR') {
-        toast.error(message);
+        await getContestants();
       }
     } finally {
       loadingStates.isDeletingContestant = false;
     }
   };
 
-  const applyFilter = (gender?: Gender) => {
-    router.push({
-      query: {
-        ...route.query,
-        filter: gender || undefined,
-      },
-    });
-  };
-
   return {
-    applyFilter,
     getContestantsId,
     deleteContestant,
     contestantList,

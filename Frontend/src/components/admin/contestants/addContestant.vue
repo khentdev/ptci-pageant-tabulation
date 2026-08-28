@@ -23,10 +23,12 @@
           class="flex h-full w-full flex-col justify-start gap-4 p-4"
         >
           <div class="h-full w-full">
-            <p>Contestant No.</p>
+            <p>Contestant Number</p>
             <input
               v-model="newContestantNumber"
-              type="number"
+              type="text"
+              inputmode="numeric"
+              placeholder="e.g. 1"
               name="contestantNumber"
               id="contestantNumber"
               class="h-10 w-full border border-black px-3"
@@ -47,6 +49,7 @@
             <input
               v-model="newContestantName"
               type="text"
+              placeholder="e.g. Dela Cruz, Juan"
               name="contestantName"
               id="contestantName"
               class="h-10 w-full border border-black px-3"
@@ -66,8 +69,8 @@
             <p>Gender</p>
             <select v-model="selectedGender" class="h-10 w-full border border-black px-3">
               <option :value="undefined" disabled>Select a gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
             </select>
             <div
               v-if="contestantStore.formErrors.contestantGender"
@@ -85,6 +88,7 @@
             <input
               v-model="newContestantTeamName"
               type="text"
+              placeholder="e.g. Yellow Team"
               name="contestantTeamName"
               id="contestantTeamName"
               class="h-10 w-full border border-black px-3"
@@ -105,6 +109,7 @@
             <input
               v-model="newContestantTeamColor"
               type="text"
+              placeholder="e.g. Yellow"
               name="contestantTeamColor"
               id="contestantTeamColor"
               class="h-10 w-full border border-black px-3"
@@ -141,35 +146,22 @@
           </div>
         </form>
       </div>
-
-      <!--<ModalFetchOverlay v-if="roundStore.loadingStates.isFetchingRounds" />-->
-      <!-- <ServerErrorOverlayModal
-          v-else-if="roundStore.errorStates.isFetchingRoundsError"
-          title="Failed to Load Rounds"
-          description="We couldn't load the rounds. Please try again."
-          :onRetry="loadRounds"
-        />
-        <form
-          v-else
-          @submit.prevent="addCategory()"
-          class="flex h-full w-full flex-col justify-start gap-4 p-4"
-        >-->
     </div>
   </teleport>
 </template>
 
 <script setup lang="ts">
+import { useToast } from '@/composables/Toast/useToast';
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import { useModalStore } from '@/stores/modals/modalStore';
 import type { AddContestantInput } from '@/types/admin/adminSetup/contestants/contestants';
 import type { Gender } from '@/types/admin/adminSetup/contestants/contestants';
 import { X, CircleAlert } from '@lucide/vue';
 import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 
-const router = useRouter();
 const contestantStore = useContestantStore();
 const modalStore = useModalStore();
+const {toast}= useToast();
 
 const newContestantNumber = ref('');
 const newContestantName = ref('');
@@ -178,10 +170,10 @@ const newContestantTeamName = ref('');
 const newContestantTeamColor = ref('');
 
 const saveContestant = async () => {
+
+  
   if (!selectedGender.value) {
-    return;
-  }
-  if (!newContestantNumber.value) {
+    toast.error('Please select a gender');
     return;
   }
 
@@ -192,16 +184,15 @@ const saveContestant = async () => {
     teamName: newContestantTeamName.value.trim(),
     teamColor: newContestantTeamColor.value.trim(),
   };
-  console.log(payload);
 
   const success = await contestantStore.addContestant(payload);
   if (success) {
     modalStore.toggleAddContestant();
-    ((newContestantNumber.value = ''),
-      (selectedGender.value = undefined),
-      (newContestantName.value = ''),
-      (newContestantTeamName.value = ''),
-      (newContestantTeamColor.value = ''));
+    newContestantNumber.value = '';
+    selectedGender.value = undefined;
+    newContestantName.value = '';
+    newContestantTeamName.value = '';
+    newContestantTeamColor.value = '';
   }
 };
 
@@ -211,6 +202,15 @@ watch(
     contestantStore.clearFormErrors();
   },
 );
+
+const digitsOnly = (value: string) => value.replace(/\D/g, '');
+
+watch(newContestantNumber, (value) => {
+  const cleaned = digitsOnly(value);
+  if (cleaned !== value) {
+    newContestantNumber.value = cleaned;
+  }
+});
 
 const props = defineProps<{
   showModal: boolean;

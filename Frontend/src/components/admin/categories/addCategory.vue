@@ -100,7 +100,7 @@ import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
 import type { AddCategoryInput } from '@/types/admin/adminSetup/category/categories';
 import { CircleAlert, X } from '@lucide/vue';
-import ModalFetchOverlay from './ModalFetchOverlay.vue';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 
 const roundStore = useRoundStore();

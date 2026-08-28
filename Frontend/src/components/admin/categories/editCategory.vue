@@ -96,7 +96,7 @@ import type {
 } from '@/types/admin/adminSetup/category/categories';
 import { ref, watch } from 'vue';
 import { CircleAlert, X } from '@lucide/vue';
-import ModalFetchOverlay from './ModalFetchOverlay.vue';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 import { useToast } from '@/composables/Toast/useToast';
 
