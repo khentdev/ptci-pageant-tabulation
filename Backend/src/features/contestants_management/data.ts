@@ -78,7 +78,8 @@ export async function editContestant({ id, candidateNumber, name, gender, teamNa
 }
 
 export async function deleteContestant({ id }: DeleteContestantInput) {
-    await prisma.contestant.delete({
-        where: { id },
-    })
+    await prisma.$transaction([
+        prisma.roundContestant.deleteMany({ where: { contestantId: id } }),
+        prisma.contestant.delete({ where: { id } }),
+    ])
 }
