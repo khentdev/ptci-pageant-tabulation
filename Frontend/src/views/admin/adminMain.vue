@@ -85,12 +85,13 @@ const toggleDropDown = () => {
                 <p class="cursor-pointer text-black/70">Contestants</p>
               </RouterLink>
 
-              <div
+              <RouterLink
+                :to="{ name: 'judge' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
                 <Users class="stroke stroke-custom-gray"></Users>
                 <p class="cursor-pointer text-black/70">Judges</p>
-              </div>
+              </RouterLink>
             </div>
 
             <div class="mt-2 flex shrink-0 flex-col">

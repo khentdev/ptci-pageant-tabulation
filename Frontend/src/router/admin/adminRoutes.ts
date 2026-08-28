@@ -26,6 +26,11 @@ export const adminRoutes: RouteRecordRaw[] = [
         name: 'contestants',
         component: () => import('../../views/admin/contestants/contestantMain.vue'),
       },
+      {
+        path: 'judge',
+        name: 'judge',
+        component: () => import('../../views/admin/judge/judgeMain.vue'),
+      },
     ],
   },
 ];
