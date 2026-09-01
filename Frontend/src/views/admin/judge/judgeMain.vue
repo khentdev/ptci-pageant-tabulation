@@ -1,23 +1,48 @@
 <script setup lang="ts">
-import RoundsTable from '@/components/admin/rounds/roundsTable.vue';
 import { Plus } from '@lucide/vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-import AddRounds from '@/components/admin/rounds/addRounds.vue';
-import EditRounds from '@/components/admin/rounds/editRounds.vue';
 import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { onMounted } from 'vue';
 import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
+import JudgeTable from '@/components/admin/judge/judgeTable.vue';
+import { useJudgeStore } from '@/stores/admin/adminSetup/judge/judgeStore';
+import AddJudge from '@/components/admin/judge/addJudge.vue';
+import EditJudge from '@/components/admin/judge/editJudge.vue';
+import { ref } from 'vue';
+import ResetPassword from '@/components/admin/judge/resetPassword.vue';
 
 const modalStore = useModalStore();
-const roundStore = useRoundStore();
+const judgeStore = useJudgeStore();
 
-onMounted(() => {
-  roundStore.getRound();
+const selectedJudgeId = ref(0);
+
+onMounted(async () => {
+  await judgeStore.getJudgesList();
 });
+
+const openResetPassJudge = (id: number) => {
+  selectedJudgeId.value = id;
+  modalStore.judgesModalFunction().toggleResetPasswordJudgesModal();
+};
+
+const openEditContestant = (id: number) => {
+  localStorage.setItem('judge-id', JSON.stringify(id));
+  selectedJudgeId.value = id;
+  modalStore.judgesModalFunction().toggleEditingJudgesModal();
+};
 </script>
 
 <template>
+  <AddJudge :showModal="modalStore.judgeModalStates.isAddingJudgeVisible"></AddJudge>
+  <EditJudge
+    :showModal="modalStore.judgeModalStates.isEditJudgeVisible"
+    :judgeId="selectedJudgeId"
+  ></EditJudge>
+  <ResetPassword
+    :showModal="modalStore.judgeModalStates.isResetPasswordJudgeVisible"
+    :judgeId="selectedJudgeId"
+  ></ResetPassword>
   <!--<BaseFetchOverlay v-if="roundStore.loadingStates.isFetchingRounds" />
   <ServerErrorOverlay
   v-else-if="roundStore.errorStates.isFetchingRoundsError"
@@ -32,7 +57,7 @@ onMounted(() => {
       <p class="font-semibold text-black/70 sm:text-2xl">Judge Management</p>
 
       <button
-        @click="modalStore.toggleAddRoundsModal()"
+        @click="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
         class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
       >
         <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8"></Plus> Add Judge
@@ -40,16 +65,8 @@ onMounted(() => {
     </div>
 
     <div class="relative w-full overflow-y-auto md:h-[calc(100dvh-100px)]">
-      <table class="w-full">
-        <thead class="sticky top-0 z-20 h-full rounded-xl">
-          <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
-            <th class="px-4 text-center">Name</th>
-            <th class="px-4 text-center">Username</th>
-            <th class="px-4 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody class="w-full"></tbody>
-      </table>
+      <JudgeTable @editContestant="openEditContestant" @resetPassJudge="openResetPassJudge">
+      </JudgeTable>
     </div>
   </div>
 </template>

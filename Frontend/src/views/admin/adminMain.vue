@@ -2,8 +2,9 @@
 import NavMain from '@/components/navMain.vue';
 import { ref } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
-import { RouterView } from 'vue-router';
-import type router from '@/router';
+import { RouterView, useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
@@ -63,34 +64,40 @@ const toggleDropDown = () => {
 
             <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
               <RouterLink
+                :class="route.name === 'rounds' ? 'bg-main-dark-brown text-white' : ''"
                 :to="{ name: 'rounds' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 duration-200 ease-in-out hover:bg-black/5 sm:p-4"
               >
-                <Calendar class="stroke stroke-custom-gray"></Calendar>
-                <p class="cursor-pointer text-black/70">Rounds</p>
+                <Calendar class=""></Calendar>
+                <p class="cursor-pointer">Rounds</p>
               </RouterLink>
               <RouterLink
+                :class="route.name === 'categories' ? 'bg-main-dark-brown text-white' : ''"
                 :to="{ name: 'categories' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
-                <LayoutGrid class="stroke stroke-custom-gray"></LayoutGrid>
-                <p class="cursor-pointer text-black/70">Categories</p>
+                <LayoutGrid class=""></LayoutGrid>
+                <p class="cursor-pointer">Categories</p>
               </RouterLink>
 
               <RouterLink
+                :class="
+                  route.name === 'contestants' ? 'bg-main-dark-brown text-white' : 'text-black'
+                "
                 :to="{ name: 'contestants' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
-                <Users class="stroke stroke-custom-gray"></Users>
-                <p class="cursor-pointer text-black/70">Contestants</p>
+                <Users class=""></Users>
+                <p class="cursor-pointer">Contestants</p>
               </RouterLink>
 
               <RouterLink
+                :class="route.name === 'judge' ? 'bg-main-dark-brown text-white' : ''"
                 :to="{ name: 'judge' }"
                 class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
-                <Users class="stroke stroke-custom-gray"></Users>
-                <p class="cursor-pointer text-black/70">Judges</p>
+                <Users class=""></Users>
+                <p class="cursor-pointer">Judges</p>
               </RouterLink>
             </div>
 

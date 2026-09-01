@@ -169,9 +169,7 @@
 <script setup lang="ts">
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import { useModalStore } from '@/stores/modals/modalStore';
-import {
-  type GetContestantByIdDTO,
-} from '@/types/admin/adminSetup/contestants/contestants';
+import { type GetContestantByIdDTO } from '@/types/admin/adminSetup/contestants/contestants';
 import type { EditContestantInput, Gender } from '@/types/admin/adminSetup/contestants/contestants';
 import { X, CircleAlert } from '@lucide/vue';
 import { ref, watch } from 'vue';
@@ -180,7 +178,7 @@ import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverla
 import { useToast } from '@/composables/Toast/useToast';
 
 const contestantStore = useContestantStore();
-const {toast}= useToast();
+const { toast } = useToast();
 const modalStore = useModalStore();
 
 const newContestantNumber = ref('');
@@ -235,15 +233,17 @@ watch(newContestantNumber, (value) => {
   }
 });
 
-const hasChanges = ()=>{
-  if(!contestant.value) {
+const hasChanges = () => {
+  if (!contestant.value) {
     return false;
   }
-  return selectedGender.value !== contestant.value?.gender ||
-  newContestantName.value !== contestant.value?.name ||
-  newContestantNumber.value !== String(contestant.value?.candidateNumber) ||
+  return (
+    selectedGender.value !== contestant.value?.gender ||
+    newContestantName.value !== contestant.value?.name ||
+    newContestantNumber.value !== String(contestant.value?.candidateNumber) ||
     newContestantTeamName.value !== contestant.value?.teamName ||
-     newContestantTeamColor.value !== contestant.value?.teamColor;
+    newContestantTeamColor.value !== contestant.value?.teamColor
+  );
 };
 
 const loadContestant = async () => {
