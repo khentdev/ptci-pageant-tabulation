@@ -123,9 +123,9 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 - [x] Create judge account (name, username, password — role always set to `judge`)
 - [x] List judges
-- [ ] Edit judge name and username (always allowed — no lock condition)
-- [ ] Reset judge password
-- [ ] Delete judge (guard: reject if judge has submitted any scores)
+- [x] Edit judge name and username (always allowed — no lock condition)
+- [x] Reset judge password
+- [x] Delete judge (guard: reject if judge has submitted any scores)
 
 ### Frontend
 
@@ -143,17 +143,21 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 ### Backend
 
-- [ ] Round results API — one fetch per round page (mount / manual refresh): rankings, `allJudgesSubmitted`, `isCompleted`, `canAdvance`, `canAdvanceReason`, per-judge per-category submission flags, `nextRound` (with `categoryCount`), and advancement payload (`hasTie`, `requiredSelections`, `included[]`, `tied[]` with contestant id + name + overall score)
-- [ ] Tie detection on that same results fetch — not on Advance click; detect only if cutoff is straddled by tied contestants; compare `overallScore` rounded to 2 decimal places
-- [ ] Advancement API — no body when no tie (backend picks top N); with tie, `{ selectedContestantIds }` merged with auto-included; validate `canAdvance` and count matches next round's `contestant_limit`
-- [ ] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance for final ranking; results fetch returns `canDeclareWinners` and `winnersDeclaredAt`
+- [x] Get judge submissions API — per-judge per-category submission flags, `fullySubmittedCount`, `totalJudges`, `allJudgesSubmitted` (API contract: [[live-event/live-judge-submissions]] — `GET /live-event/round-results/:id`)
+- [x] Get round results API — rankings, `allJudgesSubmitted`, `isCompleted`, `canAdvance`, `canAdvanceReason`, `nextRound`, `advancement`, `canDeclareWinners`, `winnersDeclaredAt` (API contract: [[live-event/live-round-results]] — `GET /live-event/round-results/:id/advancement`)
+- [x] Tie detection on round results fetch — cutoff straddle; `overallScore` rounded to 2 dp (same endpoint)
+- [x] Advancement API — no body when no tie; with tie `{ selectedContestantIds }` merged with auto-included; validates `canAdvance` (API contract: [[live-event/live-round-advance]] — POST /live-event/round-results/:id/advancement)
+- [x] Declare winners API — lock final round results (irreversible); same cutoff tie rules as Advance; persists `RoundWinner` rows + `winnersDeclaredAt` (API contract: [[live-event/live-round-declare-winners]] — `POST /live-event/round-results/:id/declare-winners`)
+- [x] Get declared winners API — read official podium from `RoundWinner` after declare (API contract: [[live-event/live-round-declared-winners]] — `GET /live-event/round-results/:id/declared-winners`)
 
 ### Frontend
 
-- [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order
-- [ ] Round Results page (shared component, driven by round ID)
-  - [ ] Ranking table: contestant rows × (one column per category avg + overall score column + rank)
-  - [ ] Judge submission status display (per judge per category: ✓ / ✗)
+_Build order (Wireframe §6): sidebar → Round Results page shell → judge submissions (API ready) → rankings & advancement read APIs ready; advance POST API ready — [[live-event/live-round-advance]]._
+
+- [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order (API contract: [[live-event/live-results-sidebar]] — reuses `GET /rounds`)
+- [ ] Round Results page (shared component, driven by round ID — two sections: Judge Submissions on top, Rankings below)
+  - [ ] Judge submission status display (per judge per category: ✓ / ✗; Done? column; "X of Y judges fully submitted") — build first after sidebar; consumes [[live-event/live-judge-submissions]]
+  - [ ] Ranking table: contestant rows × (one column per category avg + overall score column + rank) — consumes [[live-event/live-round-results]]
   - [ ] Advance button — hidden when `isCompleted` is `true`; enabled when `canAdvance` is `true`; disabled helper from `canAdvanceReason` otherwise
   - [ ] Advance button label dynamically reads next round name (`Advance to [Next Round Name]`)
 - [ ] No-tie advancement flow — `canAdvance` true and no tie → one click, empty body, backend advances top N
@@ -162,11 +166,13 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
   - [ ] Tie-resolution panel rendered under table from `advancement.included` / `advancement.tied`
   - [ ] Selection counter ("Selected: X of Y required")
   - [ ] Disable extra checkboxes once required count is reached
-  - [ ] Advance button disabled until selection count matches required
-  - [ ] One click on enabled button advances all (auto + selected tied via `selectedContestantIds`)
+  - [ ] Advance button disabled until selection count matches required (non-final rounds)
+  - [ ] Declare Winners button disabled until selection count matches required (final round)
+  - [ ] One click on enabled Advance advances all (auto + selected tied via `selectedContestantIds`)
+  - [ ] One click on enabled Declare locks winners (auto + selected tied via `selectedContestantIds` on final round)
 - [ ] Final round view — "Declare Winners" button instead of Advance
   - [ ] Declare Winners confirmation modal (warn: irreversible)
-  - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores)
+  - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores) — consumes [[live-event/live-round-declared-winners]]; not `rankings[0..2]`
 - [ ] Past rounds remain visible and browsable after advancement (`isCompleted` — read-only)
 - [ ] Refetch on page mount and manual browser refresh only — no auto-polling
 

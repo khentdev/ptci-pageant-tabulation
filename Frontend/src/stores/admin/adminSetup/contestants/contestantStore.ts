@@ -13,12 +13,9 @@ import { errorHandler } from '@/api/errors/errorHandler';
 import type { ContestantsErrorCodes } from '@/types/admin/adminSetup/contestants/error';
 import { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
-import { useRoute, useRouter } from 'vue-router';
 
 export const useContestantStore = defineStore('contestantStore', () => {
   const { toast } = useToast();
-  const router = useRouter();
-  const route = useRoute();
   const contestantList = ref<GetAllContestantsDTO[]>([]);
 
   const formErrors = reactive({
@@ -119,10 +116,7 @@ export const useContestantStore = defineStore('contestantStore', () => {
         toast.warning(message);
       } else if (code === 'CONTESTANT_GENDER_INVALID') {
         toast.warning(message);
-      } else if (code === 'CONTESTANT_ADD_ERROR') {
-        toast.error(message);
       }
-
       return false;
     } finally {
       loadingStates.isAddingContestants = false;

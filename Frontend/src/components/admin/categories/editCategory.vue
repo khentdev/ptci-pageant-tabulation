@@ -1,90 +1,63 @@
 <template>
-  <teleport to="body">
-    <div
-      @click.self="modalStore.toggleEditCategory()"
-      v-if="props.showModal"
-      class="font-poppins fixed inset-0 z-90 flex h-dvh items-center justify-center bg-black/50 p-4 py-10"
+  <BaseModal
+    :showModal="props.showModal"
+    title="Edit Category"
+    @close="modalStore.toggleEditCategory()"
+  >
+    <ModalFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryById" />
+    <ServerErrorOverlayModal
+      v-else-if="categoryStore.errorStates.isFetchingCategoryByIdError"
+      title="Failed to Load Category Details"
+      description="We couldn't load the category details. Please try again."
+      :onRetry="retryFetchCategoryById"
+    />
+    <form
+      v-else
+      @submit.prevent="editCategory()"
+      class="flex h-full w-full flex-col justify-start gap-4 p-4"
     >
-      <div
-        class="flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl bg-amber-200 sm:w-lg md:h-auto"
-      >
-        <div class="flex w-full items-center justify-between p-4 text-2xl">
-          <p>Edit Category</p>
-          <button
-            @click="modalStore.toggleEditCategory()"
-            class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-black/10"
-          >
-            <X />
-          </button>
-        </div>
-
-        <ModalFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryById" />
-        <ServerErrorOverlayModal
-          v-else-if="categoryStore.errorStates.isFetchingCategoryByIdError"
-          title="Failed to Load Category Details"
-          description="We couldn't load the category details. Please try again."
-          :onRetry="retryFetchCategoryById"
+      <div class="flex flex-col">
+        <p>Round Name</p>
+        <input
+          readonly
+          type="text"
+          class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+          :value="category?.roundName ?? ''"
+          placeholder="Loading..."
         />
-        <form
-          v-else
-          @submit.prevent="editCategory()"
-          class="flex h-full w-full flex-col justify-start gap-4 p-4"
-        >
-          <div class="flex flex-col">
-            <p>Round Name</p>
-            <input
-              readonly
-              type="text"
-              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :value="category?.roundName ?? ''"
-              placeholder="Loading..."
-            />
-          </div>
-
-          <div class="flex flex-col">
-            <p>Category Name</p>
-            <input
-              v-model="newCategoryName"
-              :readonly="category?.isLocked === true"
-              type="text"
-              name="categoryName"
-              id="categoryName"
-              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-              :placeholder="category?.name ?? ''"
-            />
-            <div
-              v-if="categoryStore.formErrors.categoryName"
-              class="mt-1 flex w-full items-start gap-1"
-            >
-              <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18" />
-              <p class="text-sm text-red-500">
-                {{ categoryStore.formErrors.categoryName }}
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-auto flex w-full items-center justify-between gap-2 md:gap-4">
-            <button
-              type="button"
-              @click="modalStore.toggleEditCategory()"
-              class="w-full rounded-xl border border-black p-4 text-sm hover:bg-black/10"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="
-                categoryStore.loadingStates.isEditingCategory || !category || category.isLocked
-              "
-              class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {{ categoryStore.loadingStates.isEditingCategory ? 'Saving...' : 'Save Changes' }}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
-  </teleport>
+
+      <div class="flex flex-col">
+        <p>Category Name</p>
+        <input
+          v-model="newCategoryName"
+          :readonly="category?.isLocked === true"
+          type="text"
+          name="categoryName"
+          id="categoryName"
+          class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+          :placeholder="category?.name ?? ''"
+        />
+        <div
+          v-if="categoryStore.formErrors.categoryName"
+          class="mt-1 flex w-full items-start gap-1"
+        >
+          <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18" />
+          <p class="text-sm text-red-500">
+            {{ categoryStore.formErrors.categoryName }}
+          </p>
+        </div>
+      </div>
+
+      <BaseModalActions
+        submitLabel="Save Changes"
+        submittingLabel="Saving..."
+        :isSubmitting="categoryStore.loadingStates.isEditingCategory"
+        :disabled="!category || category.isLocked"
+        @cancel="modalStore.toggleEditCategory()"
+      />
+    </form>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -95,7 +68,9 @@ import type {
   GetCategoryByIdDTO,
 } from '@/types/admin/adminSetup/category/categories';
 import { ref, watch } from 'vue';
-import { CircleAlert, X } from '@lucide/vue';
+import { CircleAlert } from '@lucide/vue';
+import BaseModal from '@/components/shared/BaseModal.vue';
+import BaseModalActions from '@/components/shared/BaseModalActions.vue';
 import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 import { useToast } from '@/composables/Toast/useToast';
