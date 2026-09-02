@@ -104,8 +104,6 @@ export const useJudgeStore = defineStore('judge', () => {
 
       if (code === 'JUDGE_USERNAME_EXISTS') {
         toast.warning(message);
-      } else if (code === 'JUDGE_ADD_FAILED') {
-        toast.error(message);
       }
       return false;
     } finally {
@@ -143,9 +141,8 @@ export const useJudgeStore = defineStore('judge', () => {
 
       if (code === 'JUDGE_USERNAME_EXISTS') {
         toast.warning(message);
-      } else if (code === 'JUDGE_EDIT_FAILED') {
-        toast.error(message);
       } else if (code === 'JUDGE_NOT_FOUND') {
+        await getJudgesList();
         toast.warning(message);
       }
       return false;
@@ -174,11 +171,10 @@ export const useJudgeStore = defineStore('judge', () => {
       if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
         toast.error(message, { title: 'Server Error' });
       }
-      if (code === 'JUDGE_RESET_PASSWORD_FAILED') {
-        toast.error(message);
-      } else if (code === 'JUDGE_PASSWORD_TOO_SHORT') {
+      if (code === 'JUDGE_PASSWORD_TOO_SHORT') {
         formErrors.judgePassword = message;
       } else if (code === 'JUDGE_NOT_FOUND') {
+        await getJudgesList();
         toast.warning(message);
       }
       return false;
@@ -206,9 +202,8 @@ export const useJudgeStore = defineStore('judge', () => {
       if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
         toast.error(message, { title: 'Server Error' });
       }
-      if (code === 'JUDGE_DELETE_FAILED') {
-        toast.error(message);
-      } else if (code === 'JUDGE_NOT_FOUND') {
+      if (code === 'JUDGE_NOT_FOUND') {
+        await getJudgesList();
         toast.warning(message);
       } else if (code === 'JUDGE_LOCKED') {
         toast.warning(message);
