@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
-import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
+import BasePanel from '@/components/shared/BasePanel.vue';
 import { onMounted } from 'vue';
-import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
 import JudgeTable from '@/components/admin/judge/judgeTable.vue';
 import { useJudgeStore } from '@/stores/admin/adminSetup/judge/judgeStore';
 import AddJudge from '@/components/admin/judge/addJudge.vue';
@@ -26,10 +23,14 @@ const openResetPassJudge = (id: number) => {
   modalStore.judgesModalFunction().toggleResetPasswordJudgesModal();
 };
 
-const openEditContestant = (id: number) => {
+const openEditJudge = (id: number) => {
   localStorage.setItem('judge-id', JSON.stringify(id));
   selectedJudgeId.value = id;
   modalStore.judgesModalFunction().toggleEditingJudgesModal();
+};
+
+const handleDelete = async (id: number) => {
+  await judgeStore.deleteJudge(id);
 };
 </script>
 
@@ -43,30 +44,21 @@ const openEditContestant = (id: number) => {
     :showModal="modalStore.judgeModalStates.isResetPasswordJudgeVisible"
     :judgeId="selectedJudgeId"
   ></ResetPassword>
-  <!--<BaseFetchOverlay v-if="roundStore.loadingStates.isFetchingRounds" />
-  <ServerErrorOverlay
-  v-else-if="roundStore.errorStates.isFetchingRoundsError"
-    title="Failed to Load Rounds"
-    description="We couldn't load the rounds. Please try again."
-    :onRetry="roundStore.getRound"
-  />-->
-  <div
-    class="bg-main-light-brown font-poppins relative flex h-full w-full flex-col items-center gap-2 rounded-xl border border-black/20 px-6 py-4 drop-shadow-sm drop-shadow-black/10"
+  <BasePanel
+    title="Judge Management"
+    addButtonLabel="Add Judge"
+    :isLoading="judgeStore.loadingStates.isFetchingJudgeList"
+    :isError="judgeStore.errorStates.isFetchingJudgeListError"
+    errorTitle="Failed to Load Judges"
+    errorDescription="We couldn't load the judges. Please try again."
+    :onRetry="judgeStore.getJudgesList"
+    @add="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
   >
-    <div class="flex w-full justify-between gap-2">
-      <p class="font-semibold text-black/70 sm:text-2xl">Judge Management</p>
-
-      <button
-        @click="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
-      >
-        <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8"></Plus> Add Judge
-      </button>
-    </div>
-
-    <div class="relative w-full overflow-y-auto md:h-[calc(100dvh-100px)]">
-      <JudgeTable @editContestant="openEditContestant" @resetPassJudge="openResetPassJudge">
-      </JudgeTable>
-    </div>
-  </div>
+    <JudgeTable
+      :items="judgeStore.judgeList"
+      @edit="openEditJudge"
+      @delete="handleDelete"
+      @resetPassword="openResetPassJudge"
+    ></JudgeTable>
+  </BasePanel>
 </template>
