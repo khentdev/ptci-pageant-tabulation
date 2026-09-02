@@ -236,6 +236,7 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     loadingStates.isSavingCategoryFields = true;
     try {
       const res = await categoryService.saveCategoryField(saveCategoryFieldInput);
+      await getCategoryList();
       toast.success(res.message);
       return true;
     } catch (error) {
