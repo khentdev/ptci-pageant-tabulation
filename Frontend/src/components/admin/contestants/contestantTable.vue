@@ -6,7 +6,7 @@
         <th class="px-2 text-nowrap">Name</th>
         <th class="px-2 text-nowrap">Gender</th>
         <th class="px-2 text-nowrap">Team</th>
-        <th class="px-2 text-nowrap">Action</th>
+        <th class="px-2 text-nowrap">Actions</th>
       </tr>
     </thead>
     <tbody class="w-full">
