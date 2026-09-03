@@ -1,9 +1,21 @@
 <script setup lang="ts">
 import NavMain from '@/components/navMain.vue';
-import { ref } from 'vue';
+import { ref, type Component } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
-import type router from '@/router';
+
+type SetupNavItem = {
+  label: string;
+  routeName: string;
+  icon: Component;
+};
+
+const setupNavItems: SetupNavItem[] = [
+  { label: 'Rounds', routeName: 'rounds', icon: Calendar },
+  { label: 'Categories', routeName: 'categories', icon: LayoutGrid },
+  { label: 'Contestants', routeName: 'contestants', icon: Users },
+  { label: 'Judges', routeName: 'judge', icon: Users },
+];
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
@@ -19,7 +31,7 @@ const toggleDropDown = () => {
 </script>
 
 <template>
-  <NavMain></NavMain>
+  <nav-main/>
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">
       <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>
@@ -63,34 +75,15 @@ const toggleDropDown = () => {
 
             <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
               <RouterLink
-                :to="{ name: 'rounds' }"
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 duration-200 ease-in-out hover:bg-black/5 sm:p-4"
+                v-for="item in setupNavItems"
+                :key="item.routeName"
+                exact-active-class="bg-main-dark-brown text-white hover:bg-main-dark-brown"
+                :to="{ name: item.routeName }"
+                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5  sm:p-4"
               >
-                <Calendar class="stroke stroke-custom-gray"></Calendar>
-                <p class="cursor-pointer text-black/70">Rounds</p>
+                <component :is="item.icon"></component>
+                <p class="cursor-pointer">{{ item.label }}</p>
               </RouterLink>
-              <RouterLink
-                :to="{ name: 'categories' }"
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
-              >
-                <LayoutGrid class="stroke stroke-custom-gray"></LayoutGrid>
-                <p class="cursor-pointer text-black/70">Categories</p>
-              </RouterLink>
-
-              <RouterLink
-                :to="{ name: 'contestants' }"
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
-              >
-                <Users class="stroke stroke-custom-gray"></Users>
-                <p class="cursor-pointer text-black/70">Contestants</p>
-              </RouterLink>
-
-              <div
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
-              >
-                <Users class="stroke stroke-custom-gray"></Users>
-                <p class="cursor-pointer text-black/70">Judges</p>
-              </div>
             </div>
 
             <div class="mt-2 flex shrink-0 flex-col">
