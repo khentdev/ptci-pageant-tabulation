@@ -1,78 +1,56 @@
 <template>
-  <Teleport to="body">
-    <div
-      @click.self="modalStore.toggleFieldCategory()"
-      v-if="showModal"
-      class="font-poppins fixed inset-0 z-90 flex h-dvh items-center justify-center bg-black/50 p-4 py-10"
+  <BaseModal
+    :showModal="showModal"
+    :title="`${categoryFields?.categoryName ?? ''} — Scoring Fields`"
+    :showCloseButton="false"
+    cardClass="bg-main-light-brown"
+    titleClass="font-bold text-xl md:text-2xl"
+    @close="modalStore.toggleFieldCategory()"
+  >
+    <ModalFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryFields" />
+    <ServerErrorOverlayModal
+      v-else-if="categoryStore.errorStates.isFetchingCategoryFieldsError"
+      title="Failed to Load Scoring Fields"
+      description="We couldn't load the scoring fields. Please try again."
+      :onRetry="retryFetchCategoryFields"
+    />
+    <form
+      v-else
+      @submit.prevent="handleSaveCategoryFields"
+      class="flex h-full w-full flex-col justify-start gap-4 p-4"
     >
-      <div
-        class="flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl bg-main-light-brown sm:w-lg md:h-auto"
-      >
-        <div class="flex w-full justify-between p-4 font-bold text-xl md:text-2xl">
-          <p>{{ categoryFields?.categoryName }} — Scoring Fields</p>
-        </div>
-
-        <ModalFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryFields" />
-        <ServerErrorOverlayModal
-          v-else-if="categoryStore.errorStates.isFetchingCategoryFieldsError"
-          title="Failed to Load Scoring Fields"
-          description="We couldn't load the scoring fields. Please try again."
-          :onRetry="retryFetchCategoryFields"
+      <div class="h-full w-full overflow-y-auto">
+        <FieldTable
+          :fieldRows
+          :isLocked="categoryFields?.isLocked === true"
+          @remove-row="removeRow"
         />
-        <form
-          v-else
-          @submit.prevent="handleSaveCategoryFields"
-          class="flex h-full w-full flex-col justify-start gap-4 p-4"
-        >
-          <div class="h-full w-full overflow-y-auto">
-            <FieldTable
-              :fieldRows
-              :isLocked="categoryFields?.isLocked === true"
-              @remove-row="removeRow"
-            />
-          </div>
-          <div class="mt-auto flex flex-col gap-4">
-            <button
-              type="button"
-              :disabled="categoryFields?.isLocked === true"
-              @click="addRow"
-              class="bg-jungle-green-600 w-fit cursor-pointer rounded-xl px-6 py-2 text-white hover:bg-jungle-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Add Row
-            </button>
-
-            <div class="flex gap-2 px-2">
-              <p>Total: {{ totalMaxValue }} / 100</p>
-              <Check v-if="totalMaxValue === 100" class="stroke-jungle-green-700" />
-              <TriangleAlert v-if="totalMaxValue < 100" class="h-5 w-5 stroke-red-500" />
-            </div>
-            <div class="mt-auto flex w-full items-center justify-between gap-2 md:gap-4">
-              <button
-                type="button"
-                @click="modalStore.toggleFieldCategory()"
-                class="w-full rounded-xl border border-black p-4 text-sm hover:bg-black/10"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="
-                  categoryStore.loadingStates.isSavingCategoryFields ||
-                  categoryFields?.isLocked === true ||
-                  !props.categoryId
-                "
-                class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {{
-                  categoryStore.loadingStates.isSavingCategoryFields ? 'Saving...' : 'Save Fields'
-                }}
-              </button>
-            </div>
-          </div>
-        </form>
       </div>
-    </div>
-  </Teleport>
+      <div class="mt-auto flex flex-col gap-4">
+        <button
+          type="button"
+          :disabled="categoryFields?.isLocked === true"
+          @click="addRow"
+          class="bg-jungle-green-600 w-fit cursor-pointer rounded-xl px-6 py-2 text-white hover:bg-jungle-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Add Row
+        </button>
+
+        <div class="flex gap-2 px-2">
+          <p>Total: {{ totalMaxValue }} / 100</p>
+          <Check v-if="totalMaxValue === 100" class="stroke-jungle-green-700" />
+          <TriangleAlert v-if="totalMaxValue < 100" class="h-5 w-5 stroke-red-500" />
+        </div>
+        <BaseModalActions
+          submitLabel="Save Fields"
+          submittingLabel="Saving..."
+          :isSubmitting="categoryStore.loadingStates.isSavingCategoryFields"
+          :disabled="categoryFields?.isLocked === true || !props.categoryId"
+          @cancel="modalStore.toggleFieldCategory()"
+        />
+      </div>
+    </form>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -86,6 +64,8 @@ import type {
 } from '@/types/admin/adminSetup/category/categories';
 import { Check, TriangleAlert } from '@lucide/vue';
 import FieldTable from './fieldTable.vue';
+import BaseModal from '@/components/shared/BaseModal.vue';
+import BaseModalActions from '@/components/shared/BaseModalActions.vue';
 import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 import { useToast } from '@/composables/Toast/useToast';
@@ -146,9 +126,8 @@ const loadCategoryFields = async () => {
     return;
   }
 
-  const fields = await categoryStore.getCategoryFieldsId(
-    props.categoryId,
-    () => modalStore.toggleFieldCategory(),
+  const fields = await categoryStore.getCategoryFieldsId(props.categoryId, () =>
+    modalStore.toggleFieldCategory(),
   );
   categoryFields.value = fields;
   initializeFieldRows(fields);
@@ -212,9 +191,8 @@ const handleSaveCategoryFields = async () => {
     })),
   };
 
-  const success = await categoryStore.saveCategoryFields(
-    payload,
-    () => modalStore.toggleFieldCategory(),
+  const success = await categoryStore.saveCategoryFields(payload, () =>
+    modalStore.toggleFieldCategory(),
   );
 
   if (success) {
