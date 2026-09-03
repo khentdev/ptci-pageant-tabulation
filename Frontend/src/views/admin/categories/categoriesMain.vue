@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue';
 import { useModalStore } from '@/stores/modals/modalStore';
 import { onMounted, ref } from 'vue';
 import CategoriesTable from '@/components/admin/categories/categoriesTable.vue';
@@ -7,8 +6,8 @@ import { useCategoryStore } from '@/stores/admin/adminSetup/category/categorySto
 import AddCategory from '@/components/admin/categories/addCategory.vue';
 import EditCategory from '@/components/admin/categories/editCategory.vue';
 import FieldsCategory from '@/components/admin/categories/fieldsCategory.vue';
-import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
-import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
+import BasePanel from '@/components/shared/BasePanel.vue';
+
 const modalStore = useModalStore();
 const categoryStore = useCategoryStore();
 
@@ -26,8 +25,12 @@ const openFieldsCategory = (id: number) => {
   modalStore.toggleFieldCategory();
 };
 
+const handleDelete = async (id: number) => {
+  await categoryStore.deleteCategory(id);
+};
+
 onMounted(async () => {
- await categoryStore.getCategoryList();
+  await categoryStore.getCategoryList();
 });
 </script>
 
@@ -38,32 +41,21 @@ onMounted(async () => {
     :showModal="modalStore.isFieldCategoryVisible"
     :categoryId="selectedFieldsCategoryId"
   />
-  <div
-    class="bg-main-light-brown font-poppins relative flex h-full w-full flex-col items-center gap-2 rounded-xl border border-black/20 px-6 py-4 drop-shadow-sm drop-shadow-black/10"
+  <BasePanel
+    title="Categories Management"
+    addButtonLabel="Add Category"
+    :isLoading="categoryStore.loadingStates.isFetchingCategoryList"
+    :isError="categoryStore.errorStates.isFetchingCategoryListError"
+    errorTitle="Failed to Load Categories"
+    errorDescription="We couldn't load the categories. Please try again."
+    :onRetry="categoryStore.getCategoryList"
+    @add="modalStore.toggleAddCategory()"
   >
-    <div class="flex w-full justify-between gap-2">
-      <p class="font-semibold text-black/70 sm:text-2xl">Categories Management</p>
-      <button
-        @click="modalStore.toggleAddCategory()"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
-      >
-        <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8"></Plus> Add Category
-      </button>
-    </div>
-
-    <div class="flex w-full flex-col gap-8 overflow-y-auto md:h-[calc(100dvh-100px)]">
-      <BaseFetchOverlay v-if="categoryStore.loadingStates.isFetchingCategoryList" />
-      <ServerErrorOverlayModal
-        v-else-if="categoryStore.errorStates.isFetchingCategoryListError"
-        title="Failed to Load Categories"
-        description="We couldn't load the categories. Please try again."
-        :onRetry="categoryStore.getCategoryList"
-      />
-      <CategoriesTable
-        v-else
-        @edit-category="openEditCategory"
-        @open-fields="openFieldsCategory"
-      />
-    </div>
-  </div>
+    <CategoriesTable
+      :items="categoryStore.categoryList"
+      @edit="openEditCategory"
+      @delete="handleDelete"
+      @open-fields="openFieldsCategory"
+    />
+  </BasePanel>
 </template>

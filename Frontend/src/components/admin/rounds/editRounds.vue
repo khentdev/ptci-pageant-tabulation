@@ -1,104 +1,80 @@
 <template>
-  <teleport to="body">
-    <div
-      @click.self="modalStore.toggleEditRoundsModal()"
-      v-if="props.showModal"
-      class="font-poppins fixed inset-0 z-90 flex h-dvh items-center justify-center bg-black/50 p-4 py-10"
+  <BaseModal
+    :showModal="props.showModal"
+    title="Edit Rounds"
+    @close="modalStore.toggleEditRoundsModal()"
+  >
+    <ModalFetchOverlay v-if="roundStore.loadingStates.isFetchingRoundById" />
+    <ServerErrorOverlayModal
+      v-else-if="roundStore.errorStates.isFetchingRoundByIdError"
+      title="Failed to Load Round Details"
+      description="We couldn't load the round details. Please try again."
+      :onRetry="retryFetchRoundById"
+    />
+    <form
+      v-else
+      @submit.prevent="editRound()"
+      class="flex h-full w-full flex-col justify-start gap-4 p-4"
     >
-      <div
-        class="flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl bg-amber-200 sm:w-lg md:h-auto"
-      >
-        <div class="flex w-full items-center justify-between p-4 text-2xl">
-          <p class="">Edit Rounds</p>
-          <button
-            @click="modalStore.toggleEditRoundsModal()"
-            class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-black/10"
-          >
-            <X />
-          </button>
-        </div>
-        <FetchRoundByIdFetchOverlay v-if="roundStore.loadingStates.isFetchingRoundById" />
-        <ServerErrorOverlayModal
-          v-else-if="roundStore.errorStates.isFetchingRoundByIdError"
-          title="Failed to Load Round Details"
-          description="We couldn't load the round details. Please try again."
-          :onRetry="retryFetchRoundById"
+      <div class="flex flex-col">
+        <p>Rounds Name</p>
+        <input
+          v-model="newRoundName"
+          type="text"
+          name="roundName"
+          id="roundName"
+          class="h-10 w-full border border-black px-3"
         />
-        <form
-          v-else
-          @submit.prevent="editRound()"
-          class="flex h-full w-full flex-col justify-start gap-4 p-4"
-        >
-          <div class="flex flex-col">
-            <p>Rounds Name</p>
-            <input
-              v-model="newRoundName"
-              type="text"
-              name="roundName"
-              id="roundName"
-              class="h-10 w-full border border-black px-3"
-            />
-            <div v-if="roundStore.formErrors.roundName" class="mt-1 flex w-full items-start gap-1">
-              <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
-              <p class="text-sm text-red-500">
-                {{ roundStore.formErrors.roundName }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex flex-col">
-            <p>Phase Order</p>
-            <input
-              :value="roundStore.roundId?.phaseOrder"
-              readonly
-              type="text"
-              name="phaseOrder"
-              id="phaseOrder"
-              placeholder="Loading..."
-              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-            />
-          </div>
-
-          <div v-if="roundStore.roundId?.phaseOrder !== 1" class="flex flex-col">
-            <p>Contestant Limit</p>
-            <input
-              :value="newRoundLimit"
-              @input="onLimitInput"
-              :readonly="roundStore.roundId?.isLimitLocked"
-              type="text"
-              placeholder="e.g. 10"
-              name="contestantLimit"
-              id="contestantLimit"
-              class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
-            />
-            <div v-if="roundStore.formErrors.roundLimit" class="mt-1 flex w-full items-start gap-1">
-              <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
-              <p class="text-sm text-red-500">
-                {{ roundStore.formErrors.roundLimit }}
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-auto flex w-full items-center justify-between gap-2 md:gap-4">
-            <button
-              type="button"
-              @click="modalStore.toggleEditRoundsModal()"
-              class="w-full rounded-xl border border-black p-4 text-sm hover:bg-black/10"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="roundStore.loadingStates.isEditingRound || !roundStore.roundId"
-              class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:opacity-50"
-            >
-              {{ roundStore.loadingStates.isEditingRound ? 'Saving...' : 'Save Changes' }}
-            </button>
-          </div>
-        </form>
+        <div v-if="roundStore.formErrors.roundName" class="mt-1 flex w-full items-start gap-1">
+          <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
+          <p class="text-sm text-red-500">
+            {{ roundStore.formErrors.roundName }}
+          </p>
+        </div>
       </div>
-    </div>
-  </teleport>
+
+      <div class="flex flex-col">
+        <p>Phase Order</p>
+        <input
+          :value="roundStore.roundId?.phaseOrder"
+          readonly
+          type="text"
+          name="phaseOrder"
+          id="phaseOrder"
+          placeholder="Loading..."
+          class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+        />
+      </div>
+
+      <div v-if="roundStore.roundId?.phaseOrder !== 1" class="flex flex-col">
+        <p>Contestant Limit</p>
+        <input
+          :value="newRoundLimit"
+          @input="onLimitInput"
+          :readonly="roundStore.roundId?.isLimitLocked"
+          type="text"
+          placeholder="e.g. 10"
+          name="contestantLimit"
+          id="contestantLimit"
+          class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
+        />
+        <div v-if="roundStore.formErrors.roundLimit" class="mt-1 flex w-full items-start gap-1">
+          <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
+          <p class="text-sm text-red-500">
+            {{ roundStore.formErrors.roundLimit }}
+          </p>
+        </div>
+      </div>
+
+      <BaseModalActions
+        submitLabel="Save Changes"
+        submittingLabel="Saving..."
+        :isSubmitting="roundStore.loadingStates.isEditingRound"
+        :disabled="!roundStore.roundId"
+        @cancel="modalStore.toggleEditRoundsModal()"
+      />
+    </form>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -106,9 +82,11 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore.ts';
 import { ref, watch } from 'vue';
 import type { EditRoundInput } from '@/types/admin/adminSetup/rounds/rounds';
-import { CircleAlert, X } from '@lucide/vue';
+import { CircleAlert } from '@lucide/vue';
 import { useToast } from '@/composables/Toast/useToast';
-import FetchRoundByIdFetchOverlay from './FetchRoundByIdFetchOverlay.vue';
+import BaseModal from '@/components/shared/BaseModal.vue';
+import BaseModalActions from '@/components/shared/BaseModalActions.vue';
+import ModalFetchOverlay from '@/components/shared/modal/ModalFetchOverlay.vue';
 import ServerErrorOverlayModal from '@/components/shared/modal/ServerErrorOverlayModal.vue';
 
 const roundStore = useRoundStore();
