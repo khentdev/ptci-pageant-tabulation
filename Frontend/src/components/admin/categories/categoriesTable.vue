@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="flex flex-col gap-8">
-    <table v-for="round in items" :key="round.id" class="relative w-full">
+    <table v-for="round in items" :key="round.id" class="relative w-full ">
       <thead class="sticky top-0 z-20 h-full rounded-xl">
         <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
           <th class="px-2 text-nowrap">{{ round.name }}</th>

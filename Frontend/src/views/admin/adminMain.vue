@@ -3,6 +3,7 @@ import NavMain from '@/components/navMain.vue';
 import { ref, type Component } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
+import LiveRoundSideBar from '@/components/admin/live_event/liveRoundSideBar.vue';
 
 type SetupNavItem = {
   label: string;
@@ -31,7 +32,7 @@ const toggleDropDown = () => {
 </script>
 
 <template>
-  <nav-main/>
+  <nav-main />
   <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
     <div class="flex w-full flex-col">
       <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>
@@ -39,7 +40,7 @@ const toggleDropDown = () => {
     <div class="flex h-full w-full">
       <div @click="toggleDropDown" v-if="isDropDownClick === false" class="py-4">
         <SquareArrowRight
-          class="stroke bg-main-dark-brown h-10 w-10 rounded-md stroke-white p-2"
+          class="stroke bg-main-dark-brown absolute z-99 h-10 w-10 rounded-md stroke-white p-2 sm:relative"
         ></SquareArrowRight>
       </div>
 
@@ -79,7 +80,7 @@ const toggleDropDown = () => {
                 :key="item.routeName"
                 exact-active-class="bg-main-dark-brown text-white hover:bg-main-dark-brown"
                 :to="{ name: item.routeName }"
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5  sm:p-4"
+                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
               >
                 <component :is="item.icon"></component>
                 <p class="cursor-pointer">{{ item.label }}</p>
@@ -93,7 +94,9 @@ const toggleDropDown = () => {
               <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">LIVE EVENT</p>
             </div>
 
-            <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4"></div>
+            <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
+              <LiveRoundSideBar></LiveRoundSideBar>
+            </div>
           </div>
         </div>
       </Transition>

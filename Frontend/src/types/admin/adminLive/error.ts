@@ -1,0 +1,11 @@
+export const JUDGE_SUBMISSIONS_GET_ERROR = 'JUDGE_SUBMISSIONS_GET_ERROR';
+export const ROUND_RESULTS_GET_ERROR = 'ROUND_RESULTS_GET_ERROR';
+export const ROUND_PHASE_NOT_FOUND = 'ROUND_PHASE_NOT_FOUND';
+
+// canAdvanceReason
+
+
+export type liveErrorCodes =
+  | typeof JUDGE_SUBMISSIONS_GET_ERROR
+  | typeof ROUND_RESULTS_GET_ERROR
+  | typeof ROUND_PHASE_NOT_FOUND;
