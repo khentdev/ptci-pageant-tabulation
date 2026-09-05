@@ -184,11 +184,11 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 
 ### Backend
 
-- [ ] Rounds + categories list API — returns all rounds with their categories (for sidebar)
-- [ ] Contestants by round API — returns contestants in `round_contestants` for a given round (or all contestants for phase_order = 1)
-- [ ] Scoring fields by category API — returns fields sorted by max_value descending
-- [ ] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state: any score exists for this judge + category = fully submitted)
-- [ ] Batch submit scores API — receives array of all contestant scores for a category; validates all fields present and within 0–max_value; rejects if already submitted for this judge + category; inserts all in a single transaction
+- [x] Rounds + categories list API — returns all rounds with their categories (for sidebar)
+- [x] Contestants by round API — returns contestants in `round_contestants` for a given round (or all contestants for phase_order = 1)
+- [x] Scoring fields by category API — returns fields sorted by max_value descending
+- [x] Existing scores API — returns this judge's submitted scores for a given category (to determine submitted state: any score exists for this judge + category = fully submitted)
+- [x] Batch submit scores API — receives array of all contestant scores for a category; validates all fields present and within 0–max_value; rejects if already submitted for this judge + category; inserts all in a single transaction
 
 ### Frontend
 
