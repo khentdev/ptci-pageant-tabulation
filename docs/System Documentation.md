@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 23, 2026
+**Last synced with codebase:** Sept 05, 2026
 Product-level documentation only. API contracts, request/response shapes, and implementation details live in the repo.
 
 ---
@@ -363,7 +363,9 @@ Admin must pick exactly (N - A) from the T tied contestants
 - Read path: `GET /live-event/round-results/:id/declared-winners` returns `declaredWinners` from `RoundWinner` when `winners_declared_at` is set; `null` when not declared — frontend shows podium on the same Round Results page (`/admin/live/results/:roundId`), not a separate route
 - Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display (from declared-winners GET), and no further changes are possible
 - Declaring winners is irreversible — no undo
-- Final round uses the same cutoff tie UI when more contestants tie at the top-N cutoff than slots remain (e.g. top 3 with a tie at rank 3). Admin picks who is included in the ranked top 3; medals (1st / 2nd / 3rd) follow final ranking order after resolution
+- The final round's roster is already fixed by the time it's reached: `advanceRound` always caps the number of contestants entering a round at that round's own `contestant_limit`, so the final round can never hold more contestants than its `contestant_limit`. A cutoff tie for the last qualifying spot is resolved one round earlier, during Advance into the final round — not at Declare Winners
+- Declare Winners therefore only ranks and locks the fixed final-round roster; a tie among finalists affects medal *order* only, broken by `candidateNumber` ascending (same as the rankings tiebreak), not who is included
+- The API still exposes the same cutoff-tie shape (`advancement.hasTie`, `included`, `tied`) on the final round's results GET for structural consistency with Advance, and `canDeclareWinners` is `false` while `advancement.hasTie` is `true` — but given the roster cap above, this condition is not reachable through normal play; it is defensive, not a flow admins should expect to hit
 - `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus cutoff tie must be resolved via local selection and POST body when `advancement.hasTie` is `true` — GET returns `canDeclareWinners: false` while a cutoff tie exists
 - Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display; podium rows come from [[live-event/live-round-declared-winners]] after declare
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
