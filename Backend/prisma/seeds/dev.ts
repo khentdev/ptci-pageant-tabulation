@@ -15,6 +15,15 @@ import {
 
 const SINGLE_FIELD = [{ name: "Overall", maxValue: 100 }]
 
+/**
+ * Top 3 is normally pre-filled/scored/declared at seed time to demo the
+ * "final round already declared" state. That pre-fill also marks Top 5 as
+ * isCompleted (its next round already has contestants), which suppresses
+ * the tie/advancement computation even though Top 5's scores are tied.
+ * --tie skips the Top 3 pre-fill so Top 5 surfaces a genuine hasTie: true.
+ */
+const SEED_UNRESOLVED_TIE = process.argv.includes("--tie")
+
 const CONTESTANT_DATA = [
     { candidateNumber: 101, name: "Keanna Reyes", gender: "FEMALE" as const, teamName: "Team Sining", teamColor: "#C41E3A" },
     { candidateNumber: 102, name: "Marcus Lin", gender: "MALE" as const, teamName: "Team Diwa", teamColor: "#1E4FC4" },
@@ -122,43 +131,46 @@ async function seedDev() {
         }
     }
 
-    // --- Top 3: final round — pool filled, fully scored, winners declared ---
+    // --- Top 3: final round — categories always ready for scoring ---
     const top3EveningWear = await createCategoryWithFields(top3.id, "Evening Wear", SINGLE_FIELD)
     const top3Qa = await createCategoryWithFields(top3.id, "Q&A", SINGLE_FIELD)
 
-    const topThreeIds = [101, 102, 103].map(number => byNumber.get(number)!.id)
-    await insertRoundContestants(top3.id, topThreeIds)
+    if (!SEED_UNRESOLVED_TIE) {
+        // --- pool filled, fully scored, winners declared ---
+        const topThreeIds = [101, 102, 103].map(number => byNumber.get(number)!.id)
+        await insertRoundContestants(top3.id, topThreeIds)
 
-    const top3ScoreMap = [
-        { number: 101, total: 95 },
-        { number: 102, total: 88 },
-        { number: 103, total: 82 },
-    ]
+        const top3ScoreMap = [
+            { number: 101, total: 95 },
+            { number: 102, total: 88 },
+            { number: 103, total: 82 },
+        ]
 
-    for (const category of [top3EveningWear, top3Qa]) {
-        for (const judge of [judgeMaria, judgeJuan]) {
-            await submitSingleFieldScores(
-                judge.id,
-                category,
-                top3ScoreMap.map(({ number, total }) => ({
-                    contestantId: byNumber.get(number)!.id,
-                    total,
-                })),
-            )
+        for (const category of [top3EveningWear, top3Qa]) {
+            for (const judge of [judgeMaria, judgeJuan]) {
+                await submitSingleFieldScores(
+                    judge.id,
+                    category,
+                    top3ScoreMap.map(({ number, total }) => ({
+                        contestantId: byNumber.get(number)!.id,
+                        total,
+                    })),
+                )
+            }
         }
-    }
 
-    await prisma.round.update({
-        where: { id: top3.id },
-        data: { winnersDeclaredAt: new Date() },
-    })
-    await prisma.roundWinner.createMany({
-        data: [
-            { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
-            { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
-            { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
-        ],
-    })
+        await prisma.round.update({
+            where: { id: top3.id },
+            data: { winnersDeclaredAt: new Date() },
+        })
+        await prisma.roundWinner.createMany({
+            data: [
+                { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
+                { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
+                { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
+            ],
+        })
+    }
 
     // --- Advancement Only: contestants without categories (delete guard test) ---
     await insertRoundContestants(advancementOnly.id, [
@@ -180,6 +192,7 @@ async function seedDev() {
             maria: judgeMaria,
             juan: judgeJuan,
         },
+        mode: SEED_UNRESOLVED_TIE ? "tie" : "default",
     }
 
     logSeedSummary(summary)
