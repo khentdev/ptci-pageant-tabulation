@@ -8,40 +8,31 @@
     <div
       class="bg-main-dark-brown flex h-full flex-col justify-center rounded-lg px-6 py-4 text-white"
     >
-      <p class="my-4">Select 1 more to fill remaining spot</p>
+      <p class="my-4">Select {{ requiredSelections }} more to fill remaining spot</p>
       <div
-        class="flex items-end justify-between bg-amber-100"
+        class="flex items-end justify-between"
         v-for="contestants in liveStore.roundResult?.advancement.tied"
         :key="contestants.id"
       >
-        <div class="mt-2 flex items-center gap-2">
-          <input type="checkbox" class="size-4" id="tie" />
-          <label for="tie">{{ contestants.name }}</label>
+        <div class="mt-2 flex w-full items-center gap-2">
+          <input
+            :id="`contestant-${contestants.id}`"
+            :value="contestants.id"
+            type="checkbox"
+            class="size-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="selectedCount >= requiredSelections && !isContestantSelected(contestants.id)"
+            v-model="liveStore.selectedContestantIds"
+          />
+          <label :for="`contestant-${contestants.id}`" class="w-full">{{ contestants.name }}</label>
+          <div class="flex w-full justify-end">
+            <p class="font-bold">{{ contestants.overallScore }}</p>
+          </div>
         </div>
-        <p class="font-bold">{{ contestants.overallScore }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <p>Selected: {{ liveStore.roundResult?.advancement.requiredSelections }} of 1 required</p>
-        <check
-          v-if="liveStore.roundResult?.advancement.requiredSelections === 1"
-          class="stroke stroke-jungle-green-700"
-        ></check>
-        <x
-          v-else-if="liveStore.roundResult?.advancement.requiredSelections === 0"
-          class="stroke stroke-red-500"
-        ></x>
-      </div>
-      <div class="mt-4 flex items-center justify-center gap-4">
-        <button
-          class="border-main-light-brown hover:bg-main-light-brown/30 w-full cursor-pointer rounded-lg border p-4 text-white"
-        >
-          Cancel
-        </button>
-        <button
-          class="bg-main-light-brown hover:bg-main-light-brown/80 w-full cursor-pointer rounded-lg p-4 text-black/70"
-        >
-          Confirm
-        </button>
+      <div class="mt-4 flex items-center gap-2">
+        <p>Selected: {{ selectedCount }} of {{ requiredSelections }} required</p>
+        <check v-if="liveStore.isTieResolved" class="stroke stroke-jungle-green-700"></check>
+        <x v-else class="stroke stroke-red-500"></x>
       </div>
     </div>
   </div>
@@ -49,5 +40,16 @@
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import { Check, TriangleAlert, X } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 const liveStore = useLiveStore();
+
+const selectedCount = computed(() => liveStore.selectedContestantIds.length);
+
+const requiredSelections = computed(
+  () => liveStore.roundResult?.advancement.requiredSelections ?? 0,
+);
+
+const isContestantSelected = (id: number): boolean => {
+  return liveStore.selectedContestantIds.includes(id);
+};
 </script>

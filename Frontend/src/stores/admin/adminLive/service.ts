@@ -1,5 +1,8 @@
 import { axiosInstance } from '@/api/axios/axiosConfig';
 import type {
+  DeclareWinnersResponse,
+  AdvanceRoundResponse,
+  GetDeclaredWinnersResponse,
   GetJudgeSubmissionsResponse,
   GetRoundResultsResponse,
 } from '@/types/admin/adminLive/live';
@@ -15,5 +18,23 @@ export const liveService = {
   getRoundResults: async (id: number) => {
     const res = await axiosInstance.get(`/live-event/round-results/${id}/advancement`);
     return GetTypeResponse<GetRoundResultsResponse>(res);
+  },
+
+  getDeclaredWinners: async (id: number) => {
+    const res = await axiosInstance.get(`/live-event/round-results/${id}/declared-winners`);
+    return GetTypeResponse<GetDeclaredWinnersResponse>(res);
+  },
+
+  addAdvanceRound: async (id: number, payload?: { selectedContestantIds?: number[] }) => {
+    const res = await axiosInstance.post(`/live-event/round-results/${id}/advancement`, payload);
+    return GetTypeResponse<AdvanceRoundResponse>(res);
+  },
+
+  declareWinners: async (id: number, payload?: { selectedContestantIds?: number[] }) => {
+    const res = await axiosInstance.post(
+      `/live-event/round-results/${id}/declare-winners`,
+      payload,
+    );
+    return GetTypeResponse<DeclareWinnersResponse>(res);
   },
 };

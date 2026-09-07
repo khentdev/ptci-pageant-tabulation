@@ -8,11 +8,11 @@
           Submitted
         </p>
         <Check
-          v-if="liveStore.judgeList?.allJudgesSubmitted === true"
+          v-if="liveStore.judgeList?.allJudgesSubmitted"
           class="stroke stroke-jungle-green-700"
         ></Check>
         <X
-          v-else-if="liveStore.judgeList?.allJudgesSubmitted === false"
+          v-else-if="!liveStore.judgeList?.allJudgesSubmitted"
           class="stroke stroke-red-500"
         ></X>
       </div>
@@ -47,19 +47,19 @@
             >
               <div class="flex items-center justify-center">
                 <Check
-                  v-if="categories.submitted === true"
+                  v-if="categories.submitted"
                   class="stroke stroke-jungle-green-800"
                 ></Check
-                ><X v-else-if="categories.submitted === false" class="stroke stroke-red-500"></X>
+                ><X v-else-if="!categories.submitted" class="stroke stroke-red-500"></X>
               </div>
             </td>
             <td class="border border-black/40 p-2 text-nowrap">
               <div class="flex items-center justify-center">
                 <Check
-                  v-if="j.fullySubmitted === true"
+                  v-if="j.fullySubmitted"
                   class="stroke stroke-jungle-green-800"
                 ></Check
-                ><X v-else-if="j.fullySubmitted === false" class="stroke stroke-red-500"></X>
+                ><X v-else-if="!j.fullySubmitted" class="stroke stroke-red-500"></X>
               </div>
             </td>
           </tr>

@@ -57,7 +57,7 @@ const toggleDropDown = () => {
           class="flex h-[calc(100vh-0.2rem)] w-full p-2 sm:w-3/8 sm:p-4 lg:w-3/12"
         >
           <div
-            class="bg-main-light-brown flex h-full w-full flex-col gap-2 rounded-xl border border-black/20 drop-shadow-sm drop-shadow-black/10"
+            class="bg-main-light-brown flex h-full w-full flex-col gap-2 overflow-y-auto rounded-xl border border-black/20 drop-shadow-sm drop-shadow-black/10"
           >
             <div class="flex shrink-0 items-center justify-between px-6 py-2">
               <p class="w-fulll text-xl font-bold text-black/70 sm:text-2xl">ADMIN</p>
@@ -94,7 +94,8 @@ const toggleDropDown = () => {
               <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">LIVE EVENT</p>
             </div>
 
-            <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
+            <!--  <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4"></div>-->
+            <div class="flex shrink-0 flex-col gap-2 px-4 pb-4 transition-all">
               <LiveRoundSideBar></LiveRoundSideBar>
             </div>
           </div>
