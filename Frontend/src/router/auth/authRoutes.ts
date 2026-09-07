@@ -24,4 +24,10 @@ export const authRoutes: RouteRecordRaw[] = [
     component: () => import('../../views/admin/adminMain.vue'),
     meta: { requiresAdmin: true },
   },
+  {
+    path: '/judge/scoring',
+    name: 'judge-homepage',
+    component: () => import('../../views/judge/judgeMain.vue'),
+     meta: { requiresJudge: true },
+  },
 ];
