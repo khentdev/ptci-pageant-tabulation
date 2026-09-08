@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import ContestantTable from '@/components/admin/contestants/contestantTable.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
 import AddContestant from '@/components/admin/contestants/addContestant.vue';
 import { useModalStore } from '@/stores/modals/modalStore';
 import EditContestant from '@/components/admin/contestants/editContestant.vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import { useRoute, useRouter } from 'vue-router';
 import type { Gender } from '@/types/admin/adminSetup/contestants/contestants';
+import { Users } from '@lucide/vue';
 
 const modalStore = useModalStore();
 const route = useRoute();
@@ -45,6 +47,8 @@ const openEditContestant = (id: number) => {
 const handleDelete = async (id: number) => {
   await contestantStore.deleteContestant(id);
 };
+
+const hasActiveFilter = computed(() => selectedGenderFilter.value !== undefined);
 
 watch(
   () => route.query.filter,
@@ -85,7 +89,10 @@ watch(
     @add="modalStore.toggleAddContestant()"
   >
     <template #toolbar>
-      <div class="flex gap-4 self-start" v-if="contestantStore.contestantList.length > 0">
+      <div
+        class="flex gap-4 self-start"
+        v-if="contestantStore.contestantList.length > 0 || hasActiveFilter"
+      >
         <button
           v-for="button in genderFilterButtons"
           :key="button.label"
@@ -97,7 +104,24 @@ watch(
         </button>
       </div>
     </template>
+    <EmptyState
+      v-if="contestantStore.contestantList.length === 0 && hasActiveFilter"
+      :icon="Users"
+      title="No contestants match this filter"
+      description="Try a different filter or clear it to see all contestants."
+      actionLabel="Clear Filter"
+      @action="setSelectedGenderFilter(undefined)"
+    />
+    <EmptyState
+      v-else-if="contestantStore.contestantList.length === 0"
+      :icon="Users"
+      title="No contestants yet"
+      description="Add your first contestant to get started."
+      actionLabel="Add Contestant"
+      @action="modalStore.toggleAddContestant()"
+    />
     <ContestantTable
+      v-else
       :items="contestantStore.contestantList"
       @edit="openEditContestant"
       @delete="handleDelete"

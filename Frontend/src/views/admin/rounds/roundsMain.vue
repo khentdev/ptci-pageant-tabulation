@@ -4,7 +4,9 @@ import { useModalStore } from '@/stores/modals/modalStore';
 import AddRounds from '@/components/admin/rounds/addRounds.vue';
 import EditRounds from '@/components/admin/rounds/editRounds.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
+import { Layers } from '@lucide/vue';
 import { onMounted } from 'vue';
 
 const modalStore = useModalStore();
@@ -38,7 +40,16 @@ const handleDelete = async (id: number) => {
     :onRetry="roundStore.getRound"
     @add="modalStore.toggleAddRoundsModal()"
   >
+    <EmptyState
+      v-if="roundStore.roundList.length === 0"
+      :icon="Layers"
+      title="No rounds yet"
+      description="Create your first round to start organizing the competition."
+      actionLabel="Add Rounds"
+      @action="modalStore.toggleAddRoundsModal()"
+    />
     <RoundsTable
+      v-else
       :items="roundStore.roundList"
       @edit="handleEdit"
       @delete="handleDelete"

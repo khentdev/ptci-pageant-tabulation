@@ -21,8 +21,12 @@ const SINGLE_FIELD = [{ name: "Overall", maxValue: 100 }]
  * isCompleted (its next round already has contestants), which suppresses
  * the tie/advancement computation even though Top 5's scores are tied.
  * --tie skips the Top 3 pre-fill so Top 5 surfaces a genuine hasTie: true.
+ * --declare fills/scores Top 3 like the default seed but stops short of the
+ * direct winnersDeclaredAt/RoundWinner writes, so Declare Winners can be
+ * tested through the real endpoint without needing judge scoring first.
  */
 const SEED_UNRESOLVED_TIE = process.argv.includes("--tie")
+const SEED_DECLARE_READY = process.argv.includes("--declare")
 
 const CONTESTANT_DATA = [
     { candidateNumber: 101, name: "Keanna Reyes", gender: "FEMALE" as const, teamName: "Team Sining", teamColor: "#C41E3A" },
@@ -60,12 +64,23 @@ async function seedDev() {
     const top10 = await createRound({ name: "Top 10", phaseOrder: 2, contestantLimit: 10 })
     const top5 = await createRound({ name: "Top 5", phaseOrder: 3, contestantLimit: 5 })
     const top3 = await createRound({ name: "Top 3", phaseOrder: 4, contestantLimit: 3 })
-    const spare = await createRound({ name: "Spare Round", phaseOrder: 5, contestantLimit: 5 })
-    const advancementOnly = await createRound({
-        name: "Advancement Only",
-        phaseOrder: 6,
-        contestantLimit: 2,
-    })
+
+    /**
+     * Spare Round / Advancement Only only exist in the default seed. They
+     * sit above Top 3 in phaseOrder purely to exercise round delete-guard
+     * scenarios (see SEED_REFERENCE.md). Keeping them under --tie or
+     * --declare would make Top 3's nextRound resolve to Spare Round instead
+     * of null, which permanently blocks canDeclareWinners no matter how
+     * fully Top 3 is scored — so both variants must skip them to leave
+     * Top 3 genuinely final for real Declare Winners testing.
+     */
+    const skipDecoyRounds = SEED_UNRESOLVED_TIE || SEED_DECLARE_READY
+    const spare = skipDecoyRounds
+        ? null
+        : await createRound({ name: "Spare Round", phaseOrder: 5, contestantLimit: 5 })
+    const advancementOnly = skipDecoyRounds
+        ? null
+        : await createRound({ name: "Advancement Only", phaseOrder: 6, contestantLimit: 2 })
 
     // --- Preliminary: full scores, already advanced to Top 10 ---
     const prelimsSwimwear = await createCategoryWithFields(prelims.id, "Swimwear", SINGLE_FIELD)
@@ -136,7 +151,7 @@ async function seedDev() {
     const top3Qa = await createCategoryWithFields(top3.id, "Q&A", SINGLE_FIELD)
 
     if (!SEED_UNRESOLVED_TIE) {
-        // --- pool filled, fully scored, winners declared ---
+        // --- pool filled, fully scored; declared unless --declare ---
         const topThreeIds = [101, 102, 103].map(number => byNumber.get(number)!.id)
         await insertRoundContestants(top3.id, topThreeIds)
 
@@ -159,24 +174,28 @@ async function seedDev() {
             }
         }
 
-        await prisma.round.update({
-            where: { id: top3.id },
-            data: { winnersDeclaredAt: new Date() },
-        })
-        await prisma.roundWinner.createMany({
-            data: [
-                { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
-                { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
-                { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
-            ],
-        })
+        if (!SEED_DECLARE_READY) {
+            await prisma.round.update({
+                where: { id: top3.id },
+                data: { winnersDeclaredAt: new Date() },
+            })
+            await prisma.roundWinner.createMany({
+                data: [
+                    { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
+                    { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
+                    { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
+                ],
+            })
+        }
     }
 
     // --- Advancement Only: contestants without categories (delete guard test) ---
-    await insertRoundContestants(advancementOnly.id, [
-        byNumber.get(111)!.id,
-        byNumber.get(112)!.id,
-    ])
+    if (advancementOnly) {
+        await insertRoundContestants(advancementOnly.id, [
+            byNumber.get(111)!.id,
+            byNumber.get(112)!.id,
+        ])
+    }
 
     const summary: SeedSummary = {
         rounds: {
@@ -184,15 +203,15 @@ async function seedDev() {
             top10,
             top5,
             top3,
-            spare,
-            advancementOnly,
+            ...(spare ? { spare } : {}),
+            ...(advancementOnly ? { advancementOnly } : {}),
         },
         contestants,
         judges: {
             maria: judgeMaria,
             juan: judgeJuan,
         },
-        mode: SEED_UNRESOLVED_TIE ? "tie" : "default",
+        mode: SEED_UNRESOLVED_TIE ? "tie" : SEED_DECLARE_READY ? "declare" : "default",
     }
 
     logSeedSummary(summary)

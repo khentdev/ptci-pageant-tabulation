@@ -31,7 +31,17 @@ npm run seed:dev:tie
 npm run seed:all:tie
 ```
 
-Then open **Top 5** in Admin Live Results, resolve the tie panel (pick 1 of #103/#104/#105), click Advance, and optionally score Top 3 via the judge UI to continue on to Declare Winners.
+Then open **Top 5** in Admin Live Results, resolve the tie panel (pick 1 of #103/#104/#105), click Advance, and score Top 3 via the judge UI to continue on to Declare Winners.
+
+**Testing Declare Winners without judge scoring:** if judge scoring isn't available yet, use the `:declare` variant instead — it fills and fully scores Top 3 directly (same #101/#102/#103 pool and score map as the default seed) but stops short of the direct `winnersDeclaredAt`/`RoundWinner` writes, so **Declare Winners is immediately clickable** through the real endpoint with no judge UI interaction needed:
+
+```bash
+npm run seed:dev:declare
+# or, first time:
+npm run seed:all:declare
+```
+
+Then open **Top 3** in Admin Live Results and click **Declare Winners**.
 
 ---
 
@@ -65,10 +75,10 @@ Round IDs vary after each seed — use `GET /rounds` or the seed log. Names are 
 |-------|------------|-------|------------------|-------|
 | **Preliminary** | 1 | unlimited | **State 3** — `isCompleted: true` | All judges submitted; already advanced top 10 |
 | **Top 10** | 2 | 10 | **State 1** — `allJudgesSubmitted: false` | Maria done; Juan partial; limit locked |
-| **Top 5** | 3 | 5 | Default seed: `isCompleted: true` (already "advanced"). `seed:dev:tie`: **State 2b** — `hasTie: true`, `canAdvance: true` | Scores are always tied at the cutoff (#103/#104/#105); only the `:tie` variant leaves Top 3 unfilled so the tie actually surfaces — see below |
-| **Top 3** | 4 | 3 | Default seed: **Final — declared** — `winnersDeclaredAt` set, podium rows. `seed:dev:tie`: empty pool, categories ready | Default: all judges submitted, Declare hidden, use declared-winners GET for podium. `:tie`: advance into it from Top 5 to populate |
-| **Spare Round** | 5 | 5 | N/A | Empty — **safe to delete** |
-| **Advancement Only** | 6 | 2 | N/A | 2 contestants, no categories — delete → `ROUND_PHASE_HAS_CONTESTANTS` |
+| **Top 5** | 3 | 5 | Default / `:declare` seed: `isCompleted: true` (already "advanced"). `seed:dev:tie`: **State 2b** — `hasTie: true`, `canAdvance: true` | Scores are always tied at the cutoff (#103/#104/#105); only the `:tie` variant leaves Top 3 unfilled so the tie actually surfaces — see below |
+| **Top 3** | 4 | 3 | Default seed: **Final — declared** — `winnersDeclaredAt` set, podium rows. `seed:dev:declare`: pool filled (#101/#102/#103), fully scored, genuinely final, **not yet declared** — `canDeclareWinners: true`. `seed:dev:tie`: empty pool, categories ready, genuinely final (no round above it) | Default: all judges submitted, Declare hidden, use declared-winners GET for podium. `:declare`: click Declare Winners immediately, no judge scoring needed. `:tie`: advance into it from Top 5 to populate, then score + declare for real |
+| **Spare Round** | 5 | 5 | **Default seed only** — N/A | Empty — **safe to delete**. Not created under `seed:dev:tie`/`seed:dev:declare` — its presence above Top 3 would make `nextRound` non-null and permanently block `canDeclareWinners` |
+| **Advancement Only** | 6 | 2 | **Default seed only** — N/A | 2 contestants, no categories — delete → `ROUND_PHASE_HAS_CONTESTANTS`. Not created under `seed:dev:tie`/`seed:dev:declare`, same reason as Spare Round |
 
 ### Top 5 tie detail
 
@@ -90,13 +100,18 @@ With the **default** seed, open **Top 3** in Admin Live Results after seed — `
 | 2 | 102 | Marcus Lin | 88.00 |
 | 3 | 103 | Sofia Mendoza | 82.00 |
 
-To test **Declare Winners** flow from scratch: run `npm run seed:dev:tie`, advance from **Top 5** (resolve the tie), then score Top 3 via judge UI or manual API before declare.
+To test **Declare Winners** through the real endpoint:
+
+- **Fast path, no judge scoring needed:** run `npm run seed:dev:declare`, open **Top 3**, click **Declare Winners** directly — the pool is already filled and scored, just not yet declared.
+- **Full path, exercises advance + scoring too:** run `npm run seed:dev:tie`, advance from **Top 5** (resolve the tie), then score Top 3 via judge UI or manual API before declaring.
+
+Under both `--tie` and `--declare`, Top 3 is the only round above Top 5 (no Spare Round/Advancement Only), so it's genuinely the final round and `canDeclareWinners` becomes reachable once all judges submit.
 
 ---
 
 ## Error-toast cheat sheet
 
-Reflects the **default** seed (`npm run seed:dev`). Under `seed:dev:tie`, Top 3 has no `RoundContestant`/scores yet, so its rows here won't apply until you advance into it manually.
+Reflects the **default** seed (`npm run seed:dev`). Under `seed:dev:tie`, Top 3 has no `RoundContestant`/scores yet, so its rows here won't apply until you advance into it manually. Under `seed:dev:declare`, Spare Round/Advancement Only don't exist, so their rows don't apply either.
 
 | Action | Target | Expected code |
 |--------|--------|---------------|
@@ -133,5 +148,5 @@ Re-run `npm run seed:dev` to reset after experimenting (including after declare 
 | Preliminary | Swimwear, Talent, Evening Gown (all with fields, scored) |
 | Top 10 | Production Number, Formal Wear (scored, partial); Q&A (empty) |
 | Top 5 | Swimwear, Talent (fully scored, tie scenario) |
-| Top 3 | Evening Wear, Q&A (fields created either way; fully scored + winners declared under default seed, unscored/empty pool under `seed:dev:tie`) |
+| Top 3 | Evening Wear, Q&A (fields created either way; fully scored + winners declared under default seed, fully scored + undeclared under `seed:dev:declare`, unscored/empty pool under `seed:dev:tie`) |
 | Spare / Advancement Only | none |

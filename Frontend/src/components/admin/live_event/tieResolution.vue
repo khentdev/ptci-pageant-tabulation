@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import { Check, TriangleAlert, X } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 const liveStore = useLiveStore();
 
 const selectedCount = computed(() => liveStore.selectedContestantIds.length);

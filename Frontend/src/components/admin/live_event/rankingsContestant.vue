@@ -1,5 +1,5 @@
 <template>
-  <div class="gap flex w-full flex-col gap-2">
+  <div class="gap flex w-full flex-col gap-2 mt-2">
     <div class="mt-4 flex justify-between">
       <p class="text-xl font-medium text-black/70">Rankings</p>
       <span
@@ -9,7 +9,6 @@
         Winners Declared
       </span>
     </div>
-
     <div class="h-full bg-amber-500/0" v-if="liveStore.declaredWinners?.declaredWinners">
       <table class="w-full">
         <thead class="sticky top-0 z-20 h-full rounded-xl">
@@ -27,19 +26,22 @@
           <tr class="font-poppins">
             <td class="border border-black/40 p-2 text-nowrap">
               <div class="flex items-center justify-center gap-2">
-                <Award
-                  v-if="contestant.placement === 1"
-                  class="stroke fill-yellow-400 stroke-black/70"
-                ></Award>
-                <Award
-                  v-else-if="contestant.placement === 2"
-                  class="stroke fill-gray-500 stroke-black/70"
-                ></Award>
-                <Award
-                  v-else-if="contestant.placement === 3"
-                  class="stroke fill-amber-950 stroke-black/70"
-                ></Award
-                >{{ contestant.placement }}
+                <template v-if="isPodiumOnly">
+                  <Award
+                    v-if="contestant.placement === 1"
+                    class="stroke fill-yellow-400 stroke-black/70"
+                  ></Award>
+                  <Award
+                    v-else-if="contestant.placement === 2"
+                    class="stroke fill-gray-500 stroke-black/70"
+                  ></Award>
+                  <Award
+                    v-else-if="contestant.placement === 3"
+                    class="stroke fill-amber-950 stroke-black/70"
+                  ></Award>
+                  <span>{{ contestant.placement }}</span>
+                </template>
+                <span v-else>{{ contestant.placement }}</span>
               </div>
             </td>
             <td class="border border-black/40 p-2 text-nowrap">{{ contestant.contestant.name }}</td>
@@ -53,7 +55,13 @@
     </div>
 
     <div class="h-full bg-amber-500/0" v-else-if="liveStore.roundResult?.advancement">
-      <table class="w-full">
+      <EmptyState
+        v-if="(liveStore.roundResult?.rankings.length ?? 0) === 0"
+        :icon="Users"
+        title="No contestants yet"
+        description="Advance contestants from the previous round to begin scoring."
+      />
+      <table v-else class="w-full">
         <thead class="sticky top-0 z-20 h-full rounded-xl">
           <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
             <th class="px-2 text-nowrap">Rank</th>
@@ -124,7 +132,8 @@
 </template>
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
-import { Award } from '@lucide/vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import { Award, Users } from '@lucide/vue';
 import { computed } from 'vue';
 
 const liveStore = useLiveStore();
@@ -142,5 +151,7 @@ const cutoffIndex = computed(() => {
   return liveStore.roundResult?.advancement?.included?.length ?? 0;
 });
 
-
+const isPodiumOnly = computed(() => {
+  return (liveStore.declaredWinners?.declaredWinners?.length ?? 0) <= 3;
+});
 </script>
