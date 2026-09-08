@@ -18,7 +18,14 @@
       </div>
     </div>
 
-    <div class="">
+    <EmptyState
+      v-if="(liveStore.judgeList?.judgeSubmissions.length ?? 0) === 0"
+      variant="inline"
+      :icon="Users"
+      title="No judge submissions yet"
+      description="Add judges and contestants to this round to begin scoring."
+    />
+    <div v-else class="">
       <table class="w-full border-collapse">
         <thead class="sticky top-0 z-20 h-full rounded-xl">
           <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
@@ -70,6 +77,7 @@
 </template>
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
-import { Check, X } from '@lucide/vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import { Check, Users, X } from '@lucide/vue';
 const liveStore = useLiveStore();
 </script>

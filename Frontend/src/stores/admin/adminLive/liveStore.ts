@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, watch, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRoundStore } from '../adminSetup/rounds/roundStore';
+import { computed, reactive, ref } from 'vue';
 import { liveService } from './service';
 import { useToast } from '@/composables/Toast/useToast';
 import type {
@@ -22,12 +20,12 @@ export const useLiveStore = defineStore('liveStore', () => {
   const declaredWinners = ref<GetDeclaredWinnersDTO | null>(null);
 
   const isTieResolved = computed(() => {
-    const hasTie = roundResult.value?.advancement.hasTie ?? false;
+    const hasTie = roundResult.value?.advancement.hasTie;
     if (!hasTie) {
       return true;
     }
 
-    const required = roundResult.value?.advancement.requiredSelections ?? 0;
+    const required = roundResult.value?.advancement.requiredSelections;
     return selectedContestantIds.value.length === required;
   });
 
@@ -40,12 +38,17 @@ export const useLiveStore = defineStore('liveStore', () => {
   });
 
   const errorStates = reactive({
+    isFetchingRoundPhaseNotFound: false,
     isFetchingJudgeSubmissionsError: false,
     isFetchingRoundResultsError: false,
     isFetchingDeclaredWinnersError: false,
   });
 
-  const getJudgeSubmissionsId = async (id: number) => {
+  const isLiveEventNotFound = computed(() => errorStates.isFetchingRoundPhaseNotFound);
+  const isLiveEventServerError = computed(() => errorStates.isFetchingJudgeSubmissionsError || errorStates.isFetchingRoundResultsError || errorStates.isFetchingDeclaredWinnersError);
+  const isFetchingLiveEvent = computed(() => loadingStates.isFetchingJudgeSubmissions || loadingStates.isFetchingRoundResults || loadingStates.isFetchingDeclaredWinners);
+
+  const getJudgeSubmissionsById = async (id: number) => {
     if (loadingStates.isFetchingJudgeSubmissions) {
       return;
     }
@@ -54,8 +57,9 @@ export const useLiveStore = defineStore('liveStore', () => {
       const res = await liveService.getJudgeSubmissions(id);
       judgeList.value = res.data;
       errorStates.isFetchingJudgeSubmissionsError = false;
+      errorStates.isFetchingRoundPhaseNotFound = false;
     } catch (error) {
-      const { type, code, message } = errorHandler<liveErrorCodes>(
+      const { type, code } = errorHandler<liveErrorCodes>(
         error as AxiosError<ErrorResponse<liveErrorCodes>>,
       );
 
@@ -68,9 +72,7 @@ export const useLiveStore = defineStore('liveStore', () => {
         errorStates.isFetchingJudgeSubmissionsError = true;
       }
       if (code === 'ROUND_PHASE_NOT_FOUND') {
-        toast.warning(message);
-      } else if (code === 'JUDGE_SUBMISSIONS_GET_ERROR') {
-        toast.error(message);
+        errorStates.isFetchingRoundPhaseNotFound = true;
       }
     } finally {
       loadingStates.isFetchingJudgeSubmissions = false;
@@ -87,8 +89,9 @@ export const useLiveStore = defineStore('liveStore', () => {
       roundResult.value = res.data;
       selectedContestantIds.value = [];
       errorStates.isFetchingRoundResultsError = false;
+      errorStates.isFetchingRoundPhaseNotFound = false;
     } catch (error) {
-      const { type, code, message } = errorHandler<liveErrorCodes>(
+      const { type, code } = errorHandler<liveErrorCodes>(
         error as AxiosError<ErrorResponse<liveErrorCodes>>,
       );
 
@@ -98,13 +101,10 @@ export const useLiveStore = defineStore('liveStore', () => {
         type === 'timeout' ||
         type === 'unreachable'
       ) {
-        errorStates.isFetchingJudgeSubmissionsError = true;
+        errorStates.isFetchingRoundResultsError = true;
       }
-
       if (code === 'ROUND_PHASE_NOT_FOUND') {
-        toast.warning(message);
-      } else if (code === 'ROUND_RESULTS_GET_ERROR') {
-        toast.error(message);
+        errorStates.isFetchingRoundPhaseNotFound = true;
       }
     } finally {
       loadingStates.isFetchingRoundResults = false;
@@ -120,8 +120,9 @@ export const useLiveStore = defineStore('liveStore', () => {
       const res = await liveService.getDeclaredWinners(id);
       declaredWinners.value = res.data;
       errorStates.isFetchingDeclaredWinnersError = false;
+      errorStates.isFetchingRoundPhaseNotFound = false;
     } catch (error) {
-      const { type, code, message } = errorHandler<liveErrorCodes>(
+      const { type, code } = errorHandler<liveErrorCodes>(
         error as AxiosError<ErrorResponse<liveErrorCodes>>,
       );
 
@@ -135,9 +136,7 @@ export const useLiveStore = defineStore('liveStore', () => {
       }
 
       if (code === 'ROUND_PHASE_NOT_FOUND') {
-        toast.warning(message);
-      } else if (code === 'DECLARED_WINNERS_GET_ERROR') {
-        toast.error(message);
+        errorStates.isFetchingRoundPhaseNotFound = true;
       }
     } finally {
       loadingStates.isFetchingDeclaredWinners = false;
@@ -169,20 +168,16 @@ export const useLiveStore = defineStore('liveStore', () => {
       }
 
       if (code === 'ROUND_PHASE_NOT_FOUND') {
+        toast.warning(message, { title: 'Phase Not Found' });
+      } else if (code === 'SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP') {
         toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_INVALID') {
         toast.warning(message);
-      } else if (code === 'SELECTED_CONTESTANT_ID_INVALID') {
-        toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_DUPLICATE') {
-        toast.warning(message);
-      } else if (code === 'SELECTED_CONTESTANT_IDS_NOT_ALLOWED') {
         toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_REQUIRED') {
         toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_COUNT_INVALID') {
-        toast.warning(message);
-      } else if (code === 'SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP') {
         toast.warning(message);
       } else if (code === 'ADVANCE_CONTESTANT_COUNT_MISMATCH') {
         toast.warning(message);
@@ -221,35 +216,27 @@ export const useLiveStore = defineStore('liveStore', () => {
 
       if (type === 'offline') {
         toast.warning(message, { title: 'You are Offline' });
-      } else if (['server_error', 'timeout', 'unreachable'].includes(type)) {
+      } if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
         toast.error(message, { title: 'Server Error' });
-      } else if (code === 'ROUND_ID_INVALID') {
-        toast.warning(message, { title: 'Invalid Round ID' });
       } else if (code === 'ROUND_PHASE_NOT_FOUND') {
         toast.warning(message, { title: 'Phase Not Found' });
-      } else if (code === 'SELECTED_CONTESTANT_IDS_INVALID') {
-        toast.warning(message, { title: 'Invalid Selection' });
-      } else if (code === 'SELECTED_CONTESTANT_ID_INVALID') {
-        toast.warning(message, { title: 'Invalid Contestant' });
-      } else if (code === 'SELECTED_CONTESTANT_IDS_DUPLICATE') {
-        toast.warning(message, { title: 'Duplicate Contestants' });
-      } else if (code === 'SELECTED_CONTESTANT_IDS_NOT_ALLOWED') {
-        toast.warning(message, { title: 'Selection Not Allowed' });
-      } else if (code === 'SELECTED_CONTESTANT_IDS_REQUIRED') {
-        toast.warning(message, { title: 'Selection Required' });
-      } else if (code === 'SELECTED_CONTESTANT_IDS_COUNT_INVALID') {
-        toast.warning(message, { title: 'Invalid Count' });
       } else if (code === 'SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP') {
         toast.warning(message, { title: 'Not In Tie Group' });
+      } else if (code === 'SELECTED_CONTESTANT_IDS_INVALID') {
+        toast.warning(message);
+      } else if (code === 'SELECTED_CONTESTANT_IDS_DUPLICATE') {
+        toast.warning(message);
+      } else if (code === 'SELECTED_CONTESTANT_IDS_REQUIRED') {
+        toast.warning(message);
+      } else if (code === 'SELECTED_CONTESTANT_IDS_COUNT_INVALID') {
+        toast.warning(message);
       } else if (code === 'DECLARE_WINNER_COUNT_MISMATCH') {
         toast.warning(message, { title: 'Count Mismatch' });
       } else if (code === 'DECLARE_NOT_ALLOWED') {
         toast.warning(message, { title: 'Declaration Not Allowed' });
       } else if (code === 'FORBIDDEN') {
         toast.error(message, { title: 'Access Denied' });
-      } else if (code === 'DECLARE_WINNERS_ERROR') {
-        toast.error(message, { title: 'Declare Winners Error' });
-      }
+      } 
 
       return false;
     } finally {
@@ -262,11 +249,14 @@ export const useLiveStore = defineStore('liveStore', () => {
     isTieResolved,
     selectedContestantIds,
     addAdvanceRound,
+    isLiveEventNotFound,
     getDeclaredWinners,
     declaredWinners,
+    isLiveEventServerError,
     getRoundResults,
     roundResult,
-    getJudgeSubmissionsId,
+    isFetchingLiveEvent,
+    getJudgeSubmissionsById,
     judgeList,
     loadingStates,
     errorStates,
