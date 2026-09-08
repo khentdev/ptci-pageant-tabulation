@@ -87,12 +87,12 @@ describe("Get Round Contestants Integration Test", () => {
             select: { id: true },
         })
 
-    const seedContestant = async (candidateNumber: number, name: string) =>
+    const seedContestant = async (candidateNumber: number, name: string, gender: "MALE" | "FEMALE" = "FEMALE") =>
         prisma.contestant.create({
             data: {
                 candidateNumber,
                 name,
-                gender: "FEMALE",
+                gender,
                 teamName: "Team A",
                 teamColor: "Red",
             },
@@ -151,8 +151,8 @@ describe("Get Round Contestants Integration Test", () => {
 
             expect(res.status).toBe(200)
             expect(json.data).toEqual([
-                { id: first.id, candidateNumber: 1, name: "Contestant A" },
-                { id: second.id, candidateNumber: 2, name: "Contestant B" },
+                { id: first.id, candidateNumber: 1, name: "Contestant A", gender: "FEMALE" },
+                { id: second.id, candidateNumber: 2, name: "Contestant B", gender: "FEMALE" },
             ])
         })
 
@@ -167,7 +167,7 @@ describe("Get Round Contestants Integration Test", () => {
             const json = await res.json() as GetRoundContestantsResponse
 
             expect(res.status).toBe(200)
-            expect(json.data).toEqual([{ id: advanced.id, candidateNumber: 1, name: "Advanced Contestant" }])
+            expect(json.data).toEqual([{ id: advanced.id, candidateNumber: 1, name: "Advanced Contestant", gender: "FEMALE" }])
         })
 
         it("should return an empty array when a later round has no contestants yet", async () => {
@@ -179,6 +179,51 @@ describe("Get Round Contestants Integration Test", () => {
 
             expect(res.status).toBe(200)
             expect(json.data).toEqual([])
+        })
+
+        it("should return phase 1 contestants with females first, then males, each group ordered by candidate number", async () => {
+            const { cookieHeader, csrfToken } = await seedJudgeCredentials()
+            const prelims = await seedRound({ name: "Preliminary", phaseOrder: 1 })
+            // seed out of candidateNumber order to confirm the sort is applied, not insertion order
+            const femaleThreeSeed = await seedContestant(3, "Female Contestant 3", "FEMALE")
+            const maleOneSeed = await seedContestant(1, "Male Contestant 1", "MALE")
+            const femaleTwoSeed = await seedContestant(2, "Female Contestant 2", "FEMALE")
+
+            const res = await getRoundContestants(cookieHeader, csrfToken, prelims.id)
+            const json = await res.json() as GetRoundContestantsResponse
+
+            expect(res.status).toBe(200)
+            // expected: FEMALE #2, FEMALE #3, then MALE #1
+            expect(json.data).toEqual([
+                { id: femaleTwoSeed.id, candidateNumber: 2, name: "Female Contestant 2", gender: "FEMALE" },
+                { id: femaleThreeSeed.id, candidateNumber: 3, name: "Female Contestant 3", gender: "FEMALE" },
+                { id: maleOneSeed.id, candidateNumber: 1, name: "Male Contestant 1", gender: "MALE" },
+            ])
+        })
+
+        it("should return later round contestants with females first, then males, each group ordered by candidate number", async () => {
+            const { cookieHeader, csrfToken } = await seedJudgeCredentials()
+            const top5 = await seedRound({ name: "Top 5", phaseOrder: 2, contestantLimit: 5 })
+            const femaleThree = await seedContestant(3, "Female Contestant 3", "FEMALE")
+            const maleTwo = await seedContestant(2, "Male Contestant 2", "MALE")
+            const femaleOne = await seedContestant(1, "Female Contestant 1", "FEMALE")
+            await prisma.roundContestant.createMany({
+                data: [
+                    { roundId: top5.id, contestantId: femaleThree.id },
+                    { roundId: top5.id, contestantId: maleTwo.id },
+                    { roundId: top5.id, contestantId: femaleOne.id },
+                ],
+            })
+
+            const res = await getRoundContestants(cookieHeader, csrfToken, top5.id)
+            const json = await res.json() as GetRoundContestantsResponse
+
+            expect(res.status).toBe(200)
+            expect(json.data).toEqual([
+                { id: femaleOne.id, candidateNumber: 1, name: "Female Contestant 1", gender: "FEMALE" },
+                { id: femaleThree.id, candidateNumber: 3, name: "Female Contestant 3", gender: "FEMALE" },
+                { id: maleTwo.id, candidateNumber: 2, name: "Male Contestant 2", gender: "MALE" },
+            ])
         })
     })
 

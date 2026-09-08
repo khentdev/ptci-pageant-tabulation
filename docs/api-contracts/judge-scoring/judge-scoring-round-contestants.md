@@ -8,6 +8,8 @@ Returns the contestants eligible to be scored in a round — used together with 
 
 For the first round (`phaseOrder === 1`) this returns **all** contestants — no `round_contestants` rows are needed for prelims. For any later round it returns only the contestants advanced into that round via [[live-event/live-round-advance]].
 
+Results are sorted **FEMALE first, then MALE** (the `Gender` enum is defined `MALE` → `FEMALE` in the schema, so a `DESC` sort on `gender` yields FEMALE first), each group ordered by `candidateNumber` ascending. The frontend can use the `gender` field as a section divider or label.
+
 ## When to fetch
 
 | Trigger | Fetch? |
@@ -46,8 +48,9 @@ No request body.
 ```json
 {
   "data": [
-    { "id": 3, "candidateNumber": 1, "name": "Contestant A" },
-    { "id": 5, "candidateNumber": 2, "name": "Contestant B" }
+    { "id": 3, "candidateNumber": 1, "name": "Contestant A", "gender": "FEMALE" },
+    { "id": 5, "candidateNumber": 2, "name": "Contestant B", "gender": "FEMALE" },
+    { "id": 7, "candidateNumber": 3, "name": "Contestant C", "gender": "MALE" }
   ],
   "message": "Contestants fetched successfully."
 }
@@ -55,10 +58,11 @@ No request body.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `data` | `GetRoundContestantsDTO[]` | Eligible contestants, ordered by `candidateNumber` ascending. Empty array when the round has no contestants yet |
+| `data` | `GetRoundContestantsDTO[]` | Eligible contestants sorted FEMALE first, then MALE, each group ordered by `candidateNumber` ascending. Empty array when the round has no contestants yet |
 | `data[].id` | `number` | Contestant ID |
 | `data[].candidateNumber` | `number` | Candidate number |
 | `data[].name` | `string` | Contestant name |
+| `data[].gender` | `"MALE" \| "FEMALE"` | Contestant gender — use as a section divider/label in the UI |
 | `message` | `string` | Success message |
 
 ## Errors
