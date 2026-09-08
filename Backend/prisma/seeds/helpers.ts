@@ -28,6 +28,7 @@ export type SeedSummary = {
     rounds: Record<string, SeedRound>
     contestants: SeedContestant[]
     judges: Record<string, SeedJudge>
+    mode?: string
 }
 
 export async function wipeDevData() {
@@ -35,6 +36,7 @@ export async function wipeDevData() {
         await tx.score.deleteMany()
         await tx.criteriaField.deleteMany()
         await tx.category.deleteMany()
+        await tx.roundWinner.deleteMany()
         await tx.roundContestant.deleteMany()
         await tx.round.deleteMany()
         await tx.contestant.deleteMany()
@@ -186,6 +188,7 @@ export function logSeedSummary(summary: SeedSummary) {
 
     logger.info(
         {
+            mode: summary.mode ?? "default",
             rounds: summary.rounds,
             judgeUsernames: Object.fromEntries(
                 Object.entries(summary.judges).map(([key, judge]) => [key, judge.username]),
@@ -194,6 +197,6 @@ export function logSeedSummary(summary: SeedSummary) {
                 .filter(c => c.candidateNumber >= 111)
                 .map(c => c.candidateNumber),
         },
-        `Dev seed complete — see prisma/seeds/SEED_REFERENCE.md\n${roundLines}`,
+        `Dev seed complete (mode: ${summary.mode ?? "default"}) — see prisma/seeds/SEED_REFERENCE.md\n${roundLines}`,
     )
 }

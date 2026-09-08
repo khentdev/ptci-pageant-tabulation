@@ -207,7 +207,8 @@ async function getRoundResultsInTx(
     })
 
     const nextRoundRecord = await tx.round.findFirst({
-        where: { phaseOrder: phaseOrder + 1 },
+        where: { phaseOrder: { gt: phaseOrder } },
+        orderBy: { phaseOrder: "asc" },
         select: {
             id: true,
             name: true,

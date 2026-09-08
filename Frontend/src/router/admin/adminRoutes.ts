@@ -1,4 +1,6 @@
+import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore.ts';
 import { type RouteRecordRaw } from 'vue-router';
+
 export const adminRoutes: RouteRecordRaw[] = [
   {
     path: '/admin/live/results',
@@ -30,6 +32,11 @@ export const adminRoutes: RouteRecordRaw[] = [
         path: 'judge',
         name: 'judge',
         component: () => import('../../views/admin/judge/judgeMain.vue'),
+      },
+      {
+        path: ':roundId',
+        name: 'live-event-results',
+        component: () => import('../../views/admin/live_event/liveEventMain.vue'),
       },
     ],
   },

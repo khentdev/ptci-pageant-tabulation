@@ -5,9 +5,10 @@ import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
 
 defineProps<{
   title: string;
-  addButtonLabel: string;
+  addButtonLabel?: string;
   isLoading: boolean;
   isError: boolean;
+  isNotFound?:boolean
   errorTitle: string;
   errorDescription: string;
   onRetry: () => void | Promise<void>;
@@ -26,6 +27,7 @@ const emit = defineEmits<{
     :description="errorDescription"
     :onRetry="onRetry"
   />
+  <slot v-else-if="isNotFound" name="not-found"></slot>
   <div
     v-else
     class="bg-main-light-brown font-poppins relative flex h-full w-full flex-col items-center gap-2 rounded-xl border border-black/20 px-6 py-4 drop-shadow-sm drop-shadow-black/10"
@@ -33,7 +35,7 @@ const emit = defineEmits<{
     <div class="flex w-full justify-between gap-2">
       <p class="font-semibold text-black/70 sm:text-2xl">{{ title }}</p>
 
-      <button
+      <button v-if="addButtonLabel"
         @click="emit('add')"
         class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
       >

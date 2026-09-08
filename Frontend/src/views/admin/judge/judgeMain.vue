@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import BasePanel from '@/components/shared/BasePanel.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
 import { onMounted } from 'vue';
 import JudgeTable from '@/components/admin/judge/judgeTable.vue';
 import { useJudgeStore } from '@/stores/admin/adminSetup/judge/judgeStore';
@@ -8,6 +9,7 @@ import AddJudge from '@/components/admin/judge/addJudge.vue';
 import EditJudge from '@/components/admin/judge/editJudge.vue';
 import { ref } from 'vue';
 import ResetPassword from '@/components/admin/judge/resetPassword.vue';
+import { Gavel } from '@lucide/vue';
 
 const modalStore = useModalStore();
 const judgeStore = useJudgeStore();
@@ -54,7 +56,16 @@ const handleDelete = async (id: number) => {
     :onRetry="judgeStore.getJudgesList"
     @add="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
   >
+    <EmptyState
+      v-if="judgeStore.judgeList.length === 0"
+      :icon="Gavel"
+      title="No judges yet"
+      description="Add a judge to begin scoring."
+      actionLabel="Add Judge"
+      @action="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
+    />
     <JudgeTable
+      v-else
       :items="judgeStore.judgeList"
       @edit="openEditJudge"
       @delete="handleDelete"
