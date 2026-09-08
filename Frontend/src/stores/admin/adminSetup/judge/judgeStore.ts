@@ -53,7 +53,7 @@ export const useJudgeStore = defineStore('judge', () => {
       judgeList.value = res.data;
       errorStates.isFetchingJudgeListError = false;
     } catch (error) {
-      const { code, type, message } = errorHandler<JudgeErrorCodes>(
+      const { type } = errorHandler<JudgeErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeErrorCodes>>,
       );
       if (
@@ -63,10 +63,6 @@ export const useJudgeStore = defineStore('judge', () => {
         type === 'unreachable'
       ) {
         errorStates.isFetchingJudgeListError = true;
-      }
-
-      if (code === 'JUDGE_GET_LIST_FAILED') {
-        toast.error(message);
       }
     } finally {
       loadingStates.isFetchingJudgeList = false;

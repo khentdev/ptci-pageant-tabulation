@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Check } from '@lucide/vue';
+import { Check, Tags } from '@lucide/vue';
 import type { GetCategoryListDTO } from '@/types/admin/adminSetup/category/categories';
+import EmptyState from '@/components/shared/EmptyState.vue';
 
 defineProps<{
   items: GetCategoryListDTO[];
@@ -14,7 +15,15 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-8">
+  <EmptyState
+    v-if="items.length === 0"
+    :icon="Tags"
+    title="No rounds yet"
+    description="Create a round first, then add categories to it."
+    actionLabel="Add Rounds"
+    :to="{ name: 'rounds' }"
+  />
+  <div v-else class="flex flex-col gap-8">
     <table v-for="round in items" :key="round.id" class="relative w-full ">
       <thead class="sticky top-0 z-20 h-full rounded-xl">
         <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
@@ -25,9 +34,13 @@ const emit = defineEmits<{
       </thead>
       <tbody class="w-full">
         <tr v-if="round.categories.length === 0" class="font-poppins">
-          <td colspan="3" class="border px-4 py-6 text-center">
-            <p class="text-sm text-black/70">No categories yet for this round.</p>
-            <p class="mt-1 text-xs text-black/50">Use Add Category above and select this round.</p>
+          <td colspan="3" class="p-0">
+            <EmptyState
+              variant="inline"
+              :icon="Tags"
+              title="No categories yet for this round."
+              description="Use Add Category above and select this round."
+            />
           </td>
         </tr>
         <tr v-for="categories in round.categories" :key="categories.id" class="font-poppins">
