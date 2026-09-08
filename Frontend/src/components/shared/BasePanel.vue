@@ -8,7 +8,7 @@ defineProps<{
   addButtonLabel?: string;
   isLoading: boolean;
   isError: boolean;
-  isNotFound?:boolean
+  isNotFound?: boolean;
   errorTitle: string;
   errorDescription: string;
   onRetry: () => void | Promise<void>;
@@ -35,11 +35,12 @@ const emit = defineEmits<{
     <div class="flex w-full justify-between gap-2">
       <p class="font-semibold text-black/70 sm:text-2xl">{{ title }}</p>
 
-      <button v-if="addButtonLabel"
+      <button
+        v-if="addButtonLabel"
         @click="emit('add')"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white sm:h-15 sm:text-base"
+        class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-lg p-4 text-xs text-white sm:h-15 sm:text-base"
       >
-        <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8"/> {{ addButtonLabel }}
+        <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8" /> {{ addButtonLabel }}
       </button>
     </div>
 

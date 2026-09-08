@@ -3,20 +3,9 @@ import NavMain from '@/components/navMain.vue';
 import { ref, type Component } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
-import LiveRoundSideBar from '@/components/admin/live_event/liveRoundSideBar.vue';
 
-type SetupNavItem = {
-  label: string;
-  routeName: string;
-  icon: Component;
-};
-
-const setupNavItems: SetupNavItem[] = [
-  { label: 'Rounds', routeName: 'rounds', icon: Calendar },
-  { label: 'Categories', routeName: 'categories', icon: LayoutGrid },
-  { label: 'Contestants', routeName: 'contestants', icon: Users },
-  { label: 'Judges', routeName: 'judge', icon: Users },
-];
+import JudgeRoundSidebar from '@/components/admin/judge_scoring/judgeRoundSidebar.vue';
+import JudgeScoringMain from './judgeScoringMain.vue';
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
@@ -38,7 +27,7 @@ const toggleDropDown = () => {
       <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>
     </div>
     <div class="flex h-full w-full">
-      <div @click="toggleDropDown" v-if="isDropDownClick === false" class="py-4">
+      <div @click="toggleDropDown" v-if="!isDropDownClick" class="py-4">
         <SquareArrowRight
           class="stroke bg-main-dark-brown absolute z-99 h-10 w-10 rounded-md stroke-white p-2 sm:relative"
         ></SquareArrowRight>
@@ -53,7 +42,7 @@ const toggleDropDown = () => {
         leave-to-class="-translate-x-full opacity-0"
       >
         <div
-          v-if="isDropDownClick === true"
+          v-if="isDropDownClick"
           class="flex h-[calc(100vh-0.2rem)] w-full p-2 sm:w-3/8 sm:p-4 lg:w-3/12"
         >
           <div
@@ -66,14 +55,21 @@ const toggleDropDown = () => {
                 class="stroke bg-main-dark-brown h-10 w-10 rounded-md stroke-white p-2"
               ></SquareArrowLeft>
             </div>
+
+            <div class="flex shrink-0 flex-col">
+              <div class="flex h-full w-full px-4">
+                <p class="h-px flex-1 bg-black/30"></p>
+              </div>
+            </div>
+
+            <div class="flex shrink-0 flex-col gap-2 px-4 pb-4 transition-all">
+              <JudgeRoundSidebar></JudgeRoundSidebar>
+            </div>
           </div>
         </div>
       </Transition>
 
-      <div
-        :class="isDropDownClick === true ? 'hidden sm:block' : 'block'"
-        class="h-full w-full p-4"
-      >
+      <div :class="isDropDownClick ? 'hidden sm:block' : 'block'" class="h-full w-full p-4">
         <div class="flex h-[calc(100vh-2.2rem)] w-full items-center justify-center">
           <RouterView></RouterView>
         </div>

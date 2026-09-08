@@ -1,5 +1,5 @@
 <template>
-  <div class="gap flex w-full flex-col gap-2 mt-2">
+  <div class="gap mt-2 flex w-full flex-col gap-2">
     <div class="mt-4 flex justify-between">
       <p class="text-xl font-medium text-black/70">Rankings</p>
       <span

@@ -92,11 +92,6 @@ export const useAuthStore = defineStore('auth', () => {
             continue;
           }
 
-          if (code === 'SESSION_UNAUTHORIZED' || isSessionFailureCode(code)) {
-            currentUser.value = null;
-            return;
-          }
-
           if (
             type === 'offline' ||
             type === 'server_error' ||

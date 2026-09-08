@@ -27,10 +27,14 @@ const emit = defineEmits<{
     class="font-poppins flex w-full items-center justify-center gap-3 py-6 text-center"
     role="status"
   >
-    <component :is="icon" class="size-5 shrink-0 stroke-[1.5] text-custom-gray" aria-hidden="true" />
+    <component
+      :is="icon"
+      class="text-custom-gray size-5 shrink-0 stroke-[1.5]"
+      aria-hidden="true"
+    />
     <div class="flex flex-col items-start text-left">
-      <p class="text-sm font-medium text-custom-black/70">{{ title }}</p>
-      <p v-if="description" class="text-xs text-custom-black/50">{{ description }}</p>
+      <p class="text-custom-black/70 text-sm font-medium">{{ title }}</p>
+      <p v-if="description" class="text-custom-black/50 text-xs">{{ description }}</p>
     </div>
   </div>
 
@@ -41,14 +45,16 @@ const emit = defineEmits<{
     aria-labelledby="empty-state-title"
     aria-describedby="empty-state-description"
   >
-    <div class="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl bg-white/95 p-6 text-center shadow-lg">
-      <div class="flex items-center justify-center rounded-full bg-custom-gray/15 p-4">
-        <component :is="icon" class="size-10 stroke-[1.5] text-custom-gray" aria-hidden="true" />
+    <div
+      class="flex w-full max-w-sm flex-col items-center gap-6 rounded-xl border border-black/20 p-6 text-center shadow-lg"
+    >
+      <div class="bg-custom-gray/15 flex items-center justify-center rounded-full p-4">
+        <component :is="icon" class="text-custom-gray size-10 stroke-[1.5]" aria-hidden="true" />
       </div>
 
       <div class="flex flex-col gap-2">
-        <h2 id="empty-state-title" class="text-xl font-bold text-custom-black">{{ title }}</h2>
-        <p v-if="description" id="empty-state-description" class="text-sm text-custom-black/60">
+        <h2 id="empty-state-title" class="text-custom-black text-xl font-bold">{{ title }}</h2>
+        <p v-if="description" id="empty-state-description" class="text-custom-black/60 text-sm">
           {{ description }}
         </p>
       </div>
