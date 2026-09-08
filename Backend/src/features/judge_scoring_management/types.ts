@@ -28,6 +28,7 @@ export type GetRoundContestantsDTO = {
     id: number
     candidateNumber: number
     name: string
+    gender: "MALE" | "FEMALE"
 }
 export type GetRoundContestantsResponse = {
     data: GetRoundContestantsDTO[]

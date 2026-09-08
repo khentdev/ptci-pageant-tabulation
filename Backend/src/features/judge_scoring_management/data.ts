@@ -10,6 +10,7 @@ const contestantSelect = {
     id: true,
     candidateNumber: true,
     name: true,
+    gender: true,
 } as const
 
 export async function getJudgeRounds() {
@@ -44,14 +45,17 @@ export async function getRoundContestants({ id, phaseOrder }: GetRoundContestant
     if (phaseOrder === 1) {
         return await prisma.contestant.findMany({
             select: contestantSelect,
-            orderBy: { candidateNumber: "asc" },
+            orderBy: [{ gender: "desc" }, { candidateNumber: "asc" }],
         })
     }
 
     const roundContestants = await prisma.roundContestant.findMany({
         where: { roundId: id },
         select: { contestant: { select: contestantSelect } },
-        orderBy: { contestant: { candidateNumber: "asc" } },
+        orderBy: [
+            { contestant: { gender: "desc" } },
+            { contestant: { candidateNumber: "asc" } },
+        ],
     })
 
     return roundContestants.map((row) => row.contestant)
