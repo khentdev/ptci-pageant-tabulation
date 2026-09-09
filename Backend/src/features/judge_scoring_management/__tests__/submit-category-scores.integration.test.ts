@@ -537,7 +537,7 @@ describe("Submit Category Scores Integration Test", () => {
     })
 
     describe("boundary and whitespace behavior", () => {
-        it("should accept a value of exactly 0", async () => {
+        it("should return SCORING_VALUE_OUT_OF_RANGE when a value is exactly 0", async () => {
             const { cookieHeader, csrfToken } = await seedJudgeCredentials()
             const { category, fieldOne, fieldTwo, contestantOne, contestantTwo } = await seedPreliminaryScoringSetup()
 
@@ -545,6 +545,24 @@ describe("Submit Category Scores Integration Test", () => {
                 scores: fullBatch(
                     [contestantOne.id, contestantTwo.id],
                     [{ id: fieldOne.id, value: "0" }, { id: fieldTwo.id, value: "0" }],
+                ),
+            }
+
+            const res = await postSubmitScores(cookieHeader, csrfToken, category.id, body)
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("SCORING_VALUE_OUT_OF_RANGE")
+        })
+
+        it("should accept a value of exactly 1", async () => {
+            const { cookieHeader, csrfToken } = await seedJudgeCredentials()
+            const { category, fieldOne, fieldTwo, contestantOne, contestantTwo } = await seedPreliminaryScoringSetup()
+
+            const body = {
+                scores: fullBatch(
+                    [contestantOne.id, contestantTwo.id],
+                    [{ id: fieldOne.id, value: "1" }, { id: fieldTwo.id, value: "1" }],
                 ),
             }
 

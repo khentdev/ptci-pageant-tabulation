@@ -93,7 +93,7 @@ export const SCORING_ERROR_DEF: Record<ScoringErrorCodes, ErrorDefinitions> = {
     },
     SCORING_VALUE_OUT_OF_RANGE: {
         code: "SCORING_VALUE_OUT_OF_RANGE",
-        message: "Score value must be between 0 and the field's maximum.",
+        message: "Score value must be between 1 and the field's maximum.",
         status: 400,
     },
     SCORING_ALREADY_SUBMITTED: {

@@ -133,7 +133,7 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - Each scoring field has a `name` and a `max_value` (integer or decimal, min 1)
 - The sum of all `max_value`s in the batch must equal exactly **100** — validated server-side; rejected if not
 - Frontend shows a live running total and disables Save until total = 100
-- A judge scores each field from **0 up to its `max_value`**
+- A judge scores each field from **1 up to its `max_value`**
 - Category score per judge = `Σ field_values` (plain sum — no separate weighting needed; max values are the weights)
 - Can delete a category only if no scores exist for it — useful for fixing setup mistakes
 - Cannot delete a category with existing judge scores; backend rejects with an error message shown to admin

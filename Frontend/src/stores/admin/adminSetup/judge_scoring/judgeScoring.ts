@@ -214,8 +214,8 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
 
         const numVal = parseFloat(String(val));
 
-        if (isNaN(numVal) || numVal < 0 || numVal > f.maxValue) {
-          toast.warning(`Score for ${con.name} in ${f.name} must be between 0 and ${f.maxValue}.`);
+        if (isNaN(numVal) || numVal < 1 || numVal > f.maxValue) {
+          toast.warning(`Score for ${con.name} in ${f.name} must be between 1 and ${f.maxValue}.`);
           return false;
         }
 

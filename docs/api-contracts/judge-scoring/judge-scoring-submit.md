@@ -69,8 +69,8 @@ Send `value` as a **string**, not a JSON number — same convention as `maxValue
 |------|--------|
 | Type | Must be a non-empty `string` (e.g. `"38"`, `"33.5"`) |
 | Decimal places | Up to 2 decimal places — matches `decimal(5,2)` storage |
-| Range | Must be between `0` and the field's `maxValue`, inclusive |
-| Examples | Valid: `"0"`, `"38"`, `"33.5"` — Invalid: `38` (number), `"-1"`, `"40.123"`, `"abc"` |
+| Range | Must be between `1` and the field's `maxValue`, inclusive |
+| Examples | Valid: `"38"`, `"33.5"` — Invalid: `38` (number), `"0"`, `"-1"`, `"40.123"`, `"abc"` |
 
 ## Response
 
@@ -93,7 +93,7 @@ Send `value` as a **string**, not a JSON number — same convention as `maxValue
 | All fields for all eligible contestants must be present, no duplicates | `SCORING_SCORES_INCOMPLETE` |
 | Every `contestantId` must be eligible in the round | `SCORING_CONTESTANT_NOT_IN_ROUND` |
 | Every `criteriaFieldId` must belong to the category | `SCORING_FIELD_NOT_IN_CATEGORY` |
-| Every `value` must be `0 ≤ value ≤ field.maxValue` | `SCORING_VALUE_OUT_OF_RANGE` (`data.contestantId`, `data.criteriaFieldId`, `data.maxValue`) |
+| Every `value` must be `1 ≤ value ≤ field.maxValue` | `SCORING_VALUE_OUT_OF_RANGE` (`data.contestantId`, `data.criteriaFieldId`, `data.maxValue`) |
 | Cannot resubmit — scores already exist for this judge + category | `SCORING_ALREADY_SUBMITTED`. Also enforced by the `Score` table's `[judgeId, contestantId, criteriaFieldId]` unique constraint as a second layer against concurrent double-submits |
 | Cannot submit once winners are declared for this round | `SCORING_ROUND_LOCKED` |
 | Cannot submit once a later round has already been populated (this round is completed) | `SCORING_ROUND_COMPLETED` |
@@ -126,7 +126,7 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 | `400` | `SCORING_CONTESTANT_NOT_IN_ROUND` | A submitted contestant is not part of this round. | `data.contestantId` |
 | `400` | `SCORING_FIELD_NOT_IN_CATEGORY` | A submitted field does not belong to this category. | `data.criteriaFieldId` |
 | `400` | `SCORING_SCORES_INCOMPLETE` | All fields for all contestants must be filled before submitting. | Row count doesn't match `contestants × fields`, or a pair is missing |
-| `400` | `SCORING_VALUE_OUT_OF_RANGE` | Score value must be between 0 and the field's maximum. | `data.contestantId`, `data.criteriaFieldId`, `data.maxValue` |
+| `400` | `SCORING_VALUE_OUT_OF_RANGE` | Score value must be between 1 and the field's maximum. | `data.contestantId`, `data.criteriaFieldId`, `data.maxValue` |
 | `400` | `SCORING_ALREADY_SUBMITTED` | Scores for this category have already been submitted. | Double-submit — by this same request or a concurrent one |
 | `400` | `SCORING_ROUND_LOCKED` | Winners for this round have already been declared. | |
 | `400` | `SCORING_ROUND_COMPLETED` | This round has already been completed. | A later round already has contestants |
