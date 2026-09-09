@@ -13,7 +13,7 @@ The edit round flow uses two endpoints on the same resource:
 |-------|------|
 | Name | Always editable |
 | Phase order | Always read-only (display only — not sent on save) |
-| Contestant limit | Hidden when `phaseOrder === 1` (omit from request or send `null`); editable when `phaseOrder > 1` and `isLimitLocked = false`; read-only when `isLimitLocked = true` |
+| Contestant limit | Hidden when `phaseOrder === 1` (omit from request or send `null`); editable when `phaseOrder > 1` and `isLimitLocked = false`; read-only when `isLimitLocked = true`. Applied **per gender** by advancement/declare-winners — label/help text should say so (e.g. "advances up to N females and N males") |
 
 ---
 
@@ -68,7 +68,7 @@ Used when the admin clicks **Edit** on a round row.
 | `data.id` | `number` | Round ID |
 | `data.phaseOrder` | `number` | Round sequence order — always read-only in the edit form |
 | `data.name` | `string` | Round name |
-| `data.contestantLimit` | `number \| null` | `null` = unlimited (preliminary round) |
+| `data.contestantLimit` | `number \| null` | `null` = unlimited (preliminary round). Otherwise a **per-gender** cutoff — advancement/declare-winners apply it once to females and once to males |
 | `data.isLimitLocked` | `boolean` | `true` when contestants have already advanced into this round |
 | `message` | `string` | Success message |
 
@@ -136,7 +136,7 @@ Used when the admin submits the edit form.
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `name` | `string` | Yes | Non-empty after trim — always editable |
-| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Required positive whole number for later rounds (`phaseOrder > 1`). Must match the existing value when `isLimitLocked = true`. |
+| `contestantLimit` | `number \| null` | Conditional | Omit or send `null` for preliminary round (`phaseOrder = 1`). Required positive whole number for later rounds (`phaseOrder > 1`) — applied **per gender**, not as a round total. Must match the existing value when `isLimitLocked = true`. |
 
 Phase order is immutable after creation and is not accepted in the request body.
 

@@ -6,6 +6,8 @@ Admin only.
 
 Locks final-round results by inserting `RoundWinner` rows and setting `winnersDeclaredAt` on the current round. Irreversible. Does not return rankings; refetch [[live-event/live-round-results]] after success for lock flags.
 
+**Placement is assigned independently per gender** — a Ms. and a Mr. can each hold placement 1 in the same round. `advancement`/tie resolution follow the same per-gender rules as [[live-event/live-round-advance]].
+
 **Related docs:** [[live-event/live-round-results]] (rankings preview and flags) · [[live-event/live-judge-submissions]] · [[live-event/live-results-sidebar]] · [[Wireframe & Flows]] §11 · [[System Documentation]] §3.3
 
 ## Consumers
@@ -107,11 +109,11 @@ No `data` field. After success:
 |------|----------|
 | Final round only | `nextRound === null` on a fresh results check |
 | Re-validation | Backend re-runs `getRoundResultsInTx` before write. Does **not** gate on `canDeclareWinners` alone (tie POST allowed when selections are valid) |
-| Write target | Inserts `RoundWinner` rows (`placement`, `contestantId`, `overallScore` snapshot) and sets `winnersDeclaredAt` on the **current** round in one transaction |
-| Placement sort | Winner set sorted by `overallScore` descending, then `candidateNumber` ascending — same tiebreak as rankings; `placement` 1..N assigned at declare time |
+| Write target | Inserts `RoundWinner` rows (`placement`, `gender`, `contestantId`, `overallScore` snapshot) and sets `winnersDeclaredAt` on the **current** round in one transaction |
+| Placement sort | Computed **per gender**: winners sorted by `overallScore` descending, then `candidateNumber` ascending — same tiebreak as rankings; `placement` 1..N assigned per gender at declare time, so a female and a male winner can both be placement 1 |
 | No tie | `winningContestantIds = advancement.included` |
-| Tie | `winningContestantIds = advancement.included + selectedContestantIds`; total must equal current round `contestantLimit` when limit is set |
-| Eligible ≤ limit | `included` may be shorter than N — valid declare with fewer scored contestants |
+| Tie | `winningContestantIds = advancement.included + selectedContestantIds`, resolved per gender: each gender's own included + its own share of picks must equal the current round `contestantLimit` for that gender when the limit is set |
+| Eligible ≤ limit | `included` may be shorter than N **per gender** — valid declare with fewer scored contestants |
 | Idempotency | Second declare on same round → `DECLARE_NOT_ALLOWED` (`WINNERS_ALREADY_DECLARED`) — also rejected when `RoundWinner` rows already exist |
 | Irreversible | No undo endpoint |
 | Rankings | Not returned — `rankings` on GET round results stay score-based; official podium from [[live-event/live-round-declared-winners]] |
@@ -164,7 +166,7 @@ See [[global/errors]] for shared codes (`FORBIDDEN`, etc.).
 | `400` | `SELECTED_CONTESTANT_IDS_REQUIRED` | Selected contestant IDs are required to resolve a tie. | Tie case with missing/empty selection |
 | `400` | `SELECTED_CONTESTANT_IDS_COUNT_INVALID` | Selected contestant count does not match the required tie selections. | Length ≠ `requiredSelections` |
 | `400` | `SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP` | One or more selected contestants are not in the tied group. | ID not in `advancement.tied` |
-| `400` | `DECLARE_WINNER_COUNT_MISMATCH` | Declared winner count does not match the round limit. | Merged count ≠ `contestantLimit` (tie path) |
+| `400` | `DECLARE_WINNER_COUNT_MISMATCH` | Declared winner count does not match the round limit. | One gender's merged count ≠ `contestantLimit` for that gender (tie path) — usually means picks weren't distributed correctly across the two genders' ties |
 | `403` | `FORBIDDEN` | *(shared)* | Non-admin session |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | Round `id` does not exist |
 | `409` | `DECLARE_NOT_ALLOWED` | Winners cannot be declared at this time. | `data.reason` — see table above |

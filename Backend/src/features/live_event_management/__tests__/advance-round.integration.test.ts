@@ -747,6 +747,99 @@ describe("Advance Round Integration Test", () => {
         })
     })
 
+    describe("gender-based advancement", () => {
+        const seedGenderScoredContestants = async (
+            category: { id: number },
+            judgeId: number,
+            gender: "MALE" | "FEMALE",
+            scores: number[],
+            candidateStart: number,
+        ) => {
+            const contestants = []
+            for (const [index, value] of scores.entries()) {
+                const contestant = await seedContestant({
+                    candidateNumber: candidateStart + index,
+                    name: `${gender} ${candidateStart + index}`,
+                    gender,
+                })
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                await seedScore({ judgeId, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+                contestants.push(contestant)
+            }
+            return contestants
+        }
+
+        it("should advance top N males and top N females instead of top N overall", async () => {
+            const { prelims, top5 } = await seedPreliminaryWithTop5()
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+
+            // 5 high-scoring females + 2 low-scoring males, limit 5 (per
+            // gender). A gender-blind top-5 cutoff would exclude both males.
+            const females = await seedGenderScoredContestants(category, judge.id, "FEMALE", [100, 99, 98, 97, 96], 4000)
+            const males = await seedGenderScoredContestants(category, judge.id, "MALE", [50, 40], 4100)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id)
+            expect(res.status).toBe(201)
+
+            await expectRoundContestants(top5.id, [...females, ...males].map((c) => c.id))
+        })
+
+        it("should advance cleanly when only one gender has a tie at the cutoff", async () => {
+            const { prelims, top5 } = await seedPreliminaryWithTop5()
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+            await prisma.round.update({ where: { id: top5.id }, data: { contestantLimit: 2 } })
+
+            const females = await seedGenderScoredContestants(category, judge.id, "FEMALE", [90, 80, 80], 4200)
+            const males = await seedGenderScoredContestants(category, judge.id, "MALE", [70, 60], 4300)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
+                selectedContestantIds: [females[1]!.id],
+            })
+            expect(res.status).toBe(201)
+
+            await expectRoundContestants(top5.id, [females[0]!.id, females[1]!.id, males[0]!.id, males[1]!.id])
+        })
+
+        it("should reject a tie resolution that does not satisfy both genders' required counts", async () => {
+            const { prelims, top5 } = await seedPreliminaryWithTop5()
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+            await prisma.round.update({ where: { id: top5.id }, data: { contestantLimit: 1 } })
+
+            // Both genders tie at the cutoff (limit 1, 2 eligible each) —
+            // requiredSelections is 1 per gender, 2 total.
+            const females = await seedGenderScoredContestants(category, judge.id, "FEMALE", [90, 90], 4400)
+            const males = await seedGenderScoredContestants(category, judge.id, "MALE", [70, 70], 4500)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const getJson = await (await getRoundResults(cookieHeader, csrfToken, prelims.id)).json() as GetRoundResultsResponse
+            expect(getJson.data.advancement.requiredSelections).toBe(2)
+
+            // Both picks come from the FEMALE tie — leaves MALE unresolved.
+            const badRes = await postAdvance(cookieHeader, csrfToken, prelims.id, {
+                selectedContestantIds: [females[0]!.id, females[1]!.id],
+            })
+            const badJson = await badRes.json() as { error: { code: string } }
+            expect(badRes.status).toBe(400)
+            expect(badJson.error.code).toBe("ADVANCE_CONTESTANT_COUNT_MISMATCH")
+
+            // One pick per gender resolves both ties correctly.
+            const goodRes = await postAdvance(cookieHeader, csrfToken, prelims.id, {
+                selectedContestantIds: [females[0]!.id, males[0]!.id],
+            })
+            expect(goodRes.status).toBe(201)
+            await expectRoundContestants(top5.id, [females[0]!.id, males[0]!.id])
+        })
+    })
+
     describe("post-advance verification", () => {
         it("should not change score rows when advancing", async () => {
             const { prelims } = await seedReadyToAdvanceClearTop5()

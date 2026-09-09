@@ -1,15 +1,18 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
 import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
-import { Role } from "../../../generated/prisma/enums.js";
+import { Gender, Role } from "../../../generated/prisma/enums.js";
 
 type JudgeRow = { id: number, name: string }
 type CategoryRow = { id: number, name: string }
+
+const GENDERS = [Gender.FEMALE, Gender.MALE] as const
 
 const contestantSelect = {
     id: true,
     candidateNumber: true,
     name: true,
+    gender: true,
 } as const
 
 function computeAllJudgesSubmitted(
@@ -185,6 +188,7 @@ async function getRoundResultsInTx(
                 id: contestant.id,
                 candidateNumber: contestant.candidateNumber,
                 name: contestant.name,
+                gender: contestant.gender,
             },
             categories: categoryScores,
             overallScore,
@@ -192,19 +196,33 @@ async function getRoundResultsInTx(
         }
     })
 
-    const sortedRankings = [...rankings].sort((a, b) => {
-        if (a.overallScore === null && b.overallScore === null) {
+    const rankGroup = (rows: typeof rankings) => {
+        const sorted = [...rows].sort((a, b) => {
+            if (a.overallScore === null && b.overallScore === null) {
+                return a.contestant.candidateNumber - b.contestant.candidateNumber
+            }
+            if (a.overallScore === null) return 1
+            if (b.overallScore === null) return -1
+            if (b.overallScore !== a.overallScore) return b.overallScore - a.overallScore
             return a.contestant.candidateNumber - b.contestant.candidateNumber
-        }
-        if (a.overallScore === null) return 1
-        if (b.overallScore === null) return -1
-        if (b.overallScore !== a.overallScore) return b.overallScore - a.overallScore
-        return a.contestant.candidateNumber - b.contestant.candidateNumber
-    })
+        })
+        sorted.forEach((row, index) => {
+            row.rank = row.overallScore === null ? null : index + 1
+        })
+        return sorted
+    }
 
-    sortedRankings.forEach((row, index) => {
-        row.rank = row.overallScore === null ? null : index + 1
-    })
+    // Ranking, rank numbering, and the advancement cutoff below are all
+    // computed independently per gender — advancing the overall top N would
+    // let one gender's stronger scores crowd the other out of the round.
+    const rankingsByGender = new Map(
+        GENDERS.map(gender => [
+            gender,
+            rankGroup(rankings.filter(row => row.contestant.gender === gender)),
+        ]),
+    )
+
+    const sortedRankings = GENDERS.flatMap(gender => rankingsByGender.get(gender)!)
 
     const nextRoundRecord = await tx.round.findFirst({
         where: { phaseOrder: { gt: phaseOrder } },
@@ -246,64 +264,78 @@ async function getRoundResultsInTx(
         && advancementLimit !== null
         && advancementLimit > 0
 
-    const emptyAdvancement = {
-        hasTie: false,
-        requiredSelections: 0,
-        included: [] as { id: number, name: string, overallScore: number }[],
-        tied: [] as { id: number, name: string, overallScore: number }[],
+    type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+    type AdvancementGroup = {
+        hasTie: boolean
+        requiredSelections: number
+        included: AdvancementContestantRow[]
+        tied: AdvancementContestantRow[]
     }
 
-    let advancement = emptyAdvancement
+    const emptyAdvancementGroup: AdvancementGroup = {
+        hasTie: false,
+        requiredSelections: 0,
+        included: [],
+        tied: [],
+    }
+
+    // Each gender's cutoff/tie is computed independently against the same
+    // round limit — e.g. "Top 5" advances the top 5 males AND the top 5
+    // females, not the top 5 overall.
+    function computeAdvancementForGroup(rankedRows: typeof sortedRankings, limit: number): AdvancementGroup {
+        const eligible = rankedRows.filter(row => row.overallScore !== null)
+        const toAdvancementContestant = (row: (typeof eligible)[number]): AdvancementContestantRow => ({
+            id: row.contestant.id,
+            name: row.contestant.name,
+            gender: row.contestant.gender,
+            overallScore: row.overallScore!,
+        })
+
+        if (eligible.length <= limit) {
+            return {
+                hasTie: false,
+                requiredSelections: 0,
+                included: eligible.map(toAdvancementContestant),
+                tied: [],
+            }
+        }
+
+        const cutoffRow = eligible[limit - 1]!
+        const cutoffScore = roundTo2(cutoffRow.overallScore!)
+        const aboveCutoff = eligible.filter(row => roundTo2(row.overallScore!) > cutoffScore)
+        const tiedAtCutoff = eligible.filter(row => roundTo2(row.overallScore!) === cutoffScore)
+        const autoIncludedCount = aboveCutoff.length
+
+        if (autoIncludedCount + tiedAtCutoff.length <= limit) {
+            return {
+                hasTie: false,
+                requiredSelections: 0,
+                included: eligible.slice(0, limit).map(toAdvancementContestant),
+                tied: [],
+            }
+        }
+
+        return {
+            hasTie: true,
+            requiredSelections: limit - autoIncludedCount,
+            included: aboveCutoff.map(toAdvancementContestant),
+            tied: tiedAtCutoff.map(toAdvancementContestant),
+        }
+    }
+
+    let advancement: AdvancementGroup = emptyAdvancementGroup
 
     if (shouldComputeAdvancement) {
         const limit = advancementLimit!
-        const eligible = sortedRankings.filter(row => row.overallScore !== null)
+        const advancementByGender = GENDERS.map(gender =>
+            computeAdvancementForGroup(rankingsByGender.get(gender)!, limit),
+        )
 
-        if (eligible.length <= limit) {
-            advancement = {
-                hasTie: false,
-                requiredSelections: 0,
-                included: eligible.map(row => ({
-                    id: row.contestant.id,
-                    name: row.contestant.name,
-                    overallScore: row.overallScore!,
-                })),
-                tied: [],
-            }
-        } else {
-            const cutoffRow = eligible[limit - 1]!
-            const cutoffScore = roundTo2(cutoffRow.overallScore!)
-            const aboveCutoff = eligible.filter(row => roundTo2(row.overallScore!) > cutoffScore)
-            const tiedAtCutoff = eligible.filter(row => roundTo2(row.overallScore!) === cutoffScore)
-            const autoIncludedCount = aboveCutoff.length
-
-            if (autoIncludedCount + tiedAtCutoff.length <= limit) {
-                advancement = {
-                    hasTie: false,
-                    requiredSelections: 0,
-                    included: eligible.slice(0, limit).map(row => ({
-                        id: row.contestant.id,
-                        name: row.contestant.name,
-                        overallScore: row.overallScore!,
-                    })),
-                    tied: [],
-                }
-            } else {
-                advancement = {
-                    hasTie: true,
-                    requiredSelections: limit - autoIncludedCount,
-                    included: aboveCutoff.map(row => ({
-                        id: row.contestant.id,
-                        name: row.contestant.name,
-                        overallScore: row.overallScore!,
-                    })),
-                    tied: tiedAtCutoff.map(row => ({
-                        id: row.contestant.id,
-                        name: row.contestant.name,
-                        overallScore: row.overallScore!,
-                    })),
-                }
-            }
+        advancement = {
+            hasTie: advancementByGender.some(group => group.hasTie),
+            requiredSelections: advancementByGender.reduce((sum, group) => sum + group.requiredSelections, 0),
+            included: advancementByGender.flatMap(group => group.included),
+            tied: advancementByGender.flatMap(group => group.tied),
         }
     }
 
@@ -346,6 +378,52 @@ async function getRoundResultsInTx(
         nextRound,
         advancement,
     }
+}
+
+type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+type AdvancementPreview = {
+    hasTie: boolean
+    requiredSelections: number
+    included: AdvancementContestantRow[]
+    tied: AdvancementContestantRow[]
+}
+
+/**
+ * Tie resolution runs once per gender: the flat `selectedContestantIds` body
+ * carries picks for both groups together, so each gender's tied set and
+ * required-selection count (limit minus that gender's auto-included count)
+ * must be validated on its own — otherwise an admin could satisfy the total
+ * required count while leaving one gender's tie unresolved and over-filling
+ * the other. Once every group's count checks out, the merged total is
+ * guaranteed to equal `limit` per gender, so no separate mismatch check is
+ * needed afterward.
+ */
+function resolveTieAdvancingIds(
+    advancement: AdvancementPreview,
+    selectedContestantIds: number[],
+    limit: number | null,
+    field: string,
+    countMismatchCode: "ADVANCE_CONTESTANT_COUNT_MISMATCH" | "DECLARE_WINNER_COUNT_MISMATCH",
+): number[] {
+    for (const gender of GENDERS) {
+        const groupTied = advancement.tied.filter(contestant => contestant.gender === gender)
+        if (groupTied.length === 0) continue
+
+        const groupIncludedCount = advancement.included.filter(contestant => contestant.gender === gender).length
+        const groupSelectedCount = selectedContestantIds.filter(
+            contestantId => groupTied.some(contestant => contestant.id === contestantId),
+        ).length
+        const groupRequired = limit! - groupIncludedCount
+
+        if (groupSelectedCount !== groupRequired) {
+            throw new AppError(countMismatchCode, { field })
+        }
+    }
+
+    return [
+        ...advancement.included.map(contestant => contestant.id),
+        ...selectedContestantIds,
+    ]
 }
 
 export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundInput) {
@@ -398,16 +476,13 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
                 })
             }
 
-            advancingContestantIds = [
-                ...advancement.included.map(contestant => contestant.id),
-                ...selectedContestantIds,
-            ]
-
-            if (advancingContestantIds.length !== nextRound.contestantLimit) {
-                throw new AppError("ADVANCE_CONTESTANT_COUNT_MISMATCH", {
-                    field: "advance_round_input_selected_contestant_ids",
-                })
-            }
+            advancingContestantIds = resolveTieAdvancingIds(
+                advancement,
+                selectedContestantIds,
+                nextRound.contestantLimit,
+                "advance_round_input_selected_contestant_ids",
+                "ADVANCE_CONTESTANT_COUNT_MISMATCH",
+            )
         }
 
         if (advancingContestantIds.length === 0) {
@@ -435,10 +510,11 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
 }
 
 type RankingRowForDeclare = {
-    contestant: { id: number, candidateNumber: number }
+    contestant: { id: number, candidateNumber: number, gender: Gender }
     overallScore: number | null
 }
 
+/** Placement is `1..N` within each gender — a Ms. and a Mr. can both take 1st. */
 function buildDeclaredWinnerRows(
     winningContestantIds: number[],
     rankings: RankingRowForDeclare[],
@@ -459,16 +535,23 @@ function buildDeclaredWinnerRows(
         })
     }
 
-    const sorted = [...winnerRows as RankingRowForDeclare[]].sort((a, b) => {
-        if (b.overallScore! !== a.overallScore!) return b.overallScore! - a.overallScore!
-        return a.contestant.candidateNumber - b.contestant.candidateNumber
-    })
+    const rows = winnerRows as RankingRowForDeclare[]
 
-    return sorted.map((row, index) => ({
-        contestantId: row.contestant.id,
-        placement: index + 1,
-        overallScore: row.overallScore!,
-    }))
+    return GENDERS.flatMap(gender => {
+        const sorted = rows
+            .filter(row => row.contestant.gender === gender)
+            .sort((a, b) => {
+                if (b.overallScore! !== a.overallScore!) return b.overallScore! - a.overallScore!
+                return a.contestant.candidateNumber - b.contestant.candidateNumber
+            })
+
+        return sorted.map((row, index) => ({
+            contestantId: row.contestant.id,
+            gender,
+            placement: index + 1,
+            overallScore: row.overallScore!,
+        }))
+    })
 }
 
 export async function declareWinners({ id, selectedContestantIds }: DeclareWinnersInput) {
@@ -551,19 +634,13 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
                 })
             }
 
-            winningContestantIds = [
-                ...advancement.included.map(contestant => contestant.id),
-                ...selectedContestantIds,
-            ]
-
-            if (
-                currentRound.contestantLimit !== null
-                && winningContestantIds.length !== currentRound.contestantLimit
-            ) {
-                throw new AppError("DECLARE_WINNER_COUNT_MISMATCH", {
-                    field: "declare_winners_input_selected_contestant_ids",
-                })
-            }
+            winningContestantIds = resolveTieAdvancingIds(
+                advancement,
+                selectedContestantIds,
+                currentRound.contestantLimit,
+                "declare_winners_input_selected_contestant_ids",
+                "DECLARE_WINNER_COUNT_MISMATCH",
+            )
         }
 
         if (winningContestantIds.length === 0) {
@@ -581,6 +658,7 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
             data: declaredWinnerRows.map(row => ({
                 roundId: id,
                 contestantId: row.contestantId,
+                gender: row.gender,
                 placement: row.placement,
                 overallScore: row.overallScore,
             })),
@@ -606,7 +684,7 @@ export async function getDeclaredWinners({ id }: GetDeclaredWinners) {
 
     const roundWinners = await prisma.roundWinner.findMany({
         where: { roundId: id },
-        orderBy: { placement: "asc" },
+        orderBy: [{ gender: "desc" }, { placement: "asc" }],
         include: {
             contestant: { select: contestantSelect },
         },
