@@ -939,6 +939,7 @@ describe("Get Round Results Integration Test", () => {
 
             expect(json.data.canDeclareWinners).toBe(true)
             expect(json.data.winnersDeclaredAt).toBeNull()
+            expect(json.data.placementTies).toEqual([])
         })
 
         it("should return canDeclareWinners false when winners already declared", async () => {
@@ -962,6 +963,38 @@ describe("Get Round Results Integration Test", () => {
             expect(json.data.winnersDeclaredAt).toBe(declaredAt.toISOString())
         })
 
+        it("should hide placementTies and advancement once winners are already declared, even if the underlying scores still tie", async () => {
+            const declaredAt = new Date("2026-08-21T10:00:00.000Z")
+            const top3 = await seedRound({
+                name: "Top 3",
+                phaseOrder: 3,
+                contestantLimit: 3,
+                winnersDeclaredAt: declaredAt,
+            })
+            const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+            // Same tied-score shape as the "placementTies" test above, but the
+            // round is already declared — the tie preview must not resurface.
+            const scores = [100, 100, 90]
+            for (const [index, overall] of scores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 1460 + index, name: `Declared Tie ${index}` })
+                await seedRoundContestant(top3.id, contestant.id)
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                for (const judge of [judgeOne, judgeTwo]) {
+                    await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value: overall })
+                }
+            }
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.canDeclareWinners).toBe(false)
+            expect(json.data.advancement).toEqual({ hasTie: false, requiredSelections: 0, included: [], tied: [] })
+            expect(json.data.placementTies).toEqual([])
+        })
+
         it("should return canDeclareWinners false when final round has cutoff tie", async () => {
             const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
             const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
@@ -983,6 +1016,39 @@ describe("Get Round Results Integration Test", () => {
 
             expect(json.data.advancement.hasTie).toBe(true)
             expect(json.data.canDeclareWinners).toBe(false)
+            expect(json.data.placementTies).toEqual([])
+        })
+
+        it("should return placementTies and canDeclareWinners false when finalists tie in score with no cutoff tie", async () => {
+            const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
+            const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+            const scores = [100, 100, 90]
+            const contestantIds: number[] = []
+            for (const [index, overall] of scores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 1450 + index, name: `Placement ${index}` })
+                await seedRoundContestant(top3.id, contestant.id)
+                contestantIds.push(contestant.id)
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                for (const judge of [judgeOne, judgeTwo]) {
+                    await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value: overall })
+                }
+            }
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.advancement.hasTie).toBe(false)
+            expect(json.data.canDeclareWinners).toBe(false)
+            expect(json.data.placementTies).toHaveLength(1)
+
+            const cluster = json.data.placementTies[0]!
+            const tiedIds = cluster.contestants.map(c => c.id)
+            expect(tiedIds).toContain(contestantIds[0])
+            expect(tiedIds).toContain(contestantIds[1])
+            expect(tiedIds).not.toContain(contestantIds[2])
         })
     })
 

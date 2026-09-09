@@ -10,6 +10,12 @@ export const LIVE_EVENT_ERROR_CODES = {
     SELECTED_CONTESTANT_IDS_REQUIRED: "SELECTED_CONTESTANT_IDS_REQUIRED",
     SELECTED_CONTESTANT_IDS_COUNT_INVALID: "SELECTED_CONTESTANT_IDS_COUNT_INVALID",
     SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP: "SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP",
+    PLACEMENT_ORDER_INVALID: "PLACEMENT_ORDER_INVALID",
+    PLACEMENT_ORDER_ID_INVALID: "PLACEMENT_ORDER_ID_INVALID",
+    PLACEMENT_ORDER_IDS_DUPLICATE: "PLACEMENT_ORDER_IDS_DUPLICATE",
+    PLACEMENT_ORDER_NOT_ALLOWED: "PLACEMENT_ORDER_NOT_ALLOWED",
+    PLACEMENT_ORDER_REQUIRED: "PLACEMENT_ORDER_REQUIRED",
+    PLACEMENT_ORDER_MISMATCH: "PLACEMENT_ORDER_MISMATCH",
     ADVANCE_NOT_ALLOWED: "ADVANCE_NOT_ALLOWED",
     ADVANCE_CONTESTANT_COUNT_MISMATCH: "ADVANCE_CONTESTANT_COUNT_MISMATCH",
     ROUND_ADVANCEMENT_ERROR: "ROUND_ADVANCEMENT_ERROR",
@@ -63,6 +69,36 @@ export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions>
     SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP: {
         code: "SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP",
         message: "One or more selected contestants are not in the tied group.",
+        status: 400
+    },
+    PLACEMENT_ORDER_INVALID: {
+        code: "PLACEMENT_ORDER_INVALID",
+        message: "Placement order is invalid.",
+        status: 400
+    },
+    PLACEMENT_ORDER_ID_INVALID: {
+        code: "PLACEMENT_ORDER_ID_INVALID",
+        message: "Placement order contestant ID is invalid.",
+        status: 400
+    },
+    PLACEMENT_ORDER_IDS_DUPLICATE: {
+        code: "PLACEMENT_ORDER_IDS_DUPLICATE",
+        message: "Placement order contestant IDs are duplicate.",
+        status: 400
+    },
+    PLACEMENT_ORDER_NOT_ALLOWED: {
+        code: "PLACEMENT_ORDER_NOT_ALLOWED",
+        message: "Placement order is not allowed when there is no placement tie.",
+        status: 400
+    },
+    PLACEMENT_ORDER_REQUIRED: {
+        code: "PLACEMENT_ORDER_REQUIRED",
+        message: "Placement order is required to resolve a score tie.",
+        status: 400
+    },
+    PLACEMENT_ORDER_MISMATCH: {
+        code: "PLACEMENT_ORDER_MISMATCH",
+        message: "Placement order must include exactly the tied contestants, with no extras or omissions.",
         status: 400
     },
     ADVANCE_NOT_ALLOWED: {

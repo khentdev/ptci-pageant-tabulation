@@ -246,6 +246,36 @@ describe("Declare Winners Integration Test", () => {
         return { top3, category, judgeOne, judgeTwo, contestants }
     }
 
+    const seedFinalRoundPlacementTie = async () => {
+        const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
+        const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+        const judgeOne = await seedUser(TEST_JUDGE_ONE)
+        const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+        // Exactly 3 contestants in a "Top 3" round (eligible.length === limit) —
+        // all auto-included, no cutoff tie. The first two share an identical
+        // overall score, producing a placement tie for 1st/2nd.
+        const scores = [100, 100, 90]
+        const contestants = []
+        for (const [index, overall] of scores.entries()) {
+            const contestant = await seedContestant({ candidateNumber: 3300 + index, name: `Placement ${index}` })
+            await seedRoundContestant(top3.id, contestant.id)
+            const field = await seedCriteriaField(category.id, "Score", 100)
+            for (const judge of [judgeOne, judgeTwo]) {
+                await seedScore({
+                    judgeId: judge.id,
+                    categoryId: category.id,
+                    contestantId: contestant.id,
+                    criteriaFieldId: field.id,
+                    value: overall,
+                })
+            }
+            contestants.push(contestant)
+        }
+
+        return { top3, category, judgeOne, judgeTwo, contestants }
+    }
+
     const cleanupTestData = async () => {
         await prisma.score.deleteMany()
         await prisma.criteriaField.deleteMany()
@@ -316,6 +346,19 @@ describe("Declare Winners Integration Test", () => {
 
             expect(res.status).toBe(400)
             expect(json.error.code).toBe("SELECTED_CONTESTANT_IDS_INVALID")
+        })
+
+        it("should return PLACEMENT_ORDER_INVALID when placementOrder is not an array", async () => {
+            const { top3 } = await seedFinalRoundReady()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                placementOrder: "not-an-array",
+            })
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("PLACEMENT_ORDER_INVALID")
         })
     })
 
@@ -393,6 +436,83 @@ describe("Declare Winners Integration Test", () => {
                 placement: 3,
             })
             expect(Number(roundWinners[2]!.overallScore)).toBe(85)
+        })
+    })
+
+    describe("placement tie resolution", () => {
+        it("should block declaring winners and expose placementTies when finalists tie in score", async () => {
+            const { top3, contestants } = await seedFinalRoundPlacementTie()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const resultsJson = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
+
+            expect(resultsJson.data.advancement.hasTie).toBe(false)
+            expect(resultsJson.data.canDeclareWinners).toBe(false)
+            expect(resultsJson.data.placementTies).toHaveLength(1)
+
+            const cluster = resultsJson.data.placementTies[0]!
+            const tiedIds = cluster.contestants.map(c => c.id)
+            expect(tiedIds).toContain(contestants[0]!.id)
+            expect(tiedIds).toContain(contestants[1]!.id)
+            expect(tiedIds).not.toContain(contestants[2]!.id)
+        })
+
+        it("should return PLACEMENT_ORDER_REQUIRED when declaring without resolving a placement tie", async () => {
+            const { top3 } = await seedFinalRoundPlacementTie()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("PLACEMENT_ORDER_REQUIRED")
+        })
+
+        it("should return PLACEMENT_ORDER_MISMATCH when placementOrder does not match the tied contestants", async () => {
+            const { top3, contestants } = await seedFinalRoundPlacementTie()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                placementOrder: [contestants[2]!.id],
+            })
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("PLACEMENT_ORDER_MISMATCH")
+        })
+
+        it("should return PLACEMENT_ORDER_NOT_ALLOWED when sent without a placement tie", async () => {
+            const { top3, contestant } = await seedFinalRoundReady()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                placementOrder: [contestant.id],
+            })
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("PLACEMENT_ORDER_NOT_ALLOWED")
+        })
+
+        it("should declare winners honoring the submitted placement order", async () => {
+            const { top3, contestants } = await seedFinalRoundPlacementTie()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            // contestants[1] scored equal to contestants[0] but is chosen to place higher.
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                placementOrder: [contestants[1]!.id, contestants[0]!.id],
+            })
+
+            expect(res.status).toBe(201)
+
+            const roundWinners = await prisma.roundWinner.findMany({
+                where: { roundId: top3.id },
+                orderBy: { placement: "asc" },
+            })
+            expect(roundWinners).toHaveLength(3)
+            expect(roundWinners[0]).toMatchObject({ contestantId: contestants[1]!.id, placement: 1 })
+            expect(roundWinners[1]).toMatchObject({ contestantId: contestants[0]!.id, placement: 2 })
+            expect(roundWinners[2]).toMatchObject({ contestantId: contestants[2]!.id, placement: 3 })
         })
     })
 

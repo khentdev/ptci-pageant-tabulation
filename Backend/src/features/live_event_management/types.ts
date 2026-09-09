@@ -64,6 +64,10 @@ type AdvancementContestant = {
     gender: "MALE" | "FEMALE"
     overallScore: number
 }
+export type PlacementTieCluster = {
+    gender: "MALE" | "FEMALE"
+    contestants: AdvancementContestant[]
+}
 export type GetRoundResultsDTO = {
     rankings: RankingRow[]
     allJudgesSubmitted: boolean
@@ -84,6 +88,7 @@ export type GetRoundResultsDTO = {
         included: AdvancementContestant[]
         tied: AdvancementContestant[]
     }
+    placementTies: PlacementTieCluster[]
 }
 export type GetRoundResultsResponse = {
     data: GetRoundResultsDTO
@@ -115,10 +120,12 @@ export type CanDeclareReason =
 
 export type DeclareWinnersRequestBody = {
     selectedContestantIds?: unknown
+    placementOrder?: unknown
 }
 export type DeclareWinnersInput = {
     id: number
     selectedContestantIds?: number[]
+    placementOrder?: number[]
 }
 export type DeclareWinnersInputVariables = {
     declareWinners: DeclareWinnersInput

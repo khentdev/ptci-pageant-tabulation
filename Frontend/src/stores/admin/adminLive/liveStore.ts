@@ -15,6 +15,7 @@ import type { AxiosError } from 'axios';
 export const useLiveStore = defineStore('liveStore', () => {
   const { toast } = useToast();
   const selectedContestantIds = ref<number[]>([]);
+  const placementOrder = ref<number[]>([]);
   const judgeList = ref<GetJudgeSubmissionsDTO | null>(null);
   const roundResult = ref<GetRoundResultsDTO | null>(null);
   const declaredWinners = ref<GetDeclaredWinnersDTO | null>(null);
@@ -27,6 +28,17 @@ export const useLiveStore = defineStore('liveStore', () => {
 
     const required = roundResult.value?.advancement.requiredSelections;
     return selectedContestantIds.value.length === required;
+  });
+
+  const isPlacementOrderResolved = computed(() => {
+    const clusters = roundResult.value?.placementTies;
+    if (!clusters || clusters.length === 0) {
+      return true;
+    }
+
+    return clusters.every((cluster) =>
+      cluster.contestants.every((contestant) => placementOrder.value.includes(contestant.id)),
+    );
   });
 
   const loadingStates = reactive({
@@ -88,6 +100,7 @@ export const useLiveStore = defineStore('liveStore', () => {
       const res = await liveService.getRoundResults(id);
       roundResult.value = res.data;
       selectedContestantIds.value = [];
+      placementOrder.value = [];
       errorStates.isFetchingRoundResultsError = false;
       errorStates.isFetchingRoundPhaseNotFound = false;
     } catch (error) {
@@ -202,11 +215,18 @@ export const useLiveStore = defineStore('liveStore', () => {
     loadingStates.isAddingDeclaredWinners = true;
 
     try {
-      const payload = roundResult.value?.advancement.hasTie
-        ? { selectedContestantIds: selectedContestantIds.value }
-        : undefined;
+      const payload: { selectedContestantIds?: number[]; placementOrder?: number[] } = {};
+      if (roundResult.value?.advancement.hasTie) {
+        payload.selectedContestantIds = selectedContestantIds.value;
+      }
+      if (roundResult.value?.placementTies?.length) {
+        payload.placementOrder = placementOrder.value;
+      }
 
-      const res = await liveService.declareWinners(id, payload);
+      const res = await liveService.declareWinners(
+        id,
+        Object.keys(payload).length > 0 ? payload : undefined,
+      );
       toast.success(res.message);
       return true;
     } catch (error) {
@@ -230,13 +250,25 @@ export const useLiveStore = defineStore('liveStore', () => {
         toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_COUNT_INVALID') {
         toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_REQUIRED') {
+        toast.warning(message, { title: 'Placement Order Required' });
+      } else if (code === 'PLACEMENT_ORDER_MISMATCH') {
+        toast.warning(message, { title: 'Placement Order Mismatch' });
+      } else if (code === 'PLACEMENT_ORDER_NOT_ALLOWED') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_INVALID') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_ID_INVALID') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_IDS_DUPLICATE') {
+        toast.warning(message);
       } else if (code === 'DECLARE_WINNER_COUNT_MISMATCH') {
         toast.warning(message, { title: 'Count Mismatch' });
       } else if (code === 'DECLARE_NOT_ALLOWED') {
         toast.warning(message, { title: 'Declaration Not Allowed' });
       } else if (code === 'FORBIDDEN') {
         toast.error(message, { title: 'Access Denied' });
-      } 
+      }
 
       return false;
     } finally {
@@ -248,6 +280,8 @@ export const useLiveStore = defineStore('liveStore', () => {
     addDeclareWinners,
     isTieResolved,
     selectedContestantIds,
+    placementOrder,
+    isPlacementOrderResolved,
     addAdvanceRound,
     isLiveEventNotFound,
     getDeclaredWinners,
