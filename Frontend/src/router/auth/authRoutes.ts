@@ -18,10 +18,4 @@ export const authRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: '/admin/live/results',
-    name: 'admin-homepage',
-    component: () => import('../../views/admin/adminMain.vue'),
-    meta: { requiresAdmin: true },
-  },
 ];

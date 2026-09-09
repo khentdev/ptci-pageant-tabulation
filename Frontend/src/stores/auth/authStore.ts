@@ -13,6 +13,7 @@ import { isSessionFailureCode } from '@/types/auth/error';
 import type { AuthErrorCodes } from '@/types/auth/error';
 import type { AxiosError } from 'axios';
 import type { ErrorResponse } from '@/api/errors';
+
 export const useAuthStore = defineStore('auth', () => {
   const { toast } = useToast();
   const currentUser = ref<user | null>(null);
@@ -30,16 +31,19 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggingOut: false,
   });
 
-  const isAdmin = computed(() => {
-    return currentUser.value?.user?.role === 'ADMIN';
-  });
+  const isAdmin = computed(() => currentUser.value?.user?.role === 'ADMIN');
+  const isJudge = computed(() => currentUser.value?.user?.role === 'JUDGE');
 
   const loginUser = async (user: loginInput) => {
     loadingStates.isLoggingIn = true;
     try {
       const res = await authService.loginUser(user);
       currentUser.value = { user: res.data.user };
-      await router.push({ name: 'admin-homepage' });
+      if (currentUser.value.user.role === 'ADMIN') {
+        await router.push({ name: 'admin-homepage' });
+      } else if (currentUser.value.user.role === 'JUDGE') {
+        await router.push({ name: 'judge-homepage' });
+      }
     } catch (error) {
       const { code, message, type } = errorHandler<AuthErrorCodes>(
         error as AxiosError<ErrorResponse<AuthErrorCodes>>,
@@ -87,10 +91,6 @@ export const useAuthStore = defineStore('auth', () => {
             await new Promise((r) => setTimeout(r, delay + jitter));
             continue;
           }
-          if (isSessionFailureCode(code)) {
-            currentUser.value = null;
-            return;
-          }
 
           if (
             type === 'offline' ||
@@ -98,7 +98,6 @@ export const useAuthStore = defineStore('auth', () => {
             type === 'unreachable' ||
             type === 'timeout'
           ) {
-            // I-shoshow nito yung blocking error UI with retry button
             systemErrors.sessionError = true;
             return;
           }
@@ -128,6 +127,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   return {
+    isJudge,
     loginUser,
     isInvalidCredentials,
     loadingStates,

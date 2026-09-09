@@ -1,5 +1,4 @@
 <template>
-  
   <BasePanel
     :title="currentRound?.name ?? 'Round Results'"
     :isLoading="liveStore.isFetchingLiveEvent"
@@ -9,49 +8,49 @@
     :onRetry="() => fetchRoundResults(activeRoundId ?? 0)"
     :isNotFound="liveStore.isLiveEventNotFound"
   >
-      <template #not-found>
-        <NotFoundOverlay />
-      </template>
+    <template #not-found>
+      <NotFoundOverlay />
+    </template>
 
-      <JudgeSubmissions />
-      <RankingsContestant />
-      <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
-      <div
-        class="font-medium text-red-600/70 mt-3"
-        v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
+    <JudgeSubmissions />
+    <RankingsContestant />
+    <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
+    <div
+      class="mt-3 font-medium text-red-600/70"
+      v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
+    >
+      {{ advanceReasonText }}
+    </div>
+    <div
+      v-if="liveStore.roundResult?.nextRound"
+      class="mt-4 flex w-full items-center justify-end px-4"
+    >
+      <button
+        @click="handleAdvanceRound"
+        :hidden="liveStore.roundResult.isCompleted"
+        :disabled="!canAdvanceRound || liveStore.loadingStates.isAddingAdvanceRound"
+        class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
       >
-        {{ advanceReasonText }}
-      </div>
-      <div
-        v-if="liveStore.roundResult?.nextRound"
-        class="flex w-full items-center justify-end px-4 mt-4"
-      >
-        <button
-          @click="handleAdvanceRound"
-          :hidden="liveStore.roundResult.isCompleted"
-          :disabled="!canAdvanceRound || liveStore.loadingStates.isAddingAdvanceRound"
-          class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
-        >
-          {{
-            liveStore.loadingStates.isAddingAdvanceRound
-              ? 'Advancing...'
-              : `Advance to ${liveStore.roundResult?.nextRound?.name}`
-          }}
-        </button>
-      </div>
+        {{
+          liveStore.loadingStates.isAddingAdvanceRound
+            ? 'Advancing...'
+            : `Advance to ${liveStore.roundResult?.nextRound?.name}`
+        }}
+      </button>
+    </div>
 
-      <div
-        v-else-if="liveStore.roundResult?.canDeclareWinners"
-        class="flex w-full items-center justify-end px-4 mt-4"
+    <div
+      v-else-if="liveStore.roundResult?.canDeclareWinners"
+      class="mt-4 flex w-full items-center justify-end px-4"
+    >
+      <button
+        :disabled="!canDeclareRound || liveStore.loadingStates.isAddingDeclaredWinners"
+        @click="handleDeclareWinners"
+        class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
       >
-        <button
-          :disabled="!canDeclareRound || liveStore.loadingStates.isAddingDeclaredWinners"
-          @click="handleDeclareWinners"
-          class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
-        >
-          {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
-        </button>
-      </div>
+        {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
+      </button>
+    </div>
   </BasePanel>
 </template>
 <script setup lang="ts">

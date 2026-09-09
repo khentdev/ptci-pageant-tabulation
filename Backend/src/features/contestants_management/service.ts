@@ -6,12 +6,12 @@ import type { AddContestantInput, DeleteContestantInput, EditContestantInput, Ge
 
 export async function addContestantService({ candidateNumber, name, gender, teamName, teamColor }: AddContestantInput) {
     const existingContestant = await prisma.contestant.findUnique({
-        where: { candidateNumber },
+        where: { candidateNumber_gender: { candidateNumber, gender } },
         select: { id: true },
     })
 
     if (existingContestant) {
-        logger.warn({ candidateNumber }, "Duplicate candidate number on contestant create")
+        logger.warn({ candidateNumber, gender }, "Duplicate candidate number on contestant create")
         throw new AppError("CONTESTANT_CANDIDATE_NUMBER_DUPLICATE")
     }
 
@@ -60,10 +60,10 @@ export async function editContestantService({ id, candidateNumber, name, gender,
     }
 
     const duplicateCount = await prisma.contestant.count({
-        where: { candidateNumber, NOT: { id } },
+        where: { candidateNumber, gender, NOT: { id } },
     })
     if (duplicateCount > 0) {
-        logger.warn({ id, candidateNumber }, "Duplicate candidate number on contestant edit")
+        logger.warn({ id, candidateNumber, gender }, "Duplicate candidate number on contestant edit")
         throw new AppError("CONTESTANT_CANDIDATE_NUMBER_DUPLICATE")
     }
 

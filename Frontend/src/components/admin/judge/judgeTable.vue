@@ -21,7 +21,7 @@
             </button>
             <button
               @click="emit('resetPassword', judge.id)"
-              class="h-10 cursor-pointer shrink-0 rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
+              class="h-10 shrink-0 cursor-pointer rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
             >
               Reset Password
             </button>

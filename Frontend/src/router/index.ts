@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore';
 import { authRoutes } from './auth/authRoutes';
 import { adminRoutes } from './admin/adminRoutes';
+import { judgeRoutes } from './judge/judgeRoutes';
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -10,6 +11,7 @@ export const routes: RouteRecordRaw[] = [
   },
   ...authRoutes,
   ...adminRoutes,
+  ...judgeRoutes,
 ];
 
 const router = createRouter({
