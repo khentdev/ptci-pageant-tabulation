@@ -99,7 +99,8 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
       "requiredSelections": 0,
       "included": [],
       "tied": []
-    }
+    },
+    "placementTies": []
   },
   "message": "Round results fetched successfully"
 }
@@ -121,6 +122,7 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | `data.advancement.requiredSelections` | `number`                   | Total tied contestants admin must pick across both genders (sum of each gender's `N - included.length`). `0` when no tie                                                 |
 | `data.advancement.included`         | `AdvancementContestant[]`  | Contestants above the cutoff who advance automatically — computed per gender, then combined into one array                                                                |
 | `data.advancement.tied`             | `AdvancementContestant[]`  | Tied contestants at the cutoff for admin selection — may contain one gender's tie, the other's, or both at once; each entry's `gender` says which group it belongs to    |
+| `data.placementTies`                  | `PlacementTieCluster[]`    | Same-gender contestants in the already-decided winner set who share an identical `overallScore` — their relative finish order (1st vs 2nd, etc.) is ambiguous and must be resolved by the admin. Only populated on the final round, and only once `advancement.hasTie` is `false` (a cutoff tie must be resolved first). Empty otherwise |
 | `message`                             | `string`                   | Success message                                                                                                                                                           |
 
 ### Types
@@ -138,6 +140,7 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | `winnersDeclaredAt`  | `string \| null`           | ISO timestamp when winners declared          |
 | `nextRound`          | `NextRoundSummary \| null` | Next round metadata                          |
 | `advancement`        | `AdvancementPreview`       | Advancement preview                          |
+| `placementTies`      | `PlacementTieCluster[]`    | Placement ties among the final-round winner set awaiting admin resolution |
 
 **`RankingRow`**
 
@@ -193,6 +196,15 @@ Cutoff and tie detection run independently per gender against the same `contesta
 | `name`           | `string`             | Contestant name |
 | `gender`         | `"MALE" \| "FEMALE"` | Which gender's cutoff this contestant was evaluated against |
 | `overallScore`   | `number`             | Overall score (2 dp) |
+
+**`PlacementTieCluster`**
+
+One entry per group of 2+ same-gender contestants sharing an identical `overallScore` in the final-round winner set.
+
+| Field          | Type                       | Notes |
+| -------------- | --------------------------- | ----- |
+| `gender`       | `"MALE" \| "FEMALE"`        | Which gender's placement this cluster affects |
+| `contestants`  | `AdvancementContestant[]`   | The tied contestants, unordered — the admin decides their finish order via `placementOrder` on [[live-event/live-round-declare-winners]] |
 
 **`CanAdvanceReason`**
 
@@ -254,6 +266,8 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Zero categories | `allJudgesSubmitted: true` (vacuous); `canAdvanceReason: CURRENT_ROUND_NO_CATEGORIES` |
 | Final round | `nextRound: null`, `canAdvance: false`, `canAdvanceReason: null` |
 | Final round declared | `winnersDeclaredAt` ISO timestamp, `canDeclareWinners: false` |
+| Final round, two+ same-gender finalists tie in score | `placementTies` contains one cluster for that gender, `canDeclareWinners: false` |
+| Final round, cutoff tie unresolved | `placementTies: []` (winner set not fixed yet — resolve `advancement.hasTie` first, then placement ties are computed on the next fetch or the declare-time re-check) |
 
 ## Frontend UI rules
 
@@ -268,7 +282,8 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Advance button | Hidden when `isCompleted`; enabled when `canAdvance`; disabled helper from `canAdvanceReason`. On click, POST [[live-event/live-round-advance]] |
 | Advance label | `Advance to ${nextRound.name}` when `nextRound` is set |
 | Tie panel | Show when `advancement.hasTie === true`. Filter `advancement.tied` by `gender` to show one panel per affected gender (a tie may exist in only one gender) — combine both genders' checked selections into one `selectedContestantIds` array before posting |
-| Declare Winners | Final round only (`nextRound === null`). **No tie:** enabled when `canDeclareWinners === true`; POST [[live-event/live-round-declare-winners]] with empty body. **Tie:** `canDeclareWinners === false` — show disabled Declare + tie panel; enable locally when selection count === `requiredSelections`; POST with `{ selectedContestantIds }`. Hidden when `winnersDeclaredAt` is set |
+| Declare Winners | Final round only (`nextRound === null`). **No tie:** enabled when `canDeclareWinners === true`; POST [[live-event/live-round-declare-winners]] with empty body. **Cutoff tie:** `canDeclareWinners === false` — show disabled Declare + tie panel; enable locally when selection count === `requiredSelections`; POST with `{ selectedContestantIds }`. **Placement tie:** `canDeclareWinners === false`, `placementTies` non-empty — show disabled Declare + placement-order panel (one control per tied contestant, per cluster); enable locally once every cluster has a fully assigned, unique finish order; POST with `{ placementOrder }` (combinable with `selectedContestantIds` if both kinds of tie are present). Hidden when `winnersDeclaredAt` is set |
+| Placement tie panel | Show when `placementTies.length > 0`. Render one section per cluster (filter by `gender`); let the admin assign a unique relative rank to each contestant within that cluster only (order across different clusters is irrelevant — flatten all clusters' chosen order into one `placementOrder` array before posting) |
 | Podium | When `winnersDeclaredAt` is set, show Declared Winners block from [[live-event/live-round-declared-winners]] — not `rankings[0..2]` |
 | Refetch | Page mount and manual browser refresh only — no auto-polling |
 

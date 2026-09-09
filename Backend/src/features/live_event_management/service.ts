@@ -66,7 +66,7 @@ export async function advanceRoundService({ id, selectedContestantIds }: Advance
     }
 }
 
-export async function declareWinnersService({ id, selectedContestantIds }: DeclareWinnersInput) {
+export async function declareWinnersService({ id, selectedContestantIds, placementOrder }: DeclareWinnersInput) {
     const round = await prisma.round.findUnique({
         where: { id },
         select: { id: true },
@@ -77,7 +77,7 @@ export async function declareWinnersService({ id, selectedContestantIds }: Decla
     }
 
     try {
-        await declareWinners({ id, selectedContestantIds })
+        await declareWinners({ id, selectedContestantIds, placementOrder })
     } catch (err) {
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error declaring winners")

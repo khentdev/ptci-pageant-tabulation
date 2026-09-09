@@ -15,6 +15,7 @@
     <JudgeSubmissions />
     <RankingsContestant />
     <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
+    <PlacementOrderResolution v-if="liveStore.roundResult?.placementTies?.length" />
     <div
       class="mt-3 font-medium text-red-600/70"
       v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
@@ -40,7 +41,7 @@
     </div>
 
     <div
-      v-else-if="liveStore.roundResult?.canDeclareWinners"
+      v-else-if="liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt"
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -56,6 +57,7 @@
 <script setup lang="ts">
 import JudgeSubmissions from '@/components/admin/live_event/judgeSubmissions.vue';
 import NotFoundOverlay from '@/components/admin/live_event/NotFoundOverlay.vue';
+import PlacementOrderResolution from '@/components/admin/live_event/placementOrderResolution.vue';
 import RankingsContestant from '@/components/admin/live_event/rankingsContestant.vue';
 import TieResolution from '@/components/admin/live_event/tieResolution.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
@@ -94,7 +96,6 @@ const canAdvanceRound = computed(() => {
 const canDeclareRound = computed(() => {
   if (
     !liveStore.roundResult ||
-    !liveStore.roundResult.canDeclareWinners ||
     !liveStore.roundResult.allJudgesSubmitted ||
     liveStore.isLiveEventServerError
   ) {
@@ -105,7 +106,11 @@ const canDeclareRound = computed(() => {
     return liveStore.isTieResolved;
   }
 
-  return true;
+  if (liveStore.roundResult.placementTies?.length) {
+    return liveStore.isPlacementOrderResolved;
+  }
+
+  return liveStore.roundResult.canDeclareWinners;
 });
 
 const handleAdvanceRound = async () => {
