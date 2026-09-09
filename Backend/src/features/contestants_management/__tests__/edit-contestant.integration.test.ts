@@ -823,7 +823,7 @@ describe("Edit Contestant Integration Test", () => {
             expect(unchangedContestant?.name).toBe("Test Contestant")
         })
 
-        it("should return CONTESTANT_CANDIDATE_NUMBER_DUPLICATE when candidate number belongs to another contestant", async () => {
+        it("should return CONTESTANT_CANDIDATE_NUMBER_DUPLICATE when candidate number belongs to another contestant of the same gender", async () => {
             await seedContestant({
                 candidateNumber: 1,
                 name: "Aniar, Andrea Mae",
@@ -840,6 +840,7 @@ describe("Edit Contestant Integration Test", () => {
             })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
+            // FEMALE #2 → FEMALE #1, but FEMALE #1 already exists
             const res = await patchEditContestant(cookieHeader, csrfToken, contestant.id, {
                 candidateNumber: "1",
                 name: "Dela Cruz, Christine",
@@ -853,7 +854,7 @@ describe("Edit Contestant Integration Test", () => {
             expect(json.error.code).toBe("CONTESTANT_CANDIDATE_NUMBER_DUPLICATE")
         })
 
-        it("should not update the contestant when candidate number is duplicate", async () => {
+        it("should not update the contestant when candidate number is duplicate within the same gender", async () => {
             await seedContestant({
                 candidateNumber: 1,
                 name: "Aniar, Andrea Mae",
@@ -870,6 +871,7 @@ describe("Edit Contestant Integration Test", () => {
             })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
+            // FEMALE #2 → FEMALE #1, but FEMALE #1 already exists — should be rejected
             await patchEditContestant(cookieHeader, csrfToken, contestant.id, {
                 candidateNumber: "1",
                 name: "Dela Cruz, Christine",
@@ -883,6 +885,40 @@ describe("Edit Contestant Integration Test", () => {
                 select: { candidateNumber: true },
             })
             expect(unchangedContestant?.candidateNumber).toBe(2)
+        })
+
+        it("should allow editing to the same candidate number when gender differs from the existing contestant", async () => {
+            await seedContestant({
+                candidateNumber: 1,
+                name: "Aniar, Andrea Mae",
+                gender: "FEMALE",
+                teamName: "Yellow Team",
+                teamColor: "Yellow",
+            })
+            const contestant = await seedContestant({
+                candidateNumber: 2,
+                name: "Santos, John",
+                gender: "MALE",
+                teamName: "Blue Team",
+                teamColor: "Blue",
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            // MALE #2 → MALE #1 — FEMALE #1 exists but MALE #1 does not, so no conflict
+            const res = await patchEditContestant(cookieHeader, csrfToken, contestant.id, {
+                candidateNumber: "1",
+                name: "Santos, John",
+                gender: "MALE",
+                teamName: "Blue Team",
+                teamColor: "Blue",
+            })
+            expect(res.status).toBe(200)
+
+            const updatedContestant = await prisma.contestant.findUnique({
+                where: { id: contestant.id },
+                select: { candidateNumber: true, gender: true },
+            })
+            expect(updatedContestant).toEqual({ candidateNumber: 1, gender: "MALE" })
         })
     })
 })

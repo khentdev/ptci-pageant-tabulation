@@ -282,6 +282,23 @@ describe("Add Contestant Integration Test", () => {
             ])
         })
 
+        it("should allow the same candidate number for different genders", async () => {
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            await postAddContestant(cookieHeader, csrfToken, validBody) // FEMALE #1
+            const res = await postAddContestant(cookieHeader, csrfToken, {
+                candidateNumber: "1",
+                name: "Santos, John",
+                gender: "MALE",
+                teamName: "Blue Team",
+                teamColor: "Blue",
+            })
+            expect(res.status).toBe(201)
+
+            const count = await prisma.contestant.count()
+            expect(count).toBe(2)
+        })
+
         it("should not create a round_contestants row on add", async () => {
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
@@ -532,7 +549,7 @@ describe("Add Contestant Integration Test", () => {
     })
 
     describe("business rules", () => {
-        it("should return CONTESTANT_CANDIDATE_NUMBER_DUPLICATE when candidate number already exists", async () => {
+        it("should return CONTESTANT_CANDIDATE_NUMBER_DUPLICATE when candidate number already exists for the same gender", async () => {
             await seedContestant({
                 candidateNumber: 1,
                 name: "Existing Contestant",
@@ -542,14 +559,14 @@ describe("Add Contestant Integration Test", () => {
             })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
-            const res = await postAddContestant(cookieHeader, csrfToken, validBody)
+            const res = await postAddContestant(cookieHeader, csrfToken, validBody) // also FEMALE #1
             const json = await res.json() as { error: { code: string } }
 
             expect(res.status).toBe(400)
             expect(json.error.code).toBe("CONTESTANT_CANDIDATE_NUMBER_DUPLICATE")
         })
 
-        it("should not create a contestant when candidate number is duplicate", async () => {
+        it("should not create a contestant when candidate number is duplicate within the same gender", async () => {
             await seedContestant({
                 candidateNumber: 1,
                 name: "Existing Contestant",
@@ -559,10 +576,33 @@ describe("Add Contestant Integration Test", () => {
             })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
-            await postAddContestant(cookieHeader, csrfToken, validBody)
+            await postAddContestant(cookieHeader, csrfToken, validBody) // also FEMALE #1
 
             const contestantCount = await prisma.contestant.count()
             expect(contestantCount).toBe(1)
+        })
+
+        it("should allow adding a contestant with the same candidate number when gender differs", async () => {
+            await seedContestant({
+                candidateNumber: 1,
+                name: "Existing Female Contestant",
+                gender: "FEMALE",
+                teamName: "Team A",
+                teamColor: "Red",
+            })
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAddContestant(cookieHeader, csrfToken, {
+                candidateNumber: "1",
+                name: "Santos, John",
+                gender: "MALE",
+                teamName: "Blue Team",
+                teamColor: "Blue",
+            })
+
+            expect(res.status).toBe(201)
+            const contestantCount = await prisma.contestant.count()
+            expect(contestantCount).toBe(2)
         })
     })
 })

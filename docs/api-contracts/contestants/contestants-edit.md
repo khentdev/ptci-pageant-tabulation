@@ -184,7 +184,7 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 | `400` | `CONTESTANT_ID_INVALID` | Contestant ID must be a positive whole number. | Backend API layer only. Do not handle in frontend. |
 | `400` | `CONTESTANT_CANDIDATE_NUMBER_REQUIRED` | Candidate number is required. | |
 | `400` | `CONTESTANT_CANDIDATE_NUMBER_INVALID` | Candidate number must be a positive whole number. | Backend API layer only. Do not handle in frontend. |
-| `400` | `CONTESTANT_CANDIDATE_NUMBER_DUPLICATE` | Candidate number is already in use. | |
+| `400` | `CONTESTANT_CANDIDATE_NUMBER_DUPLICATE` | Candidate number is already in use. | Scoped per gender — the same number is allowed for `MALE` and `FEMALE` contestants. |
 | `400` | `CONTESTANT_NAME_REQUIRED` | Contestant name is required. | |
 | `400` | `CONTESTANT_GENDER_REQUIRED` | Gender is required. | |
 | `400` | `CONTESTANT_GENDER_INVALID` | Gender must be Male or Female. | |
