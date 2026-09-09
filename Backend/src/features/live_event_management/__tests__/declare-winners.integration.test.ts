@@ -551,6 +551,105 @@ describe("Declare Winners Integration Test", () => {
         })
     })
 
+    describe("gender-based declare winners", () => {
+        const seedGenderScoredFinalist = async (
+            top3: { id: number },
+            category: { id: number },
+            judgeOne: { id: number },
+            judgeTwo: { id: number },
+            gender: "MALE" | "FEMALE",
+            candidateNumber: number,
+            value: number,
+        ) => {
+            const contestant = await seedContestant({ candidateNumber, name: `${gender} ${candidateNumber}`, gender })
+            await seedRoundContestant(top3.id, contestant.id)
+            const field = await seedCriteriaField(category.id, "Score", 100)
+            for (const judge of [judgeOne, judgeTwo]) {
+                await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+            }
+            return contestant
+        }
+
+        it("should declare two independent placement sequences, one per gender", async () => {
+            const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 2 })
+            const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+            const female1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5000, 95)
+            const female2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5001, 80)
+            const male1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5100, 90)
+            const male2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5101, 75)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            expect(res.status).toBe(201)
+
+            const roundWinners = await prisma.roundWinner.findMany({
+                where: { roundId: top3.id },
+                orderBy: [{ gender: "asc" }, { placement: "asc" }],
+            })
+
+            expect(roundWinners).toHaveLength(4)
+            expect(roundWinners).toContainEqual(expect.objectContaining({ contestantId: female1.id, gender: "FEMALE", placement: 1 }))
+            expect(roundWinners).toContainEqual(expect.objectContaining({ contestantId: female2.id, gender: "FEMALE", placement: 2 }))
+            expect(roundWinners).toContainEqual(expect.objectContaining({ contestantId: male1.id, gender: "MALE", placement: 1 }))
+            expect(roundWinners).toContainEqual(expect.objectContaining({ contestantId: male2.id, gender: "MALE", placement: 2 }))
+        })
+
+        it("should resolve simultaneous ties in both genders when one pick per gender is provided", async () => {
+            const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 1 })
+            const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+            const female1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5200, 90)
+            const female2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5201, 90)
+            const male1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5300, 85)
+            const male2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5301, 85)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const before = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
+            expect(before.data.advancement.hasTie).toBe(true)
+            expect(before.data.advancement.requiredSelections).toBe(2)
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                selectedContestantIds: [female1.id, male1.id],
+            })
+            expect(res.status).toBe(201)
+
+            const roundWinners = await prisma.roundWinner.findMany({ where: { roundId: top3.id } })
+            expect(roundWinners).toHaveLength(2)
+            const winnerIds = roundWinners.map((row) => row.contestantId)
+            expect(winnerIds).toContain(female1.id)
+            expect(winnerIds).toContain(male1.id)
+            expect(winnerIds).not.toContain(female2.id)
+            expect(winnerIds).not.toContain(male2.id)
+        })
+
+        it("should reject a declare where both picks come from the same gender's tie", async () => {
+            const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 1 })
+            const category = await seedCategory({ name: "Swimwear", roundId: top3.id })
+            const judgeOne = await seedUser(TEST_JUDGE_ONE)
+            const judgeTwo = await seedUser(TEST_JUDGE_TWO)
+
+            const female1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5400, 90)
+            const female2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "FEMALE", 5401, 90)
+            await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5500, 85)
+            await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5501, 85)
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
+                selectedContestantIds: [female1.id, female2.id],
+            })
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("DECLARE_WINNER_COUNT_MISMATCH")
+        })
+    })
+
     describe("not found", () => {
         it("should return 404 when round does not exist", async () => {
             const { cookieHeader, csrfToken } = await seedAdminCredentials()

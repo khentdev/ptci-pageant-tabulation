@@ -4,7 +4,7 @@
       <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
         <th class="px-4 text-nowrap">Name</th>
         <th class="px-4 text-nowrap">Phase Order</th>
-        <th class="px-4 text-nowrap">Contestant Limit</th>
+        <th class="px-4 text-nowrap">Contestant Limit (per gender)</th>
         <th class="px-4">Action</th>
       </tr>
     </thead>

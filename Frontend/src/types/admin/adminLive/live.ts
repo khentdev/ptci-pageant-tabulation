@@ -52,6 +52,7 @@ type RankingRow = {
     id: number;
     candidateNumber: number;
     name: string;
+    gender: 'MALE' | 'FEMALE';
   };
   categories: RankingCategoryScore[];
   overallScore: number | null;
@@ -60,6 +61,7 @@ type RankingRow = {
 type AdvancementContestant = {
   id: number;
   name: string;
+  gender: 'MALE' | 'FEMALE';
   overallScore: number;
 };
 export type GetRoundResultsDTO = {
@@ -132,6 +134,7 @@ export type DeclaredWinnerRow = {
     id: number;
     candidateNumber: number;
     name: string;
+    gender: 'MALE' | 'FEMALE';
   };
   overallScore: number;
 };

@@ -6,6 +6,8 @@ Admin only.
 
 Confirms advancement for the current round — inserts advancing contestants into the **next** round's `round_contestants`. Does not return rankings; refetch [[live-event/live-round-results]] after success.
 
+**Advancement runs independently per gender** against the same `nextRound.contestantLimit` (e.g. a limit of 5 advances up to 5 females and up to 5 males). A tie can exist in one gender only, both genders at once, or neither — `selectedContestantIds` is still one flat array covering picks from whichever gender(s) have a tie; the backend partitions it by gender internally and validates each gender's pick count independently.
+
 **Related docs:** [[live-event/live-round-results]] (rankings preview and flags) · [[live-event/live-judge-submissions]] · [[live-event/live-results-sidebar]] · [[Wireframe & Flows]] §6 · [[System Documentation]] §3.2
 
 ## Consumers
@@ -53,8 +55,8 @@ Optional. Omit body or send `{}` when there is no tie.
 | Case | Body | Notes |
 |------|------|-------|
 | No tie | Omit or `{}` | Backend uses `advancement.included` from a fresh `canAdvance` check. Do **not** send `selectedContestantIds` |
-| Tie at cutoff | `AdvanceRoundRequestBody` | IDs from `advancement.tied` only. Length must equal `advancement.requiredSelections`. Merged with `advancement.included` |
-| Eligible ≤ limit | Omit or `{}` | May advance fewer than `nextRound.contestantLimit` when fewer contestants have scores |
+| Tie at cutoff (one or both genders) | `AdvanceRoundRequestBody` | IDs from `advancement.tied` only, combined across whichever gender(s) have a tie. Length must equal `advancement.requiredSelections` (both genders' required counts summed), and each gender's own share of picks must match that gender's own required count. Merged with `advancement.included` |
+| Eligible ≤ limit | Omit or `{}` | May advance fewer than `nextRound.contestantLimit` **per gender** when fewer contestants of that gender have scores |
 
 ```json
 {
@@ -103,8 +105,8 @@ No `data` field. Refetch `GET /live-event/round-results/:id/advancement` to see 
 | Re-validation | Backend re-runs `getRoundResultsInTx` and rejects when `canAdvance` is `false` |
 | Write target | Inserts into **next** round (`nextRound.id`), not the current round |
 | No tie | `advancingContestantIds = advancement.included` |
-| Tie | `advancingContestantIds = advancement.included + selectedContestantIds`; total must equal `nextRound.contestantLimit` |
-| Eligible ≤ limit | `included` may be shorter than N — valid advance with fewer rows |
+| Tie | `advancingContestantIds = advancement.included + selectedContestantIds`, resolved per gender: each gender's own included + its own share of `selectedContestantIds` must equal `nextRound.contestantLimit` for that gender — a `400 SELECTED_CONTESTANT_IDS_COUNT_INVALID`/`ADVANCE_CONTESTANT_COUNT_MISMATCH` is returned if picks are misallocated across genders (e.g. both extra picks taken from one gender's tie while the other gender's tie is left unresolved) |
+| Eligible ≤ limit | `included` may be shorter than N **per gender** — valid advance with fewer rows |
 | Idempotency | Second advance on same round → `ADVANCE_NOT_ALLOWED` (`ROUND_COMPLETED` or `NEXT_ROUND_ALREADY_FILLED`) |
 | Rankings | Not returned — use GET round results after success |
 
@@ -130,7 +132,7 @@ When `canAdvance` is `false` on GET, `canAdvanceReason` uses the same codes (exc
 | When to POST | Advance button click only — never on mount or poll |
 | Enable gate | `canAdvance === true`; if `advancement.hasTie`, also require selection count === `requiredSelections` |
 | No-tie body | Empty body or `{}` — do not send `selectedContestantIds` |
-| Tie body | `{ selectedContestantIds }` from checked rows in `advancement.tied` |
+| Tie body | `{ selectedContestantIds }` from checked rows in `advancement.tied`, combined across both gender tie panels into one array |
 | After success | Refetch GET round results (and optionally judge submissions); clear local tie selection |
 | Button hidden | When `isCompleted === true` |
 
@@ -159,7 +161,7 @@ See [[global/errors]] for shared codes (`FORBIDDEN`, etc.).
 | `400` | `SELECTED_CONTESTANT_IDS_REQUIRED` | Selected contestant IDs are required to resolve a tie. | Tie case with missing/empty selection |
 | `400` | `SELECTED_CONTESTANT_IDS_COUNT_INVALID` | Selected contestant count does not match the required tie selections. | Length ≠ `requiredSelections` |
 | `400` | `SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP` | One or more selected contestants are not in the tied group. | ID not in `advancement.tied` |
-| `400` | `ADVANCE_CONTESTANT_COUNT_MISMATCH` | Advancing contestant count does not match the next round limit. | Merged count ≠ `contestantLimit` (tie path) |
+| `400` | `ADVANCE_CONTESTANT_COUNT_MISMATCH` | Advancing contestant count does not match the next round limit. | One gender's merged count ≠ `contestantLimit` for that gender (tie path) — usually means picks weren't distributed correctly across the two genders' ties |
 | `403` | `FORBIDDEN` | *(shared)* | Non-admin session |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | Round `id` does not exist |
 | `409` | `ADVANCE_NOT_ALLOWED` | Round cannot be advanced at this time. | `data.reason` — see table above |

@@ -47,7 +47,7 @@
       </div>
 
       <div v-if="roundStore.roundId?.phaseOrder !== 1" class="flex flex-col">
-        <p>Contestant Limit</p>
+        <p>Contestant Limit (per gender)</p>
         <input
           :value="newRoundLimit"
           @input="onLimitInput"
@@ -58,6 +58,9 @@
           id="contestantLimit"
           class="h-10 w-full border border-black px-3 read-only:cursor-not-allowed read-only:bg-gray-300"
         />
+        <p class="mt-1 text-xs text-black/60">
+          Applies separately to each gender — e.g. 5 advances up to 5 females and up to 5 males.
+        </p>
         <div v-if="roundStore.formErrors.roundLimit" class="mt-1 flex w-full items-start gap-1">
           <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18"></CircleAlert>
           <p class="text-sm text-red-500">

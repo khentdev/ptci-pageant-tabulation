@@ -823,6 +823,108 @@ describe("Get Round Results Integration Test", () => {
         })
     })
 
+    describe("gender-based advancement", () => {
+        it("should advance top N per gender instead of top N overall (males are not squeezed out by higher-scoring females)", async () => {
+            const { prelims, top5 } = await seedPreliminaryWithTop5()
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+
+            const femaleScores = [100, 99, 98, 97, 96]
+            const females = []
+            for (const [index, value] of femaleScores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 2000 + index, name: `Female ${index}`, gender: "FEMALE" })
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+                females.push(contestant)
+            }
+
+            const maleScores = [50, 40]
+            const males = []
+            for (const [index, value] of maleScores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 2100 + index, name: `Male ${index}`, gender: "MALE" })
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+                males.push(contestant)
+            }
+
+            // top5's contestantLimit is 5, but only 2 males exist at all — a
+            // global (gender-blind) top-5 cutoff would take the 5 highest
+            // scores and exclude every male. Per-gender, both males must
+            // still advance alongside the top females.
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, prelims.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.advancement.hasTie).toBe(false)
+            const includedIds = json.data.advancement.included.map((c) => c.id)
+            expect(includedIds).toEqual(expect.arrayContaining(males.map((m) => m.id)))
+            expect(includedIds).toEqual(expect.arrayContaining(females.map((f) => f.id)))
+            expect(json.data.advancement.included).toHaveLength(7)
+        })
+
+        it("should compute rank independently per gender (each gender restarts at 1)", async () => {
+            const round = await seedRound({ name: "Preliminary", phaseOrder: 1 })
+            const category = await seedCategory({ name: "Swimwear", roundId: round.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+
+            const female = await seedContestant({ candidateNumber: 3000, name: "Female Top", gender: "FEMALE" })
+            const male = await seedContestant({ candidateNumber: 3001, name: "Male Top", gender: "MALE" })
+            const fField = await seedCriteriaField(category.id, "Score", 100)
+            await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: female.id, criteriaFieldId: fField.id, value: 95 })
+            await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: male.id, criteriaFieldId: fField.id, value: 70 })
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, round.id)).json() as GetRoundResultsResponse
+
+            const femaleRow = json.data.rankings.find((r) => r.contestant.id === female.id)!
+            const maleRow = json.data.rankings.find((r) => r.contestant.id === male.id)!
+            expect(femaleRow.rank).toBe(1)
+            expect(maleRow.rank).toBe(1)
+        })
+
+        it("should surface a tie in only one gender while the other advances cleanly", async () => {
+            const { prelims, top5 } = await seedPreliminaryWithTop5()
+            const category = await seedCategory({ name: "Swimwear", roundId: prelims.id })
+            await seedCategory({ name: "Swimwear", roundId: top5.id })
+            const judge = await seedUser(TEST_JUDGE_ONE)
+
+            // 3 females competing for a limit of 2 -> tie at the cutoff.
+            const femaleScores = [90, 80, 80]
+            const females = []
+            for (const [index, value] of femaleScores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 2200 + index, name: `Tie Female ${index}`, gender: "FEMALE" })
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+                females.push(contestant)
+            }
+
+            // 2 males, clean top N with no tie.
+            const maleScores = [70, 60]
+            const males = []
+            for (const [index, value] of maleScores.entries()) {
+                const contestant = await seedContestant({ candidateNumber: 2300 + index, name: `Clean Male ${index}`, gender: "MALE" })
+                const field = await seedCriteriaField(category.id, "Score", 100)
+                await seedScore({ judgeId: judge.id, categoryId: category.id, contestantId: contestant.id, criteriaFieldId: field.id, value })
+                males.push(contestant)
+            }
+
+            await prisma.round.update({ where: { id: top5.id }, data: { contestantLimit: 2 } })
+
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const json = await (await getRoundResults(cookieHeader, csrfToken, prelims.id)).json() as GetRoundResultsResponse
+
+            expect(json.data.advancement.hasTie).toBe(true)
+            expect(json.data.advancement.requiredSelections).toBe(1)
+            expect(json.data.advancement.tied.map((c) => c.id).sort()).toEqual(
+                [females[1]!.id, females[2]!.id].sort(),
+            )
+            expect(json.data.advancement.tied.every((c) => c.gender === "FEMALE")).toBe(true)
+
+            const includedMaleIds = json.data.advancement.included.filter((c) => c.gender === "MALE").map((c) => c.id)
+            expect(includedMaleIds.sort()).toEqual(males.map((m) => m.id).sort())
+        })
+    })
+
     describe("declare winners", () => {
         it("should return canDeclareWinners true on final round when ready", async () => {
             const top3 = await seedRound({ name: "Top 3", phaseOrder: 3, contestantLimit: 3 })
