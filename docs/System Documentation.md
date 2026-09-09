@@ -99,7 +99,7 @@ Setup is completed **before** the pageant starts. Admin configures rounds, categ
 - The first round (phase_order = 1) always shows all contestants — no `RoundContestant` rows needed
 - First round (phase_order = 1) has contestant limit = `null` (unlimited — all contestants participate)
 - Subsequent rounds (Top 10, Top 5, Top 3, etc.) have a defined `contestant_limit`
-- The `contestant_limit` of a round determines how many contestants are advanced into it from the previous round
+- The `contestant_limit` of a round determines how many contestants of **each gender** are advanced into it from the previous round (e.g. `5` advances up to 5 females and up to 5 males — see §3.2)
 - **Next round** = the round with the lowest `phase_order` that is greater than the current round's `phase_order` (gaps in phase_order are allowed — e.g. 1, 5, 10 works the same as 1, 2, 3)
 - **Final round** = the round with the highest `phase_order` — shows "Declare Winners" instead of "Advance"
 - Can delete a round only if it has no categories and no scores — useful for fixing setup mistakes
@@ -219,6 +219,8 @@ Used **during** the actual pageant event. Separate view from Setup.
 - Tie detection at the advancement cutoff
 - Manual tie resolution UI on the same page
 
+**Advancement is gender-based, not overall.** Ranking, rank numbering, the cutoff, and tie detection are all computed **independently for males and females** against the same round `contestant_limit` — a limit of 5 advances the top 5 females and the top 5 males (up to 10 total), not the 5 highest scores regardless of gender. This prevents one gender's stronger scores from crowding the other out of the round entirely. A tie can surface in one gender only, both at once, or neither.
+
 **Score Calculation**
 
 ```
@@ -238,6 +240,7 @@ Used **during** the actual pageant event. Separate view from Setup.
 - Per category column: average across judges who have submitted that category; `—` if no judge has submitted that category yet for this round's contestants
 - Overall column: average of category columns that are not `—`; show `—` if no category has a value yet
 - Tie detection and advancement use rankings only when `allJudgesSubmitted` is `true` (full averages across all judges for every category in the round)
+- Rank numbering (the ranking column) restarts at 1 for each gender — it is not a single 1..N sequence across the whole round
 
 **Rankings contestant pool**
 
@@ -266,11 +269,11 @@ Frontend does not compute submission state, ties, or whether Advance is allowed.
 | `isCompleted`                    | `true` when the next round already has contestants in `round_contestants` (i.e. this round was already advanced). Page is read-only history (State 3). Frontend **hides** Advance button and tie-resolution panel |
 | `canAdvance`                     | `true` only when Advance is allowed (all conditions below met). When `false`, Advance stays hidden if `isCompleted` is `true`; otherwise disabled with helper from `canAdvanceReason`                             |
 | `canAdvanceReason`               | When `canAdvance` is `false`, optional code for disabled button helper text (e.g. `JUDGES_NOT_COMPLETE`, `CURRENT_ROUND_NO_CATEGORIES`, `NEXT_ROUND_ALREADY_FILLED`, `NEXT_ROUND_NO_CATEGORIES`, `ROUND_COMPLETED`)                              |
-| `advancement.hasTie`             | `true` only if a tie straddles the next round's cutoff — frontend shows tie-resolution panel below the full rankings table                                                                                        |
-| `advancement.requiredSelections` | How many tied contestants admin must pick (`N - A`). `0` if no tie                                                                                                                                                |
-| `advancement.included`           | Auto-included contestants: `id`, `name`, `overallScore`                                                                                                                                                           |
-| `advancement.tied`               | Tied contestants admin may pick: `id`, `name`, `overallScore`                                                                                                                                                     |
-| `nextRound`                      | `{ id, name, contestantLimit, categoryCount }`. `null` on the final round                                                                                                                                         |
+| `advancement.hasTie`             | `true` only if a tie straddles the cutoff **in either gender** — frontend shows tie-resolution panel(s) below the full rankings table                                                                            |
+| `advancement.requiredSelections` | Total tied contestants admin must pick across both genders (`N - A` per gender, summed). `0` if neither gender has a tie                                                                                          |
+| `advancement.included`           | Auto-included contestants, both genders combined: `id`, `name`, `gender`, `overallScore`                                                                                                                          |
+| `advancement.tied`               | Tied contestants admin may pick, both genders combined: `id`, `name`, `gender`, `overallScore` — filter by `gender` to separate the two tie groups                                                               |
+| `nextRound`                      | `{ id, name, contestantLimit, categoryCount }`. `null` on the final round. `contestantLimit` is applied **per gender**                                                                                            |
 
 `canAdvance` is `true` only when all of the following hold:
 
@@ -285,9 +288,10 @@ Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCo
 
 **Tie comparison**
 
-- Two contestants are tied when their `overallScore` matches after rounding to **2 decimal places**
-- Only a tie that **straddles the cutoff** (not enough spots for all tied contestants) triggers the tie UI
+- Two contestants of the **same gender** are tied when their `overallScore` matches after rounding to **2 decimal places** — ties are never compared across genders
+- Only a tie that **straddles the cutoff** (not enough spots for all tied contestants of that gender) triggers the tie UI
 - Ties entirely above or below the cutoff do not require admin action
+- A tie in one gender does not block or delay the other gender's clean advancement
 
 **Advance API**
 
@@ -295,10 +299,10 @@ Tie / included lists are only sent when `allJudgesSubmitted` is `true` and `isCo
 
 | Case | Request body | Backend behavior |
 | --- | --- | --- |
-| No tie | No body (or empty) | Backend takes contestants from `advancement.included` (top N by ranking, or all eligible when fewer than N have scores) |
-| Tie at cutoff | `{ selectedContestantIds: number[] }` — IDs from `advancement.tied` only | Backend merges `advancement.included` + `selectedContestantIds`; validates count === `nextRound.contestantLimit` |
+| No tie | No body (or empty) | Backend takes contestants from `advancement.included` (top N by ranking per gender, or all eligible when fewer than N of that gender have scores) |
+| Tie at cutoff (one or both genders) | `{ selectedContestantIds: number[] }` — IDs from `advancement.tied` only, combined across whichever gender(s) have a tie | Backend merges `advancement.included` + `selectedContestantIds` **per gender**; validates each gender's count === `nextRound.contestantLimit` for that gender |
 
-Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend keeps tie checkbox selection in local state until Advance succeeds (no auto-polling to reset it).
+Backend re-validates tie rules and `canAdvance` conditions on submit, checking each gender's pick count independently — an admin cannot satisfy the total required-selections count by taking every extra pick from one gender's tie while leaving the other gender's tie unresolved. Frontend keeps tie checkbox selection in local state (one array covering both gender panels) until Advance succeeds (no auto-polling to reset it).
 
 **Business Rules**
 
@@ -308,37 +312,37 @@ Backend re-validates tie rules and `canAdvance` conditions on submit. Frontend k
 - When `isCompleted` is `true`, hide Advance button and tie-resolution panel entirely (State 3)
 - If `allJudgesSubmitted` is `false`, Advance stays disabled (or hidden until all judges submit — same as State 1)
 - Advance is rejected if the next round has no categories — admin must add categories in Setup first
-- System determines how many to advance by reading the **next round's `contestant_limit`**
-- When fewer contestants have scores than the limit, advancement may include fewer than N — all eligible scored contestants advance
-- Contestants ranked above the cutoff are auto-advanced; no admin selection needed
-- A tie only requires admin resolution when it **straddles the cutoff line** — meaning some tied contestants fall above the cutoff and some below (not enough spots for all tied contestants)
+- System determines how many of each gender to advance by reading the **next round's `contestant_limit`**, applied once per gender
+- When fewer contestants of a gender have scores than the limit, that gender's advancement may include fewer than N — all its eligible scored contestants advance (this is independent of the other gender)
+- Contestants ranked above the cutoff **within their own gender** are auto-advanced; no admin selection needed
+- A tie only requires admin resolution when it **straddles the cutoff line within a gender** — meaning some tied contestants of that gender fall above the cutoff and some below (not enough spots for all tied contestants of that gender)
 - A tie where all tied contestants are above the cutoff → all advance automatically, no issue
 - A tie where all tied contestants are below the cutoff → none advance, no issue
-- Only a tie that crosses the cutoff boundary triggers the manual tie resolution UI
+- Only a tie that crosses the cutoff boundary triggers the manual tie resolution UI — a tie in one gender never affects the other gender's advancement
 - After advancing, the previous round's results remain permanently visible in Round Results for history and verification
 
-**Advancement Logic**
+**Advancement Logic (run once per gender, then combined)**
 
 ```
-Next round limit = N
-Contestants clearly above cutoff = A        (A < N, no tie concerns)
-Tied contestants straddling the cutoff = T  (A + T > N)
-Admin must pick exactly (N - A) from the T tied contestants
+Per-gender limit = N               (same N applied to females and to males independently)
+Contestants of that gender clearly above cutoff = A        (A < N, no tie concerns)
+Tied contestants of that gender straddling the cutoff = T  (A + T > N)
+Admin must pick exactly (N - A) from that gender's T tied contestants
 ```
 
-**No Tie case:**
-- All top N contestants are clearly ranked → Advance button is immediately enabled → one click advances all
+**No Tie case (both genders clean):**
+- All top N contestants of each gender are clearly ranked → Advance button is immediately enabled → one click advances all
 
-**Tie case:**
-- Full rankings table (all category columns) remains visible — same as the no-tie view
-- When `advancement.hasTie` is `true`, a tie-resolution panel appears **below** the rankings table
-- Panel shows "Included" (from `advancement.included`) and "Tie — select X more" (checkboxes from `advancement.tied`)
-- Admin checks the required number of tied contestants to fill remaining spots
-- Remaining checkbox count = `N - A` (system always shows exactly how many are needed)
-- Unneeded checkboxes in the tied group are disabled once the required count is reached (prevents over-selection)
-- Advance button is disabled until: `auto-included + tied selections === N`
-- No separate "Save" step — selection state lives on the page; when count matches, button unlocks
-- One click on the enabled Advance button advances all (auto-included + selected tied) to the next round
+**Tie case (one or both genders):**
+- Full rankings table (all category columns) remains visible — same as the no-tie view, typically grouped/labeled by gender
+- When `advancement.hasTie` is `true`, a tie-resolution panel appears **below** the rankings table for each gender that has a tie (a tie in only one gender shows only that gender's panel)
+- Each panel shows "Included" (from `advancement.included`, filtered to that gender) and "Tie — select X more" (checkboxes from `advancement.tied`, filtered to that gender)
+- Admin checks the required number of tied contestants **in each affected gender's panel** to fill that gender's remaining spots
+- Remaining checkbox count per panel = `N - A` for that gender (system always shows exactly how many are needed)
+- Unneeded checkboxes in a tied group are disabled once that group's required count is reached (prevents over-selection)
+- Advance button is disabled until every affected gender satisfies: `auto-included + tied selections === N` for that gender
+- No separate "Save" step — selection state lives on the page as one combined array; when every gender's count matches, button unlocks
+- One click on the enabled Advance button advances all (auto-included + selected tied, both genders) to the next round
 
 **On confirmation:**
 1. All advancing contestants inserted into `round_contestants` for the next round
@@ -353,20 +357,21 @@ Admin must pick exactly (N - A) from the T tied contestants
 
 - Final round results view shows final rankings
 - Declare Winners button locks all results
-- Displays 1st Place, 2nd Place, 3rd Place prominently
+- Displays 1st Place, 2nd Place, 3rd Place prominently, **per gender** (a Ms. podium and a Mr. podium)
 
 **Business Rules**
 
 - The round with the highest `phase_order` is treated as the final round — no "Advance" button, only "Declare Winners"
-- Declaring winners sets `winners_declared_at` on that round and inserts `RoundWinner` rows in the same transaction — lock plus official podium snapshot (`placement`, `contestantId`, `overallScore`)
-- Official declared podium (placement + score snapshot) is stored in `RoundWinner` rows at declare time — sorted by score then `candidateNumber` at write; separate from score-based `rankings` on the round results page
-- Read path: `GET /live-event/round-results/:id/declared-winners` returns `declaredWinners` from `RoundWinner` when `winners_declared_at` is set; `null` when not declared — frontend shows podium on the same Round Results page (`/admin/live/results/:roundId`), not a separate route
+- Declaring winners sets `winners_declared_at` on that round and inserts `RoundWinner` rows in the same transaction — lock plus official podium snapshot (`placement`, `gender`, `contestantId`, `overallScore`)
+- **Placement is per gender**: sorting, ranking, and `placement` numbering (1..N) are computed independently for females and males, so a female and a male can both be declared placement 1 in the same round. `RoundWinner`'s primary key is `(roundId, gender, placement)`
+- Official declared podium (placement + score snapshot) is stored in `RoundWinner` rows at declare time — sorted by gender then score then `candidateNumber` at write; separate from score-based `rankings` on the round results page
+- Read path: `GET /live-event/round-results/:id/declared-winners` returns `declaredWinners` from `RoundWinner` when `winners_declared_at` is set; `null` when not declared — frontend shows two podiums (grouped by `gender`) on the same Round Results page (`/admin/live/results/:roundId`), not a separate route
 - Once `winners_declared_at` is set: the Declare button is hidden, the page shows the official winners display (from declared-winners GET), and no further changes are possible
 - Declaring winners is irreversible — no undo
-- The final round's roster is already fixed by the time it's reached: `advanceRound` always caps the number of contestants entering a round at that round's own `contestant_limit`, so the final round can never hold more contestants than its `contestant_limit`. A cutoff tie for the last qualifying spot is resolved one round earlier, during Advance into the final round — not at Declare Winners
-- Declare Winners therefore only ranks and locks the fixed final-round roster; a tie among finalists affects medal *order* only, broken by `candidateNumber` ascending (same as the rankings tiebreak), not who is included
-- The API still exposes the same cutoff-tie shape (`advancement.hasTie`, `included`, `tied`) on the final round's results GET for structural consistency with Advance, and `canDeclareWinners` is `false` while `advancement.hasTie` is `true` — but given the roster cap above, this condition is not reachable through normal play; it is defensive, not a flow admins should expect to hit
-- `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus cutoff tie must be resolved via local selection and POST body when `advancement.hasTie` is `true` — GET returns `canDeclareWinners: false` while a cutoff tie exists
+- The final round's roster is already fixed by the time it's reached: `advanceRound` always caps the number of contestants of each gender entering a round at that round's own `contestant_limit` for that gender, so the final round can never hold more of either gender than its `contestant_limit`. A cutoff tie for the last qualifying spot in a gender is resolved one round earlier, during Advance into the final round — not at Declare Winners
+- Declare Winners therefore only ranks and locks the fixed final-round roster; a tie among finalists of the same gender affects medal *order* only, broken by `candidateNumber` ascending (same as the rankings tiebreak), not who is included
+- The API still exposes the same cutoff-tie shape (`advancement.hasTie`, `included`, `tied`, all gender-tagged) on the final round's results GET for structural consistency with Advance, and `canDeclareWinners` is `false` while `advancement.hasTie` is `true` for either gender — but given the roster cap above, this condition is not reachable through normal play; it is defensive, not a flow admins should expect to hit
+- `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus any cutoff tie (either gender) must be resolved via local selection and POST body when `advancement.hasTie` is `true` — GET returns `canDeclareWinners: false` while a cutoff tie exists in either gender
 - Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display; podium rows come from [[live-event/live-round-declared-winners]] after declare
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
 

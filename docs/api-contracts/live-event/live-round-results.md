@@ -6,6 +6,8 @@ Admin only.
 
 Returns **rankings**, advancement preview, and round-state flags for one round. Used for the Rankings section, Advance button, tie-resolution panel, and Declare Winners on the Admin Live Event → Round Results page.
 
+**Advancement is computed independently per gender.** `rankings`, `advancement.included`, and `advancement.tied` are flat arrays covering both genders together, but rank numbering, the cutoff, and tie detection all restart per gender — a round's `contestantLimit` is applied once to females and once to males, not to the combined pool. See "Rule" table below and [[System Documentation]] §3.2.
+
 **Read-only.** Confirming advancement is a separate POST — see [[live-event/live-round-advance]] (`POST /live-event/round-results/:id/advancement`). Declaring winners on the final round is [[live-event/live-round-declare-winners]] (`POST /live-event/round-results/:id/declare-winners`). Official podium after declare is [[live-event/live-round-declared-winners]] (`GET /live-event/round-results/:id/declared-winners`).
 
 **Does not include** `judgeSubmissions` or `declaredWinners` — fetch judge matrix via [[live-event/live-judge-submissions]] (`GET /live-event/round-results/:id`); fetch podium via [[live-event/live-round-declared-winners]] when `winnersDeclaredAt` is set.
@@ -61,7 +63,8 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
         "contestant": {
           "id": 1,
           "candidateNumber": 101,
-          "name": "Keanna"
+          "name": "Keanna",
+          "gender": "FEMALE"
         },
         "categories": [
           {
@@ -105,7 +108,7 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | Field                                 | Type                       | Notes                                                                                                                                                                     |
 | ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `data`                                | `GetRoundResultsDTO`       | Rankings and round-state flags for the requested round                                                                                                                    |
-| `data.rankings`                       | `RankingRow[]`             | One row per contestant in the round's contestant pool. Sorted by `overallScore` descending; `null` overall scores last; ties broken by `candidateNumber` ascending        |
+| `data.rankings`                       | `RankingRow[]`             | One row per contestant in the round's contestant pool. Grouped by gender (FEMALE rows first, then MALE — matching the judge-scoring contestant list), each group sorted by `overallScore` descending with `null` overall scores last and ties broken by `candidateNumber` ascending        |
 | `data.allJudgesSubmitted`             | `boolean`                  | `true` when every judge has submitted every category in this round. `false` when zero judges. Vacuously `true` when the round has zero categories but judges exist        |
 | `data.isCompleted`                    | `boolean`                  | `true` when the next round already has rows in `round_contestants` (this round was advanced). Page is read-only history (Wireframe State 3)                               |
 | `data.canAdvance`                     | `boolean`                  | `true` only when Advance is allowed. `canAdvance` may be `true` while `advancement.hasTie` is `true` — frontend disables Advance until tie selections match               |
@@ -114,10 +117,10 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | `data.winnersDeclaredAt`              | `string \| null`           | ISO timestamp when winners were declared on the final round; `null` otherwise                                                                                             |
 | `data.nextRound`                      | `NextRoundSummary \| null` | Next round metadata. `null` on the final round                                                                                                                            |
 | `data.advancement`                    | `AdvancementPreview`       | Advancement preview — populated only when `allJudgesSubmitted` is `true`, `isCompleted` is `false`, current round has categories, and a positive advancement limit exists |
-| `data.advancement.hasTie`             | `boolean`                  | `true` when tied contestants straddle the cutoff (Wireframe State 2b)                                                                                                     |
-| `data.advancement.requiredSelections` | `number`                   | How many tied contestants admin must pick (`N - included.length`). `0` when no tie                                                                                        |
-| `data.advancement.included`         | `AdvancementContestant[]`  | Contestants above the cutoff who advance automatically                                                                                                                    |
-| `data.advancement.tied`             | `AdvancementContestant[]`  | Tied contestants at the cutoff for admin selection                                                                                                                        |
+| `data.advancement.hasTie`             | `boolean`                  | `true` when either gender has tied contestants straddling its cutoff (Wireframe State 2b)                                                                                 |
+| `data.advancement.requiredSelections` | `number`                   | Total tied contestants admin must pick across both genders (sum of each gender's `N - included.length`). `0` when no tie                                                 |
+| `data.advancement.included`         | `AdvancementContestant[]`  | Contestants above the cutoff who advance automatically — computed per gender, then combined into one array                                                                |
+| `data.advancement.tied`             | `AdvancementContestant[]`  | Tied contestants at the cutoff for admin selection — may contain one gender's tie, the other's, or both at once; each entry's `gender` says which group it belongs to    |
 | `message`                             | `string`                   | Success message                                                                                                                                                           |
 
 ### Types
@@ -147,11 +150,12 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 
 **`RankingContestant`**
 
-| Field              | Type     | Notes |
-| ------------------ | -------- | ----- |
-| `id`               | `number` | Contestant ID |
-| `candidateNumber`  | `number` | Display number |
-| `name`             | `string` | Display name |
+| Field              | Type                 | Notes |
+| ------------------ | -------------------- | ----- |
+| `id`               | `number`             | Contestant ID |
+| `candidateNumber`  | `number`             | Display number |
+| `name`             | `string`             | Display name |
+| `gender`           | `"MALE" \| "FEMALE"` | Which per-gender ranking/advancement group this row belongs to |
 
 **`RankingCategoryScore`**
 
@@ -167,25 +171,28 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | ------------------- | ------------------ | ----- |
 | `id`                | `number`           | Next round ID |
 | `name`              | `string`           | Next round name (Advance button label) |
-| `contestantLimit`   | `number \| null`   | How many contestants advance into the next round |
+| `contestantLimit`   | `number \| null`   | How many contestants advance into the next round **per gender** (e.g. `5` advances up to 5 females and up to 5 males — up to 10 total) |
 | `categoryCount`     | `number`           | Number of categories configured on the next round |
 
 **`AdvancementPreview`**
 
+Cutoff and tie detection run independently per gender against the same `contestantLimit`, then the two groups' results are combined into these flat arrays/flags.
+
 | Field                 | Type                      | Notes |
 | --------------------- | ------------------------- | ----- |
-| `hasTie`              | `boolean`                 | `true` when tied contestants straddle the cutoff |
-| `requiredSelections`  | `number`                  | How many tied contestants admin must pick (`N - included.length`). `0` when no tie |
-| `included`            | `AdvancementContestant[]` | Contestants above the cutoff who advance automatically |
-| `tied`                | `AdvancementContestant[]` | Tied contestants at the cutoff for admin selection |
+| `hasTie`              | `boolean`                 | `true` when either gender's tied contestants straddle its cutoff |
+| `requiredSelections`  | `number`                  | Sum of each gender's `N - included.length`. `0` when neither gender has a tie |
+| `included`            | `AdvancementContestant[]` | Contestants above the cutoff who advance automatically, both genders combined |
+| `tied`                | `AdvancementContestant[]` | Tied contestants for admin selection, both genders combined — filter by `gender` to render separate tie panels |
 
 **`AdvancementContestant`**
 
-| Field            | Type     | Notes |
-| ---------------- | -------- | ----- |
-| `id`             | `number` | Contestant ID |
-| `name`           | `string` | Contestant name |
-| `overallScore`   | `number` | Overall score (2 dp) |
+| Field            | Type                 | Notes |
+| ---------------- | -------------------- | ----- |
+| `id`             | `number`             | Contestant ID |
+| `name`           | `string`             | Contestant name |
+| `gender`         | `"MALE" \| "FEMALE"` | Which gender's cutoff this contestant was evaluated against |
+| `overallScore`   | `number`             | Overall score (2 dp) |
 
 **`CanAdvanceReason`**
 
@@ -198,7 +205,8 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 | Contestant pool — Preliminary (`phaseOrder = 1`) | All contestants |
 | Contestant pool — Top N (`phaseOrder > 1`) | Only `round_contestants` for that round |
 | Score math | Sum criteria fields per judge per category → average across judges per category → average across categories → overall |
-| Sort / rank | Higher `overallScore` ranks first; tie on overall breaks by `candidateNumber` ascending; `null` overall → `rank: null`, sorted last |
+| Sort / rank | Computed **per gender**: higher `overallScore` ranks first within that gender; tie on overall breaks by `candidateNumber` ascending; `null` overall → `rank: null`, sorted last. `rank` restarts at 1 for each gender |
+| Advancement cutoff | Computed **per gender** against the same `contestantLimit` — e.g. a limit of 5 advances the top 5 females and the top 5 males independently, not the top 5 overall |
 
 ### `canAdvanceReason` codes
 
@@ -221,14 +229,18 @@ Fetch alongside [[live-event/live-judge-submissions]] on mount / refresh / round
 
 ### Advancement preview
 
-| Case                     | `advancement` shape                                                                                                  |
+Each case below is evaluated **once per gender** (against the same `contestantLimit`), then both genders' `included`/`tied` are concatenated into the flat arrays on the response.
+
+| Case                     | Per-gender `advancement` contribution                                                                                  |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | Judges still scoring     | `hasTie: false`, `included: []`, `tied: []`                                                                          |
 | Round completed          | Empty advancement (same as above)                                                                                    |
-| All judges done, no tie  | `included` = top N by overall; `hasTie: false`                                                                       |
-| Eligible ≤ limit         | All scored contestants in `included`; no tie                                                                         |
-| Tie at cutoff (State 2b) | `hasTie: true`, `requiredSelections = N - included.length`, `included` = above cutoff, `tied` = same score at cutoff |
-| Tie below cutoff only    | `hasTie: false` — tied group does not straddle the line                                                              |
+| All judges done, no tie  | `included` = that gender's top N by overall; `hasTie: false`                                                                       |
+| Eligible ≤ limit         | All of that gender's scored contestants in `included`; no tie                                                                         |
+| Tie at cutoff (State 2b) | `hasTie: true`, that gender's `requiredSelections = N - included.length`, `included` = above cutoff, `tied` = same score at cutoff |
+| Tie below cutoff only    | `hasTie: false` for that gender — tied group does not straddle the line                                                              |
+
+A tie in only one gender still sets the overall `hasTie: true` and populates `tied` with just that gender's contestants — the other gender's contestants land in `included` with nothing required. Ties in both genders simultaneously populate `tied` with both groups at once (filter by `gender` to tell them apart), and `requiredSelections` is their sum.
 
 Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement write is [[live-event/live-round-advance]] — not covered here.
 
@@ -248,13 +260,14 @@ Tie comparison uses `overallScore` rounded to **2 decimal places**. Advancement 
 | Signal | Rule |
 |--------|------|
 | Ranking columns | `rankings[].categories[].name` — category `name` ascending |
+| Rankings grouping | Group `rankings` by `contestant.gender` client-side (or rely on the FEMALE-first/MALE-second server ordering) to render as two tables/sections — `rank` already restarts per gender |
 | Category cell | `avgScore` — number or `—` when `null` |
 | Overall cell | `overallScore` — number or `—` when `null` |
 | Rank cell | `rank` — number or `—` when `null` |
 | All submitted badge | Show when `allJudgesSubmitted === true` (Wireframe State 2+) |
 | Advance button | Hidden when `isCompleted`; enabled when `canAdvance`; disabled helper from `canAdvanceReason`. On click, POST [[live-event/live-round-advance]] |
 | Advance label | `Advance to ${nextRound.name}` when `nextRound` is set |
-| Tie panel | Show when `advancement.hasTie === true` |
+| Tie panel | Show when `advancement.hasTie === true`. Filter `advancement.tied` by `gender` to show one panel per affected gender (a tie may exist in only one gender) — combine both genders' checked selections into one `selectedContestantIds` array before posting |
 | Declare Winners | Final round only (`nextRound === null`). **No tie:** enabled when `canDeclareWinners === true`; POST [[live-event/live-round-declare-winners]] with empty body. **Tie:** `canDeclareWinners === false` — show disabled Declare + tie panel; enable locally when selection count === `requiredSelections`; POST with `{ selectedContestantIds }`. Hidden when `winnersDeclaredAt` is set |
 | Podium | When `winnersDeclaredAt` is set, show Declared Winners block from [[live-event/live-round-declared-winners]] — not `rankings[0..2]` |
 | Refetch | Page mount and manual browser refresh only — no auto-polling |

@@ -35,7 +35,7 @@ Admin only.
 | ----------------- | ----------------- | ----------- | ----------------------------------------------------------------------------------- |
 | `name`            | `string`          | Yes         | Non-empty after trim                                                                |
 | `phaseOrder`      | `number`          | Yes         | Positive whole number                                                               |
-| `contestantLimit` | `number \| null`  | Conditional | Optional for `phaseOrder = 1` (stored as unlimited). Required for `phaseOrder > 1`. |
+| `contestantLimit` | `number \| null`  | Conditional | Optional for `phaseOrder = 1` (stored as unlimited). Required for `phaseOrder > 1` — applied **per gender** by advancement/declare-winners (e.g. `5` advances up to 5 females and up to 5 males, not 5 total). |
 
 ## Response
 

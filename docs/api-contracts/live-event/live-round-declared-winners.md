@@ -6,6 +6,8 @@ Admin only.
 
 Returns the **official declared podium** for one round after POST [[live-event/live-round-declare-winners]]. Rows come from `RoundWinner` (`placement`, contestant identity, `overallScore` snapshot at declare time). Not score-based `rankings` from [[live-event/live-round-results]].
 
+**`declaredWinners` contains two independent placement sequences, one per gender** — group by `contestant.gender` to render separate Ms./Mr. podiums; do not assume `placement` is unique across the whole array (a female and a male can both be placement 1).
+
 **Related docs:** [[live-event/live-round-declare-winners]] (write) · [[live-event/live-round-results]] (`winnersDeclaredAt` gate) · [[live-event/live-judge-submissions]] · [[live-event/live-results-sidebar]] · [[Wireframe & Flows]] §6 · §11 · [[System Documentation]] §3.3
 
 ## Consumers
@@ -65,33 +67,38 @@ Fetch matrix with other Round Results GETs:
         "contestant": {
           "id": 1,
           "candidateNumber": 101,
-          "name": "Keanna"
+          "name": "Keanna",
+          "gender": "FEMALE"
         },
         "overallScore": 95
       },
       {
         "placement": 2,
         "contestant": {
-          "id": 2,
-          "candidateNumber": 102,
-          "name": "Roldan"
-        },
-        "overallScore": 88.5
-      },
-      {
-        "placement": 3,
-        "contestant": {
           "id": 3,
           "candidateNumber": 103,
-          "name": "Ethel"
+          "name": "Ethel",
+          "gender": "FEMALE"
         },
         "overallScore": 84
+      },
+      {
+        "placement": 1,
+        "contestant": {
+          "id": 2,
+          "candidateNumber": 102,
+          "name": "Roldan",
+          "gender": "MALE"
+        },
+        "overallScore": 88.5
       }
     ]
   },
   "message": "Declared winners fetched successfully"
 }
 ```
+
+Note `placement: 1` appears twice — once for the FEMALE podium (Keanna), once for the MALE podium (Roldan). Rows are ordered FEMALE group first (by `placement` ascending), then MALE group (by `placement` ascending).
 
 When winners are not declared (`winnersDeclaredAt` is `null` on the round):
 
@@ -107,7 +114,7 @@ When winners are not declared (`winnersDeclaredAt` is `null` on the round):
 | Field | Type | Notes |
 |-------|------|-------|
 | `data` | `GetDeclaredWinnersDTO` | Official podium payload |
-| `data.declaredWinners` | `DeclaredWinnerRow[] \| null` | `null` when `winnersDeclaredAt` is not set. Non-null array when declared (may be empty if timestamp set but no rows — edge case) |
+| `data.declaredWinners` | `DeclaredWinnerRow[] \| null` | `null` when `winnersDeclaredAt` is not set. Non-null array when declared (may be empty if timestamp set but no rows — edge case). Contains both genders' podiums; group by `contestant.gender` to render them separately |
 | `message` | `string` | Success message |
 
 ### Types
@@ -122,7 +129,7 @@ When winners are not declared (`winnersDeclaredAt` is `null` on the round):
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `placement` | `number` | Medal rank `1..N` assigned at declare time |
+| `placement` | `number` | Medal rank `1..N` **within `contestant.gender`**, assigned at declare time — not unique across the whole array |
 | `contestant` | `DeclaredWinnerContestant` | Contestant identity |
 | `overallScore` | `number` | Score snapshot at declare (2 decimal places) |
 
@@ -133,12 +140,13 @@ When winners are not declared (`winnersDeclaredAt` is `null` on the round):
 | `id` | `number` | Contestant ID |
 | `candidateNumber` | `number` | Display number |
 | `name` | `string` | Display name |
+| `gender` | `"MALE" \| "FEMALE"` | Which podium (placement sequence) this row belongs to |
 
 ## Business rules
 
 | Rule | Behavior |
 |------|----------|
-| Read source | `RoundWinner` rows for the round, ordered by `placement` ascending |
+| Read source | `RoundWinner` rows for the round, ordered by gender (FEMALE first) then `placement` ascending |
 | Not declared | `winnersDeclaredAt === null` → `declaredWinners: null` (any round, including non-final) |
 | Declared | `winnersDeclaredAt` set → array of rows (empty array if timestamp set but no `RoundWinner` rows) |
 | vs rankings | Podium names and 3rd place after tie resolution come from this endpoint — not `rankings[0..2]` or `rank` column |
@@ -151,7 +159,7 @@ When winners are not declared (`winnersDeclaredAt` is `null` on the round):
 
 | Signal | Rule |
 |--------|------|
-| Podium source | Bind 🥇 🥈 🥉 rows from `declaredWinners[]` — `placement`, `contestant.name`, `overallScore` |
+| Podium source | Group `declaredWinners[]` by `contestant.gender` first, then bind 🥇 🥈 🥉 rows within each group from `placement`, `contestant.name`, `overallScore` — two podiums, not one |
 | When to show | `declaredWinners !== null` (or `winnersDeclaredAt` from advancement GET) |
 | Before declare | No podium block; no declared-winners GET required while `winnersDeclaredAt` is `null` |
 | After declare | Replace Declare button with podium block; data from this GET, not rankings |

@@ -31,7 +31,17 @@ npm run seed:dev:tie
 npm run seed:all:tie
 ```
 
-Then open **Top 5** in Admin Live Results, resolve the tie panel (pick 1 of #103/#104/#105), click Advance, and score Top 3 via the judge UI to continue on to Declare Winners.
+Then open **Top 5** in Admin Live Results, resolve the tie panel (pick 1 of #103/#105), click Advance, and score Top 3 via the judge UI to continue on to Declare Winners.
+
+**Testing a tie in both genders at once:** use `:tie-both` instead — it adds #106 into Top 5's pool so MALE ties too (#104/#106 behind #102), alongside the same FEMALE tie (#103/#105 behind #101). Both tie panels show up, and Advance stays blocked (`SELECTED_CONTESTANT_IDS_COUNT_INVALID`) until you pick one contestant from **each** gender's tie group:
+
+```bash
+npm run seed:dev:tie-both
+# or, first time:
+npm run seed:all:tie-both
+```
+
+Then open **Top 5** — you'll see two tie panels (Female, Male). Try Advance after checking only one panel to confirm it's rejected, then check both to confirm it succeeds.
 
 **Testing Declare Winners without judge scoring:** if judge scoring isn't available yet, use the `:declare` variant instead — it fills and fully scores Top 3 directly (same #101/#102/#103 pool and score map as the default seed) but stops short of the direct `winnersDeclaredAt`/`RoundWinner` writes, so **Declare Winners is immediately clickable** through the real endpoint with no judge UI interaction needed:
 
@@ -69,36 +79,49 @@ Then open **Top 3** in Admin Live Results and click **Declare Winners**.
 
 ## Rounds and live-event states
 
+**`contestantLimit` is a per-gender cutoff** — advancement and Declare Winners rank and cut off males and females independently, so a round's limit is applied to *each* gender (e.g. "Top 5" advances up to 5 females **and** up to 5 males, not 5 total).
+
 Round IDs vary after each seed — use `GET /rounds` or the seed log. Names are stable:
 
-| Round | phaseOrder | Limit | Live-event state | Notes |
+| Round | phaseOrder | Limit (per gender) | Live-event state | Notes |
 |-------|------------|-------|------------------|-------|
 | **Preliminary** | 1 | unlimited | **State 3** — `isCompleted: true` | All judges submitted; already advanced top 10 |
-| **Top 10** | 2 | 10 | **State 1** — `allJudgesSubmitted: false` | Maria done; Juan partial; limit locked |
-| **Top 5** | 3 | 5 | Default / `:declare` seed: `isCompleted: true` (already "advanced"). `seed:dev:tie`: **State 2b** — `hasTie: true`, `canAdvance: true` | Scores are always tied at the cutoff (#103/#104/#105); only the `:tie` variant leaves Top 3 unfilled so the tie actually surfaces — see below |
-| **Top 3** | 4 | 3 | Default seed: **Final — declared** — `winnersDeclaredAt` set, podium rows. `seed:dev:declare`: pool filled (#101/#102/#103), fully scored, genuinely final, **not yet declared** — `canDeclareWinners: true`. `seed:dev:tie`: empty pool, categories ready, genuinely final (no round above it) | Default: all judges submitted, Declare hidden, use declared-winners GET for podium. `:declare`: click Declare Winners immediately, no judge scoring needed. `:tie`: advance into it from Top 5 to populate, then score + declare for real |
+| **Top 10** | 2 | 10 | **State 1** — `allJudgesSubmitted: false` | Maria done; Juan partial; limit locked. Only 5 scored per gender, so the limit doesn't actually cut anyone here |
+| **Top 5** | 3 | 5 | Default / `:declare` seed: `isCompleted: true` (already "advanced"). `seed:dev:tie`/`seed:dev:tie-both`: **State 2b** — `hasTie: true`, `canAdvance: true` | Scores are tied for the FEMALE group at the Top 5 → Top 3 cutoff (#103/#105); `:tie-both` also ties the MALE group (#104/#106). Only these two variants leave Top 3 unfilled so the tie(s) actually surface — see below |
+| **Top 3** | 4 | 2 | Default seed: **Final — declared** — `winnersDeclaredAt` set, podium rows. `seed:dev:declare`: pool filled (#101/#102/#103), fully scored, genuinely final, **not yet declared** — `canDeclareWinners: true`. `seed:dev:tie`: empty pool, categories ready, genuinely final (no round above it) | Default: all judges submitted, Declare hidden, use declared-winners GET for podium. `:declare`: click Declare Winners immediately, no judge scoring needed. `:tie`: advance into it from Top 5 to populate, then score + declare for real |
 | **Spare Round** | 5 | 5 | **Default seed only** — N/A | Empty — **safe to delete**. Not created under `seed:dev:tie`/`seed:dev:declare` — its presence above Top 3 would make `nextRound` non-null and permanently block `canDeclareWinners` |
 | **Advancement Only** | 6 | 2 | **Default seed only** — N/A | 2 contestants, no categories — delete → `ROUND_PHASE_HAS_CONTESTANTS`. Not created under `seed:dev:tie`/`seed:dev:declare`, same reason as Spare Round |
 
 ### Top 5 tie detail
 
-Advancing to Top 3 (limit 3):
+Top 5's pool (from the earlier Top 10 → Top 5 seed insert) is #101–#105 — 3 females (#101, #103, #105) and 2 males (#102, #104). Advancing to Top 3 (limit **2 per gender**):
 
-- **Auto-included:** #101 (95.00), #102 (92.00)
-- **Tied at cutoff:** #103, #104, #105 (all 88.00) — admin picks exactly **1**
-- `advancement.requiredSelections` = 1
+- **FEMALE — Auto-included:** #101 (95.00). **Tied at cutoff:** #103, #105 (both 88.00) — admin picks exactly **1**.
+- **MALE — Auto-included:** #102 (92.00), #104 (88.00) — pool of 2 fits the limit of 2, no tie.
+- `advancement.hasTie` = `true` (from the FEMALE group); `advancement.requiredSelections` = 1 total.
 
-**Note:** with the default `npm run seed:dev`, Top 3's pool is pre-filled (#101, #102, #103) as if advance from Top 5 already happened — this also makes Top 5 report `isCompleted: true`, so `hasTie` never surfaces even though the underlying scores are tied. Run `npm run seed:dev:tie` instead to leave Top 3's pool empty and test advance + tie resolution on **Top 5** from scratch.
+**Note:** with the default `npm run seed:dev`, Top 3's pool is pre-filled (#101, #102, #103) as if advance from Top 5 already happened — this also makes Top 5 report `isCompleted: true`, so `hasTie` never surfaces even though the underlying FEMALE scores are tied. Run `npm run seed:dev:tie` instead to leave Top 3's pool empty and test advance + tie resolution on **Top 5** from scratch.
+
+### Top 5 tie detail — both genders (`seed:dev:tie-both`)
+
+Same as above, plus #106 (Noah Villanueva, MALE) is added into Top 5's pool, making it #101–#106 — 3 females, 3 males. Advancing to Top 3 (limit **2 per gender**):
+
+- **FEMALE — Auto-included:** #101 (95.00). **Tied at cutoff:** #103, #105 (both 88.00) — admin picks exactly **1**.
+- **MALE — Auto-included:** #102 (92.00). **Tied at cutoff:** #104, #106 (both 88.00) — admin picks exactly **1**.
+- `advancement.hasTie` = `true`; `advancement.requiredSelections` = **2** total (1 per gender).
+- `advancement.tied` contains all 4 tied contestants (2 per gender) — the tie panel should render as two separate sections, one per gender, per [[live-event/live-round-results]].
+
+**What to verify:** Advance is rejected (`SELECTED_CONTESTANT_IDS_COUNT_INVALID`) if you only check a contestant in one gender's panel — it only succeeds once you've picked exactly one from **each** gender's tied group. Confirmed via the real endpoint: 4 total selections (2 auto-included + 2 tie picks) land in Top 3's pool as 2 females + 2 males.
 
 ### Top 3 declared winners (podium)
 
-With the **default** seed, open **Top 3** in Admin Live Results after seed — `GET declared-winners` returns:
+With the **default** seed, open **Top 3** in Admin Live Results after seed — `GET declared-winners` returns two independent placement sequences (one per gender):
 
-| Placement | Contestant # | Name | overallScore |
-|-----------|--------------|------|--------------|
-| 1 | 101 | Keanna Reyes | 95.00 |
-| 2 | 102 | Marcus Lin | 88.00 |
-| 3 | 103 | Sofia Mendoza | 82.00 |
+| Gender | Placement | Contestant # | Name | overallScore |
+|--------|-----------|--------------|------|--------------|
+| FEMALE | 1 | 101 | Keanna Reyes | 95.00 |
+| FEMALE | 2 | 103 | Sofia Mendoza | 82.00 |
+| MALE | 1 | 102 | Marcus Lin | 88.00 |
 
 To test **Declare Winners** through the real endpoint:
 

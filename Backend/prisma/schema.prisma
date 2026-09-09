@@ -96,13 +96,14 @@ model RoundContestant {
 model RoundWinner {
   roundId        Int
   contestantId   Int
+  gender         Gender
   placement      Int
   overallScore   Decimal @db.Decimal(5, 2)
 
   round      Round      @relation(fields: [roundId], references: [id])
   contestant Contestant @relation(fields: [contestantId], references: [id])
 
-  @@id([roundId, placement])
+  @@id([roundId, gender, placement])
   @@unique([roundId, contestantId])
 }
 

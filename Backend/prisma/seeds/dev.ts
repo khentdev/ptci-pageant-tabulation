@@ -20,12 +20,17 @@ const SINGLE_FIELD = [{ name: "Overall", maxValue: 100 }]
  * "final round already declared" state. That pre-fill also marks Top 5 as
  * isCompleted (its next round already has contestants), which suppresses
  * the tie/advancement computation even though Top 5's scores are tied.
- * --tie skips the Top 3 pre-fill so Top 5 surfaces a genuine hasTie: true.
+ * --tie skips the Top 3 pre-fill so Top 5 surfaces a genuine hasTie: true —
+ * FEMALE only (#103/#105 tied behind #101; the 2 males advance cleanly).
+ * --tie-both is the same idea but ties BOTH genders at once (adds #106 into
+ * Top 5's pool so #104/#106 tie behind #102 too), for testing that Advance
+ * stays blocked until every gender's tie panel is resolved.
  * --declare fills/scores Top 3 like the default seed but stops short of the
  * direct winnersDeclaredAt/RoundWinner writes, so Declare Winners can be
  * tested through the real endpoint without needing judge scoring first.
  */
-const SEED_UNRESOLVED_TIE = process.argv.includes("--tie")
+const TIE_MODE_BOTH_GENDERS = process.argv.includes("--tie-both")
+const SEED_UNRESOLVED_TIE = TIE_MODE_BOTH_GENDERS || process.argv.includes("--tie")
 const SEED_DECLARE_READY = process.argv.includes("--declare")
 
 const CONTESTANT_DATA = [
@@ -56,14 +61,24 @@ async function seedDev() {
     const topTenIds = contestants
         .filter(c => c.candidateNumber <= 110)
         .map(c => c.id)
+    const topFiveCandidateNumbers = TIE_MODE_BOTH_GENDERS
+        ? [101, 102, 103, 104, 105, 106]
+        : [101, 102, 103, 104, 105]
     const topFiveIds = contestants
-        .filter(c => c.candidateNumber <= 105)
+        .filter(c => topFiveCandidateNumbers.includes(c.candidateNumber))
         .map(c => c.id)
 
+    /**
+     * contestantLimit is a per-gender cutoff (advancement/declare-winners run
+     * independently per gender), so "Top 10"/"Top 5"/"Top 3" mean up to
+     * double that number once both genders are counted. Top 3's limit is 2
+     * (not 3) so the Top 5 -> Top 3 tie demo below stays genuine per gender
+     * instead of trivially fitting everyone.
+     */
     const prelims = await createRound({ name: "Preliminary", phaseOrder: 1, contestantLimit: null })
     const top10 = await createRound({ name: "Top 10", phaseOrder: 2, contestantLimit: 10 })
     const top5 = await createRound({ name: "Top 5", phaseOrder: 3, contestantLimit: 5 })
-    const top3 = await createRound({ name: "Top 3", phaseOrder: 4, contestantLimit: 3 })
+    const top3 = await createRound({ name: "Top 3", phaseOrder: 4, contestantLimit: 2 })
 
     /**
      * Spare Round / Advancement Only only exist in the default seed. They
@@ -125,13 +140,24 @@ async function seedDev() {
 
     await insertRoundContestants(top5.id, topFiveIds)
 
-    const top5ScoreMap = [
-        { number: 101, total: 95 },
-        { number: 102, total: 92 },
-        { number: 103, total: 88 },
-        { number: 104, total: 88 },
-        { number: 105, total: 88 },
-    ]
+    // FEMALE: #101 clear leader, #103/#105 tied behind at the cutoff (limit 2).
+    // MALE (--tie-both only): #102 clear leader, #104/#106 tied the same way.
+    const top5ScoreMap = TIE_MODE_BOTH_GENDERS
+        ? [
+            { number: 101, total: 95 },
+            { number: 102, total: 92 },
+            { number: 103, total: 88 },
+            { number: 104, total: 88 },
+            { number: 105, total: 88 },
+            { number: 106, total: 88 },
+        ]
+        : [
+            { number: 101, total: 95 },
+            { number: 102, total: 92 },
+            { number: 103, total: 88 },
+            { number: 104, total: 88 },
+            { number: 105, total: 88 },
+        ]
 
     for (const category of [top5Swimwear, top5Talent]) {
         for (const judge of [judgeMaria, judgeJuan]) {
@@ -181,9 +207,10 @@ async function seedDev() {
             })
             await prisma.roundWinner.createMany({
                 data: [
-                    { roundId: top3.id, contestantId: byNumber.get(101)!.id, placement: 1, overallScore: 95 },
-                    { roundId: top3.id, contestantId: byNumber.get(102)!.id, placement: 2, overallScore: 88 },
-                    { roundId: top3.id, contestantId: byNumber.get(103)!.id, placement: 3, overallScore: 82 },
+                    // Placement is per gender: #101/#103 (FEMALE) and #102 (MALE) each start at 1.
+                    { roundId: top3.id, contestantId: byNumber.get(101)!.id, gender: "FEMALE", placement: 1, overallScore: 95 },
+                    { roundId: top3.id, contestantId: byNumber.get(103)!.id, gender: "FEMALE", placement: 2, overallScore: 82 },
+                    { roundId: top3.id, contestantId: byNumber.get(102)!.id, gender: "MALE", placement: 1, overallScore: 88 },
                 ],
             })
         }
@@ -211,7 +238,7 @@ async function seedDev() {
             maria: judgeMaria,
             juan: judgeJuan,
         },
-        mode: SEED_UNRESOLVED_TIE ? "tie" : SEED_DECLARE_READY ? "declare" : "default",
+        mode: TIE_MODE_BOTH_GENDERS ? "tie-both" : SEED_UNRESOLVED_TIE ? "tie" : SEED_DECLARE_READY ? "declare" : "default",
     }
 
     logSeedSummary(summary)
