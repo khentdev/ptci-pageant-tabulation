@@ -214,6 +214,45 @@ describe("Add Judge Integration Test", () => {
         })
     })
 
+    describe("role assignment", () => {
+        it("should default to JUDGE when role is omitted", async () => {
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAddJudge(cookieHeader, csrfToken, validBody)
+            expect(res.status).toBe(201)
+
+            const judge = await prisma.user.findFirst({
+                where: { username: NEW_JUDGE.username },
+                select: { role: true },
+            })
+            expect(judge?.role).toBe("JUDGE")
+        })
+
+        it("should create a Chairman account when role is CHAIRMAN", async () => {
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAddJudge(cookieHeader, csrfToken, { ...validBody, role: "CHAIRMAN" })
+            expect(res.status).toBe(201)
+
+            const created = await prisma.user.findFirst({
+                where: { username: NEW_JUDGE.username },
+                select: { role: true },
+            })
+            expect(created?.role).toBe("CHAIRMAN")
+        })
+
+        it("should return JUDGE_ROLE_INVALID for an unrecognized role value", async () => {
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAddJudge(cookieHeader, csrfToken, { ...validBody, role: "ADMIN" })
+            const json = await res.json() as { error: { code: string; field: string } }
+
+            expect(res.status).toBe(400)
+            expect(json.error.code).toBe("JUDGE_ROLE_INVALID")
+            expect(json.error.field).toBe("judge_role_input")
+        })
+    })
+
     describe("validation", () => {
         it.each([
             {

@@ -32,11 +32,18 @@ describe("Get Declared Winners Integration Test", () => {
         role: "JUDGE" as Role,
     }
 
+    const TEST_CHAIRMAN = {
+        name: "Get Declared Winners Chairman",
+        username: "test-get-declared-winners-chairman",
+        role: "CHAIRMAN" as Role,
+    }
+
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TEST_JUDGE_ONE.username,
         TEST_JUDGE_TWO.username,
+        TEST_CHAIRMAN.username,
     ]
 
     const deviceFingerprint = "{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"
@@ -116,6 +123,11 @@ describe("Get Declared Winners Integration Test", () => {
     const seedAdminCredentials = async () => {
         await seedUser(TEST_ADMIN)
         return loginAndGetCredentials(TEST_ADMIN.username)
+    }
+
+    const seedChairmanCredentials = async () => {
+        await seedUser(TEST_CHAIRMAN)
+        return loginAndGetCredentials(TEST_CHAIRMAN.username)
     }
 
     const seedRound = async (data: {
@@ -337,7 +349,7 @@ describe("Get Declared Winners Integration Test", () => {
 
         it("should return declared winners after tie resolution with correct third place", async () => {
             const { top3, contestants } = await seedFinalRoundTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const tiedPick = contestants[3]!
             const declareRes = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {

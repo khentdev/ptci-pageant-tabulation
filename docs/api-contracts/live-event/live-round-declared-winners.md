@@ -2,7 +2,7 @@
 
 `GET /live-event/round-results/:id/declared-winners`
 
-Admin only.
+Admin or Chairman.
 
 Returns the **official declared podium** for one round after POST [[live-event/live-round-declare-winners]]. Rows come from `RoundWinner` (`placement`, contestant identity, `overallScore` snapshot at declare time). Not score-based `rankings` from [[live-event/live-round-results]].
 

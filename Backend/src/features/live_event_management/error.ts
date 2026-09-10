@@ -18,9 +18,12 @@ export const LIVE_EVENT_ERROR_CODES = {
     PLACEMENT_ORDER_MISMATCH: "PLACEMENT_ORDER_MISMATCH",
     ADVANCE_NOT_ALLOWED: "ADVANCE_NOT_ALLOWED",
     ADVANCE_CONTESTANT_COUNT_MISMATCH: "ADVANCE_CONTESTANT_COUNT_MISMATCH",
+    ADVANCE_REQUIRES_CHAIRMAN: "ADVANCE_REQUIRES_CHAIRMAN",
     ROUND_ADVANCEMENT_ERROR: "ROUND_ADVANCEMENT_ERROR",
     DECLARE_NOT_ALLOWED: "DECLARE_NOT_ALLOWED",
     DECLARE_WINNER_COUNT_MISMATCH: "DECLARE_WINNER_COUNT_MISMATCH",
+    DECLARE_REQUIRES_CHAIRMAN: "DECLARE_REQUIRES_CHAIRMAN",
+    CHAIRMAN_ACTION_REQUIRES_TIE: "CHAIRMAN_ACTION_REQUIRES_TIE",
     DECLARE_WINNERS_ERROR: "DECLARE_WINNERS_ERROR",
     DECLARED_WINNERS_GET_ERROR: "DECLARED_WINNERS_GET_ERROR",
 } as const
@@ -111,6 +114,11 @@ export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions>
         message: "Advancing contestant count does not match the next round limit.",
         status: 400
     },
+    ADVANCE_REQUIRES_CHAIRMAN: {
+        code: "ADVANCE_REQUIRES_CHAIRMAN",
+        message: "This round has a tie. Only the Chairman can resolve it and advance.",
+        status: 409
+    },
     ROUND_ADVANCEMENT_ERROR: {
         code: "ROUND_ADVANCEMENT_ERROR",
         message: "Unable to advance round.",
@@ -125,6 +133,16 @@ export const LIVE_EVENT_ERROR_DEF: Record<LiveEventErrorCodes, ErrorDefinitions>
         code: "DECLARE_WINNER_COUNT_MISMATCH",
         message: "Declared winner count does not match the round limit.",
         status: 400
+    },
+    DECLARE_REQUIRES_CHAIRMAN: {
+        code: "DECLARE_REQUIRES_CHAIRMAN",
+        message: "This round has a tie. Only the Chairman can resolve it and declare winners.",
+        status: 409
+    },
+    CHAIRMAN_ACTION_REQUIRES_TIE: {
+        code: "CHAIRMAN_ACTION_REQUIRES_TIE",
+        message: "There is no tie to resolve. The Chairman can only act when a tie exists.",
+        status: 409
     },
     DECLARE_WINNERS_ERROR: {
         code: "DECLARE_WINNERS_ERROR",

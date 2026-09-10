@@ -2,6 +2,11 @@ import type { Context } from "hono";
 import type { AdvanceRoundInputVariables, AdvanceRoundResponse, DeclareWinnersInputVariables, DeclareWinnersResponse, GetDeclaredWinnersInputVariables, GetDeclaredWinnersResponse, GetJudgeSubmissionsInputVariables, GetJudgeSubmissionsResponse, GetRoundResultsInputVariables, GetRoundResultsResponse } from "./types.js";
 import { advanceRoundService, declareWinnersService, getDeclaredWinnersService, getJudgeSubmissionsService, getRoundResultsByIdService } from "./service.js";
 import type { AppContext } from "../../types/context.js";
+import type { TokenPayload } from "../../lib/jwt/index.js";
+
+function getCallerRole(c: Context) {
+    return (c.var["authenticatedUserTokenPayload"] as TokenPayload).role
+}
 
 export async function getJudgeSubmissionsController(c: Context<AppContext<GetJudgeSubmissionsInputVariables>>) {
     const input = c.get("getJudgeSubmissions")
@@ -23,7 +28,7 @@ export async function getRoundResultsByIdController(c: Context<AppContext<GetRou
 
 export async function advanceRoundController(c: Context<AppContext<AdvanceRoundInputVariables>>) {
     const input = c.get("advanceRound")
-    await advanceRoundService(input)
+    await advanceRoundService({ ...input, callerRole: getCallerRole(c) })
     return c.json<AdvanceRoundResponse>({
         message: "Round advanced successfully"
     }, 201)
@@ -31,7 +36,7 @@ export async function advanceRoundController(c: Context<AppContext<AdvanceRoundI
 
 export async function declareWinnersController(c: Context<AppContext<DeclareWinnersInputVariables>>) {
     const input = c.get("declareWinners")
-    await declareWinnersService(input)
+    await declareWinnersService({ ...input, callerRole: getCallerRole(c) })
     return c.json<DeclareWinnersResponse>({
         message: "Winners declared successfully"
     }, 201)

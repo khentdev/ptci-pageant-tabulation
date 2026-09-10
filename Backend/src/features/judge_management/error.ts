@@ -5,6 +5,7 @@ export const JUDGE_ERROR_CODES = {
     JUDGE_NAME_TOO_SHORT: "JUDGE_NAME_TOO_SHORT",
     JUDGE_USERNAME_TOO_SHORT: "JUDGE_USERNAME_TOO_SHORT",
     JUDGE_PASSWORD_TOO_SHORT: "JUDGE_PASSWORD_TOO_SHORT",
+    JUDGE_ROLE_INVALID: "JUDGE_ROLE_INVALID",
     JUDGE_ID_INVALID: "JUDGE_ID_INVALID",
     JUDGE_NOT_FOUND: "JUDGE_NOT_FOUND",
     JUDGE_LOCKED: "JUDGE_LOCKED",
@@ -34,6 +35,11 @@ export const JUDGE_ERROR_DEF: Record<JudgeErrorCodes, ErrorDefinitions> = {
     JUDGE_PASSWORD_TOO_SHORT: {
         code: "JUDGE_PASSWORD_TOO_SHORT",
         message: "Password must be at least 8 characters long.",
+        status: 400,
+    },
+    JUDGE_ROLE_INVALID: {
+        code: "JUDGE_ROLE_INVALID",
+        message: "Role must be either JUDGE or CHAIRMAN.",
         status: 400,
     },
     JUDGE_ADD_FAILED: {

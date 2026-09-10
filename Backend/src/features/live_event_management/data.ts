@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
-import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import type { AdvanceRoundServiceInput, CanAdvanceReason, DeclareWinnersServiceInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
 import { Gender, Role } from "../../../generated/prisma/enums.js";
 
 type JudgeRow = { id: number, name: string }
@@ -470,7 +470,7 @@ function resolveTieAdvancingIds(
     ]
 }
 
-export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundInput) {
+export async function advanceRound({ id, selectedContestantIds, callerRole }: AdvanceRoundServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -487,6 +487,15 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
             throw new AppError("ADVANCE_NOT_ALLOWED", {
                 data: { reason: results.canAdvanceReason },
             })
+        }
+
+        // Ties are a judging call, not an operational one — Admin handles
+        // every routine (non-tie) advance, Chairman resolves ties only.
+        if (callerRole === Role.ADMIN && results.advancement.hasTie) {
+            throw new AppError("ADVANCE_REQUIRES_CHAIRMAN")
+        }
+        if (callerRole === Role.CHAIRMAN && !results.advancement.hasTie) {
+            throw new AppError("CHAIRMAN_ACTION_REQUIRES_TIE")
         }
 
         const { advancement, nextRound } = results
@@ -604,7 +613,7 @@ function buildDeclaredWinnerRows(
     })
 }
 
-export async function declareWinners({ id, selectedContestantIds, placementOrder }: DeclareWinnersInput) {
+export async function declareWinners({ id, selectedContestantIds, placementOrder, callerRole }: DeclareWinnersServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -651,6 +660,17 @@ export async function declareWinners({ id, selectedContestantIds, placementOrder
             throw new AppError("DECLARE_NOT_ALLOWED", {
                 data: { reason: "JUDGES_NOT_COMPLETE" },
             })
+        }
+
+        // Ties (cutoff or placement) are a judging call, not an operational
+        // one — Admin declares every routine (tie-free) round, Chairman
+        // resolves ties only.
+        const hasUnresolvedTie = results.advancement.hasTie || results.placementTies.length > 0
+        if (callerRole === Role.ADMIN && hasUnresolvedTie) {
+            throw new AppError("DECLARE_REQUIRES_CHAIRMAN")
+        }
+        if (callerRole === Role.CHAIRMAN && !hasUnresolvedTie) {
+            throw new AppError("CHAIRMAN_ACTION_REQUIRES_TIE")
         }
 
         const { advancement } = results

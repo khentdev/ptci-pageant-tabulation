@@ -50,7 +50,7 @@
       <BaseModalActions
         submitLabel="Save Changes"
         submittingLabel="Saving changes..."
-        :isSubmitting="judgeStore.loadingStates.isAddingJudges"
+        :isSubmitting="judgeStore.loadingStates.isEditingJudges"
         @cancel="modalStore.judgesModalFunction().toggleEditingJudgesModal()"
       />
     </form>

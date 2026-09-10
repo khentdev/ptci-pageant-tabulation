@@ -3,7 +3,7 @@ export interface loginInput {
   password: string;
 }
 
-export type role = 'ADMIN' | 'JUDGE';
+export type role = 'ADMIN' | 'JUDGE' | 'CHAIRMAN';
 
 export type UserDTO = {
   id: number;

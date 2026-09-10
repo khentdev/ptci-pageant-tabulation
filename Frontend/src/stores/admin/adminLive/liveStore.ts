@@ -198,6 +198,10 @@ export const useLiveStore = defineStore('liveStore', () => {
         toast.error(message);
       } else if (code === 'ADVANCE_NOT_ALLOWED') {
         toast.warning(message);
+      } else if (code === 'ADVANCE_REQUIRES_CHAIRMAN') {
+        toast.warning(message, { title: 'Chairman Required' });
+      } else if (code === 'CHAIRMAN_ACTION_REQUIRES_TIE') {
+        toast.warning(message, { title: 'No Tie To Resolve' });
       } else if (code === 'ROUND_ADVANCEMENT_ERROR') {
         toast.error(message);
       }
@@ -266,6 +270,10 @@ export const useLiveStore = defineStore('liveStore', () => {
         toast.warning(message, { title: 'Count Mismatch' });
       } else if (code === 'DECLARE_NOT_ALLOWED') {
         toast.warning(message, { title: 'Declaration Not Allowed' });
+      } else if (code === 'DECLARE_REQUIRES_CHAIRMAN') {
+        toast.warning(message, { title: 'Chairman Required' });
+      } else if (code === 'CHAIRMAN_ACTION_REQUIRES_TIE') {
+        toast.warning(message, { title: 'No Tie To Resolve' });
       } else if (code === 'FORBIDDEN') {
         toast.error(message, { title: 'Access Denied' });
       }

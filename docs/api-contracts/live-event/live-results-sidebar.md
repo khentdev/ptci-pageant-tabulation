@@ -1,6 +1,6 @@
 # Admin Live Results Sidebar
 
-Admin only.
+Admin or Chairman.
 
 Used on Admin Live Event → Round Results sidebar. Populates one navigation item per round, ordered by `phaseOrder`. Navigation only — does not fetch rankings, scores, or advancement data.
 

@@ -8,8 +8,11 @@ import { validateAddRoundInput, validateEditRoundInput, validateGetRoundByIdInpu
 
 const roundRoutes = new Hono()
 roundRoutes.
-    get("/", authenticate, requireRole(Role.ADMIN), getRoundsListController).
-    get("/:id", authenticate, requireRole(Role.ADMIN), validateGetRoundByIdInput, getRoundByIdController).
+    // Read-only — Chairman's Live Event sidebar (LiveRoundSideBar) also
+    // needs the round list/detail for navigation, even though Chairman has
+    // no access to round management (create/edit/delete stay Admin-only).
+    get("/", authenticate, requireRole(Role.ADMIN, Role.CHAIRMAN), getRoundsListController).
+    get("/:id", authenticate, requireRole(Role.ADMIN, Role.CHAIRMAN), validateGetRoundByIdInput, getRoundByIdController).
     patch("/:id", authenticate, requireRole(Role.ADMIN), validateEditRoundInput, editRoundController).
     post("/", authenticate, requireRole(Role.ADMIN), validateAddRoundInput, addRoundController).
     delete("/:id", authenticate, requireRole(Role.ADMIN), validateDeleteRoundPhaseInput, deleteRoundPhaseController)

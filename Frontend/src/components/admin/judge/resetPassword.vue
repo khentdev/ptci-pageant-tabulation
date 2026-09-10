@@ -31,7 +31,7 @@
       <BaseModalActions
         submitLabel="Save Changes"
         submittingLabel="Saving changes..."
-        :isSubmitting="judgeStore.loadingStates.isAddingJudges"
+        :isSubmitting="judgeStore.loadingStates.isResettingPassword"
         @cancel="modalStore.judgesModalFunction().toggleResetPasswordJudgesModal()"
       />
     </form>

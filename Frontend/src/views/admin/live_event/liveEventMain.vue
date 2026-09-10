@@ -23,7 +23,7 @@
       {{ advanceReasonText }}
     </div>
     <div
-      v-if="liveStore.roundResult?.nextRound"
+      v-if="liveStore.roundResult?.nextRound && showAdvanceSection"
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -39,9 +39,15 @@
         }}
       </button>
     </div>
+    <div
+      v-else-if="liveStore.roundResult?.nextRound && authStore.isAdmin && liveStore.roundResult.advancement.hasTie"
+      class="mt-3 font-medium text-red-600/70"
+    >
+      A tie must be resolved by the Chairman before advancing.
+    </div>
 
     <div
-      v-else-if="liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt"
+      v-else-if="liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt && showDeclareSection"
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -52,6 +58,17 @@
         {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
       </button>
     </div>
+    <div
+      v-else-if="
+        liveStore.roundResult &&
+        !liveStore.roundResult.winnersDeclaredAt &&
+        authStore.isAdmin &&
+        (liveStore.roundResult.advancement.hasTie || Boolean(liveStore.roundResult.placementTies?.length))
+      "
+      class="mt-3 font-medium text-red-600/70"
+    >
+      A tie must be resolved by the Chairman before declaring winners.
+    </div>
   </BasePanel>
 </template>
 <script setup lang="ts">
@@ -61,6 +78,7 @@ import PlacementOrderResolution from '@/components/admin/live_event/placementOrd
 import RankingsContestant from '@/components/admin/live_event/rankingsContestant.vue';
 import TieResolution from '@/components/admin/live_event/tieResolution.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
+import { useAuthStore } from '@/stores/auth/authStore';
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { computed, watch } from 'vue';
@@ -69,6 +87,22 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 const roundStore = useRoundStore();
 const liveStore = useLiveStore();
+const authStore = useAuthStore();
+
+// Ties are a judging call — Chairman resolves them, Admin handles every
+// routine (tie-free) advance/declare. Each side's action section is only
+// shown to the role actually allowed to perform it right now.
+const showAdvanceSection = computed(() => {
+  const hasTie = liveStore.roundResult?.advancement.hasTie ?? false;
+  return authStore.isChairman ? hasTie : !hasTie;
+});
+
+const showDeclareSection = computed(() => {
+  const hasTie =
+    (liveStore.roundResult?.advancement.hasTie ?? false) ||
+    Boolean(liveStore.roundResult?.placementTies?.length);
+  return authStore.isChairman ? hasTie : !hasTie;
+});
 
 const activeRoundId = computed<number | null>(() => {
   const raw = route.params.roundId;

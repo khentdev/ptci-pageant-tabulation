@@ -40,7 +40,7 @@ export async function wipeDevData() {
         await tx.roundContestant.deleteMany()
         await tx.round.deleteMany()
         await tx.contestant.deleteMany()
-        await tx.user.deleteMany({ where: { role: Role.JUDGE } })
+        await tx.user.deleteMany({ where: { role: { in: [Role.JUDGE, Role.CHAIRMAN] } } })
     })
     logger.info("Wiped non-admin dev data")
 }
@@ -53,6 +53,19 @@ export async function createJudge(data: { name: string; username: string }) {
             username: data.username,
             hashedPassword,
             role: Role.JUDGE,
+        },
+        select: { id: true, name: true, username: true },
+    })
+}
+
+export async function createChairman(data: { name: string; username: string }) {
+    const hashedPassword = await argon2.hash(DEV_JUDGE_PASSWORD)
+    return prisma.user.create({
+        data: {
+            name: data.name,
+            username: data.username,
+            hashedPassword,
+            role: Role.CHAIRMAN,
         },
         select: { id: true, name: true, username: true },
     })

@@ -2,6 +2,7 @@ import { prisma } from "../../src/infra/prisma.js"
 import logger from "../../src/infra/logger.js"
 import {
     createCategoryWithFields,
+    createChairman,
     createContestants,
     createJudge,
     createRound,
@@ -17,7 +18,8 @@ import {
  * (summing to 100). No scores and no round pools are pre-seeded — Top 5 and
  * Top 3 start empty so the full flow (judge scoring -> advance -> judge
  * scoring -> declare winners) can be exercised end-to-end through the real
- * UI/API from a clean slate.
+ * UI/API from a clean slate. Also seeds one Chairman account (`chairman.diaz`)
+ * for manually testing tie-resolution as that role.
  */
 const TWO_FIELDS = [
     { name: "Presentation", maxValue: 50 },
@@ -42,9 +44,10 @@ const CONTESTANT_DATA = [
 async function seedDevSimple() {
     await wipeDevData()
 
-    const [judgeAya, judgeBen] = await Promise.all([
+    const [judgeAya, judgeBen, chairmanDiaz] = await Promise.all([
         createJudge({ name: "Aya Santos", username: "judge.aya" }),
         createJudge({ name: "Ben Cruz", username: "judge.ben" }),
+        createChairman({ name: "Carmen Diaz", username: "chairman.diaz" }),
     ])
 
     const contestants = await createContestants(CONTESTANT_DATA)
@@ -65,7 +68,7 @@ async function seedDevSimple() {
     const summary: SeedSummary = {
         rounds: { prelims, top5, top3 },
         contestants,
-        judges: { aya: judgeAya, ben: judgeBen },
+        judges: { aya: judgeAya, ben: judgeBen, diaz: chairmanDiaz },
         mode: "simple",
     }
 

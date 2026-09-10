@@ -2,12 +2,13 @@
 
 `GET /rounds`
 
-Admin only.
+Admin or Chairman. Read-only — Chairman's Live Event sidebar also needs the round list for navigation, even though Chairman has no access to round management (add/edit/delete stay Admin-only).
 
 ## Consumers
 
 - Admin Setup → Rounds list page
 - Admin Live Event → Round Results sidebar — see [[live-event/live-results-sidebar]]
+- Chairman Live Event → Round Results sidebar (same component, Chairman-scoped nav)
 - Admin Setup → Add Category round dropdown — see [[categories/categories-add]]
 
 ## Request

@@ -34,10 +34,17 @@ describe("Reset Judge Password Integration Test", () => {
         password: NEW_PASSWORD,
     }
 
+    const TARGET_CHAIRMAN = {
+        name: "Head Judge",
+        username: "test-reset-judge-chairman",
+        role: "CHAIRMAN" as Role,
+    }
+
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TARGET_JUDGE.username,
+        TARGET_CHAIRMAN.username,
     ]
 
     const postLogin = (username: string, password: string = TEST_PASSWORD) =>
@@ -187,6 +194,20 @@ describe("Reset Judge Password Integration Test", () => {
             expect(oldPasswordMatches).toBe(false)
 
             const loginRes = await postLogin(TARGET_JUDGE.username, NEW_PASSWORD)
+            expect(loginRes.status).toBe(200)
+        })
+
+        it("should reset a Chairman account's password", async () => {
+            const targetChairman = await seedUser(TARGET_CHAIRMAN)
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await patchResetJudgePassword(cookieHeader, csrfToken, targetChairman.id, validBody)
+            const json = await res.json() as ResetJudgePasswordResponse
+
+            expect(res.status).toBe(200)
+            expect(json.message).toBe("Judge password reset successfully.")
+
+            const loginRes = await postLogin(TARGET_CHAIRMAN.username, NEW_PASSWORD)
             expect(loginRes.status).toBe(200)
         })
     })

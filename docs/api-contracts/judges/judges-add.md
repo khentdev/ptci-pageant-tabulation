@@ -4,7 +4,7 @@
 
 Admin only.
 
-Creates a judge account with name, username, and password. Role is always set to `JUDGE` on the backend.
+Creates a Judge or Chairman account with name, username, password, and an optional role. This is the same feature Admin uses to manage the Chairman account — there is no separate "Chairman Management" endpoint.
 
 **Frontend form rules**
 
@@ -13,6 +13,7 @@ Creates a judge account with name, username, and password. Role is always set to
 | Name | Required — at least 3 characters after trim |
 | Username | Required — at least 3 characters after trim; must be unique system-wide |
 | Password | Required — at least 8 characters after trim |
+| Role | Optional — `JUDGE` or `CHAIRMAN`; defaults to `JUDGE` when omitted. Set once at creation, not editable afterward |
 
 ## Request
 
@@ -37,7 +38,8 @@ Creates a judge account with name, username, and password. Role is always set to
 {
   "name": "Judge One",
   "username": "judge.one",
-  "password": "securepass"
+  "password": "securepass",
+  "role": "JUDGE"
 }
 ```
 
@@ -46,6 +48,7 @@ Creates a judge account with name, username, and password. Role is always set to
 | `name` | `string` | Yes | At least 3 characters after trim |
 | `username` | `string` | Yes | At least 3 characters after trim; must be unique across all users |
 | `password` | `string` | Yes | At least 8 characters after trim; stored as an argon2 hash |
+| `role` | `"JUDGE" \| "CHAIRMAN"` | No | Defaults to `JUDGE` when omitted |
 
 ## Response
 
@@ -82,4 +85,5 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 | `400` | `JUDGE_USERNAME_TOO_SHORT` | Username must be at least 3 characters long. | `field`: `judge_username_input` |
 | `400` | `JUDGE_PASSWORD_TOO_SHORT` | Password must be at least 8 characters long. | `field`: `judge_password_input` |
 | `400` | `JUDGE_USERNAME_EXISTS` | Username already exists. | Applies to any existing user, including admins |
+| `400` | `JUDGE_ROLE_INVALID` | Role must be either JUDGE or CHAIRMAN. | `field`: `judge_role_input` |
 | `500` | `JUDGE_ADD_FAILED` | Unable to add judge. | Includes unexpected DB failures (e.g. concurrent duplicate username race) |

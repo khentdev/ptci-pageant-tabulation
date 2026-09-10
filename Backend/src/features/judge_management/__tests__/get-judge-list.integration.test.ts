@@ -43,6 +43,7 @@ describe("Get Judge List Integration Test", () => {
         TEST_JUDGE_ONE.username,
         TEST_JUDGE_TWO.username,
         TEST_JUDGE_THREE.username,
+        "test-get-judge-list-chairman",
     ]
 
     const deviceFingerprint = "{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"
@@ -173,6 +174,7 @@ describe("Get Judge List Integration Test", () => {
                     id: judge.id,
                     name: TEST_JUDGE_ONE.name,
                     username: TEST_JUDGE_ONE.username,
+                    role: TEST_JUDGE_ONE.role,
                 },
             ])
         })
@@ -194,16 +196,19 @@ describe("Get Judge List Integration Test", () => {
                         id: judgeOne.id,
                         name: TEST_JUDGE_ONE.name,
                         username: TEST_JUDGE_ONE.username,
+                        role: TEST_JUDGE_ONE.role,
                     },
                     {
                         id: judgeTwo.id,
                         name: TEST_JUDGE_TWO.name,
                         username: TEST_JUDGE_TWO.username,
+                        role: TEST_JUDGE_TWO.role,
                     },
                     {
                         id: judgeThree.id,
                         name: TEST_JUDGE_THREE.name,
                         username: TEST_JUDGE_THREE.username,
+                        role: TEST_JUDGE_THREE.role,
                     },
                 ]),
             )
@@ -261,18 +266,25 @@ describe("Get Judge List Integration Test", () => {
             }
         })
 
-        it("should not expose role in any list entry", async () => {
-            await seedUser(TEST_JUDGE_ONE)
-            await seedUser(TEST_JUDGE_TWO)
+        it("should expose each entry's role, including Chairman accounts", async () => {
+            const judge = await seedUser(TEST_JUDGE_ONE)
+            const chairman = await seedUser({
+                name: "Head Judge",
+                username: "test-get-judge-list-chairman",
+                role: "CHAIRMAN",
+            })
             const { cookieHeader, csrfToken } = await seedAdminCredentials()
 
             const res = await getJudgeList(cookieHeader, csrfToken)
             expect(res.status).toBe(200)
 
             const json = await res.json() as GetJudgeListResponse
-            for (const entry of json.data) {
-                expect("role" in entry).toBe(false)
-            }
+            expect(json.data).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ id: judge.id, role: "JUDGE" }),
+                    expect.objectContaining({ id: chairman.id, role: "CHAIRMAN" }),
+                ]),
+            )
         })
 
         it("should not expose createdAt in any list entry", async () => {

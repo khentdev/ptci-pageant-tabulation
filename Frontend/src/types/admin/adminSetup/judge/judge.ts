@@ -1,12 +1,16 @@
+export type JudgeAssignableRole = 'JUDGE' | 'CHAIRMAN';
+
 export type AddJudgeInputRequestBody = {
   name: unknown;
   username: unknown;
   password: unknown;
+  role?: unknown;
 };
 export type AddJudgeInput = {
   name: string;
   username: string;
   password: string;
+  role: JudgeAssignableRole;
 };
 export type AddJudgeInputVariables = {
   addJudgeInput: AddJudgeInput;
@@ -20,6 +24,7 @@ export type GetJudgeListDTO = {
   id: number;
   name: string;
   username: string;
+  role: JudgeAssignableRole;
 };
 export type GetJudgeListResponse = {
   data: GetJudgeListDTO[];
