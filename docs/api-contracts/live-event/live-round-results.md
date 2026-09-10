@@ -2,7 +2,7 @@
 
 `GET /live-event/round-results/:id/advancement`
 
-Admin only.
+Admin or Chairman.
 
 Returns **rankings**, advancement preview, and round-state flags for one round. Used for the Rankings section, Advance button, tie-resolution panel, and Declare Winners on the Admin Live Event → Round Results page.
 

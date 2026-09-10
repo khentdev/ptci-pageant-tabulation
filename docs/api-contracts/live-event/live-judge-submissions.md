@@ -2,7 +2,7 @@
 
 `GET /live-event/round-results/:id`
 
-Admin only.
+Admin or Chairman.
 
 Returns the **Judge Submissions** matrix for one round: per-judge, per-category submitted flags, aggregate counts, and whether all judges have finished scoring. Used for the top section of the Admin Live Event → Round Results page.
 

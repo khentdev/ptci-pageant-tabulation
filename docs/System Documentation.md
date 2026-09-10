@@ -10,7 +10,7 @@ Product-level documentation only. API contracts, request/response shapes, and im
 | **Project Name** | PTCI Pageant Tabulation System                                                                   |
 | **Type**         | Internal Web Application (Single Event)                                                          |
 | **Purpose**      | Digital scoring and tabulation for PTCI school intramurals pageant — replaces the old PHP system |
-| **Target Users** | Admin (event organizer) and Judges                                                               |
+| **Target Users** | Admin (event organizer), Judges, and Chairman (head judge — resolves ties only)                  |
 | **Tech Stack**   | Vue.js (TypeScript) + Tailwind CSS (frontend) · Hono + Prisma + PostgreSQL (backend)             |
 |                  |                                                                                                  |
 
@@ -20,10 +20,11 @@ Product-level documentation only. API contracts, request/response shapes, and im
 
 | Module                    | Description                                                                 |
 | ------------------------- | --------------------------------------------------------------------------- |
-| Auth                      | Username + password login for Admin and Judge roles; role-based routing     |
+| Auth                      | Username + password login for Admin, Judge, and Chairman roles; role-based routing |
 | Public Candidates Page    | Public-facing grid of candidate photos filterable by gender                 |
-| Admin — Setup             | Create rounds, categories, scoring fields, contestants, and judge accounts  |
-| Admin — Live Event        | Monitor judge submissions, view results, advance contestants, declare winners |
+| Admin — Setup             | Create rounds, categories, scoring fields, contestants, and judge/chairman accounts |
+| Admin — Live Event        | Monitor judge submissions, view results, advance contestants, declare winners (Admin: tie-free only) |
+| Chairman — Live Event     | Same results view as Admin (no Setup access); resolves cutoff and placement ties only |
 | Judge — Scoring Interface | View active categories, fill in scores per contestant, submit              |
 
 ---
@@ -37,17 +38,17 @@ Product-level documentation only. API contracts, request/response shapes, and im
 **Features**
 
 - Login with username + password
-- Role-based redirect after login: Admin → `/admin/live/results/:roundId` (Preliminary, `phase_order = 1`) · Judge → Scoring panel
+- Role-based redirect after login: Admin or Chairman → `/admin/live/results/:roundId` (Preliminary, `phase_order = 1`) · Judge → Scoring panel
 - Session management via JWT stored in HTTP-only cookie
 - Logout clears session and redirects to login
 
 **Business Rules**
 
-- Only two roles: `admin` and `judge`
+- Three roles: `ADMIN`, `JUDGE`, `CHAIRMAN`
 - No self-registration; all accounts are created by Admin
-- Admin creates judge accounts manually through the Setup panel
+- Admin creates Judge and Chairman accounts through the same Setup → Judges & Chairman panel (a role picker at creation decides which; role is not editable afterward)
 - Invalid credentials → generic "Invalid username or password" — never reveal which field is wrong
-- Admin cannot access the Judge scoring panel; Judges cannot access the Admin panel
+- Judges cannot access the Admin/Chairman panel or vice versa. Admin and Chairman share the same Live Event page/URLs, but Chairman has no access to Setup (Rounds/Categories/Contestants/Judges) and can only Advance/Declare when a tie exists — see §3.2/§3.3
 - Session is validated on every app load; expired or invalid session redirects to login
 
 ---
@@ -221,6 +222,12 @@ Used **during** the actual pageant event. Separate view from Setup.
 
 **Advancement is gender-based, not overall.** Ranking, rank numbering, the cutoff, and tie detection are all computed **independently for males and females** against the same round `contestant_limit` — a limit of 5 advances the top 5 females and the top 5 males (up to 10 total), not the 5 highest scores regardless of gender. This prevents one gender's stronger scores from crowding the other out of the round entirely. A tie can surface in one gender only, both at once, or neither.
 
+**Advance is role-conditional on whether a tie exists.** Resolving a tie is a judging decision, not an operational one:
+- **No tie:** only **Admin** can advance. The Advance button is hidden for Chairman.
+- **Tie exists (`advancement.hasTie`):** only **Chairman** can advance. Admin's Advance button is hidden and replaced with a message that the tie must be resolved by the Chairman first.
+- The tie-resolution checkboxes are visible to both roles (so Admin can see what's blocking progress) but only interactive for Chairman.
+- The backend enforces this independent of the UI — an Admin POST while a tie exists returns `409 ADVANCE_REQUIRES_CHAIRMAN`; a Chairman POST with no tie returns `409 CHAIRMAN_ACTION_REQUIRES_TIE`.
+
 **Score Calculation**
 
 ```
@@ -370,10 +377,11 @@ Admin must pick exactly (N - A) from that gender's T tied contestants
 - Declaring winners is irreversible — no undo
 - The final round's roster is already fixed by the time it's reached: `advanceRound` always caps the number of contestants of each gender entering a round at that round's own `contestant_limit` for that gender, so the final round can never hold more of either gender than its `contestant_limit`. A cutoff tie for the last qualifying spot in a gender is resolved one round earlier, during Advance into the final round — not at Declare Winners
 - The API still exposes the same cutoff-tie shape (`advancement.hasTie`, `included`, `tied`, all gender-tagged) on the final round's results GET for structural consistency with Advance, and `canDeclareWinners` is `false` while `advancement.hasTie` is `true` for either gender — but given the roster cap above, this condition is not reachable through normal play; it is defensive, not a flow admins should expect to hit
-- **Placement ties require admin resolution — they are not silently broken.** Even with the roster already fixed, two or more same-gender finalists can legitimately share the exact same `overallScore` (e.g. both at 100 for a Top 3 round). `GET /live-event/round-results/:id/advancement` exposes these as `placementTies` — one entry per tied cluster (`gender`, `contestants[]`) — computed from the already-decided winner set once any cutoff tie is resolved. `canDeclareWinners` is `false` while `placementTies` is non-empty
-- To declare, the admin must submit `placementOrder: number[]` — the exact set of tied contestant IDs, ordered by chosen finish order within each cluster (order across unrelated clusters doesn't matter, since only same-score contestants are ever compared). The backend re-validates this set server-side (`PLACEMENT_ORDER_REQUIRED` / `PLACEMENT_ORDER_MISMATCH` / `PLACEMENT_ORDER_NOT_ALLOWED`) before assigning `placement` — a client can never dictate placement numbers directly, only break the tie
+- **Placement ties require Chairman resolution — they are not silently broken.** Even with the roster already fixed, two or more same-gender finalists can legitimately share the exact same `overallScore` (e.g. both at 100 for a Top 3 round). `GET /live-event/round-results/:id/advancement` exposes these as `placementTies` — one entry per tied cluster (`gender`, `contestants[]`) — computed from the already-decided winner set once any cutoff tie is resolved. `canDeclareWinners` is `false` while `placementTies` is non-empty
+- To declare, the Chairman must submit `placementOrder: number[]` — the exact set of tied contestant IDs, ordered by chosen finish order within each cluster (order across unrelated clusters doesn't matter, since only same-score contestants are ever compared). The backend re-validates this set server-side (`PLACEMENT_ORDER_REQUIRED` / `PLACEMENT_ORDER_MISMATCH` / `PLACEMENT_ORDER_NOT_ALLOWED`) before assigning `placement` — a client can never dictate placement numbers directly, only break the tie
 - Non-tied contestants are always ordered by `overallScore` descending regardless of `placementOrder`; `candidateNumber` ascending remains the fallback tiebreak only for the (now unreachable post-validation) case where two contestants are equal-scored but not covered by a submitted order
 - `canDeclareWinners` follows the same readiness gates as Advance (all judges submitted, not already declared, current round has categories), plus any cutoff tie (either gender) must be resolved via local selection and POST body when `advancement.hasTie` is `true`, and any placement tie must be resolved via `placementOrder` when `placementTies` is non-empty — GET returns `canDeclareWinners: false` while either is unresolved
+- **Declare is role-conditional, same split as Advance (§3.2):** only **Admin** can declare when there is no tie of either kind; only **Chairman** can declare when a cutoff tie or placement tie exists. Admin's Declare button is hidden and replaced with a "resolved by the Chairman" message while a tie is unresolved; Chairman's button only appears when there is a tie to resolve. Enforced server-side regardless of UI state: Admin POST during a tie → `409 DECLARE_REQUIRES_CHAIRMAN`; Chairman POST with no tie → `409 CHAIRMAN_ACTION_REQUIRES_TIE`
 - Results fetch for the final round should include `canDeclareWinners` and `winnersDeclaredAt` (or `isWinnersDeclared`) so the frontend can show/hide Declare and the winners display; podium rows come from [[live-event/live-round-declared-winners]] after declare
 - **Admin account:** a single admin account is seeded into the database before the event — no self-registration flow exists for admin
 
@@ -427,10 +435,11 @@ Admin must pick exactly (N - A) from that gender's T tied contestants
 
 **In Scope**
 
-- Username + password login for Admin and Judge
+- Username + password login for Admin, Judge, and Chairman
 - Public candidates page (read-only, no auth)
-- Admin setup: rounds, categories, scoring fields, contestants, judge accounts
-- Admin live event: round control, results, advancement, tie resolution, declare winners
+- Admin setup: rounds, categories, scoring fields, contestants, judge/chairman accounts
+- Admin live event: round control, results, advancement, tie resolution, declare winners (tie-free only)
+- Chairman live event: same results view as Admin (no Setup access); resolves ties only
 - Judge scoring interface with per-category batch submission and lock
 - Auto score calculation and ranking
 - Judge submission status tracking

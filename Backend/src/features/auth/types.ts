@@ -11,7 +11,7 @@ export type LoginInput = {
 export type LoginInputVariables = {
     LoginInput: LoginInput
 }
-export type Role = "ADMIN" | "JUDGE"
+export type Role = "ADMIN" | "JUDGE" | "CHAIRMAN"
 export type LoginDTO = {
     user: {
         id: number

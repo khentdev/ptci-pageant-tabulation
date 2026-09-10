@@ -8,7 +8,11 @@ import { AppError } from '../../errors/appError.js';
 import { prisma } from '../../infra/prisma.js';
 import { Role } from '../../../generated/prisma/enums.js';
 
-export async function addJudgeService({ name, username, password }: AddJudgeInput) {
+// This CRUD manages both Judge and Chairman accounts — the ADMIN account
+// itself must stay untouchable through it.
+const JUDGE_MANAGEABLE_ROLES: Role[] = [Role.JUDGE, Role.CHAIRMAN]
+
+export async function addJudgeService({ name, username, password, role }: AddJudgeInput) {
     const usernameExists = await prisma.user.findUnique({
         where: {
             username: username,
@@ -22,7 +26,7 @@ export async function addJudgeService({ name, username, password }: AddJudgeInpu
 
     try {
         const hashedPassword = await argon.hash(password);
-        await addJudge({ name, username, password: hashedPassword });
+        await addJudge({ name, username, password: hashedPassword, role });
     } catch (err) {
         logger.error({ err }, "Error adding judge");
         throw new AppError("JUDGE_ADD_FAILED");
@@ -44,7 +48,7 @@ export async function editJudgeService({ id, name, username }: EditJudgeInput) {
         select: { id: true, role: true },
     })
 
-    if (!existingJudge || existingJudge.role !== Role.JUDGE) {
+    if (!existingJudge || !JUDGE_MANAGEABLE_ROLES.includes(existingJudge.role)) {
         logger.warn({ id }, "Judge not found on judge edit")
         throw new AppError("JUDGE_NOT_FOUND")
     }
@@ -72,7 +76,7 @@ export async function resetJudgePasswordService({ id, password }: ResetJudgePass
         select: { id: true, role: true },
     })
 
-    if (!existingJudge || existingJudge.role !== Role.JUDGE) {
+    if (!existingJudge || !JUDGE_MANAGEABLE_ROLES.includes(existingJudge.role)) {
         logger.warn({ id }, "Judge not found on judge password reset")
         throw new AppError("JUDGE_NOT_FOUND")
     }
@@ -92,7 +96,7 @@ export async function deleteJudgeService({ id }: DeleteJudgeInput) {
         select: { id: true, role: true },
     })
 
-    if (!existingJudge || existingJudge.role !== Role.JUDGE) {
+    if (!existingJudge || !JUDGE_MANAGEABLE_ROLES.includes(existingJudge.role)) {
         logger.warn({ id }, "Judge not found on judge delete")
         throw new AppError("JUDGE_NOT_FOUND")
     }

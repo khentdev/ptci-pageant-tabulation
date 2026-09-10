@@ -34,11 +34,18 @@ describe("Delete Judge Integration Test", () => {
 
     const deviceFingerprint = "{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"
 
+    const TARGET_CHAIRMAN = {
+        name: "Head Judge",
+        username: "test-delete-judge-chairman",
+        role: "CHAIRMAN" as Role,
+    }
+
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TARGET_JUDGE.username,
         OTHER_JUDGE.username,
+        TARGET_CHAIRMAN.username,
     ]
 
     const postLogin = (username: string) =>
@@ -258,6 +265,23 @@ describe("Delete Judge Integration Test", () => {
                 select: { id: true },
             })
             expect(deletedJudge).toBeNull()
+        })
+
+        it("should delete a Chairman account with no scores", async () => {
+            const targetChairman = await seedUser(TARGET_CHAIRMAN)
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await deleteJudge(cookieHeader, csrfToken, targetChairman.id)
+            const json = await res.json() as DeleteJudgeResponse
+
+            expect(res.status).toBe(200)
+            expect(json.message).toBe("Judge deleted successfully.")
+
+            const deletedChairman = await prisma.user.findUnique({
+                where: { id: targetChairman.id },
+                select: { id: true },
+            })
+            expect(deletedChairman).toBeNull()
         })
 
         it("should not affect sibling judges when deleting one judge", async () => {

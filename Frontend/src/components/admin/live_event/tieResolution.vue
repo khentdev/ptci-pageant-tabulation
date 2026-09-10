@@ -22,7 +22,10 @@
               :value="contestant.id"
               type="checkbox"
               class="size-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="group.selectedCount >= group.required && !isContestantSelected(contestant.id)"
+              :disabled="
+                !authStore.isChairman ||
+                (group.selectedCount >= group.required && !isContestantSelected(contestant.id))
+              "
               v-model="liveStore.selectedContestantIds"
             />
             <label :for="`contestant-${contestant.id}`" class="w-full">{{ contestant.name }}</label>
@@ -46,12 +49,14 @@
 </template>
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
+import { useAuthStore } from '@/stores/auth/authStore';
 import { Check, TriangleAlert, X } from '@lucide/vue';
 import { computed } from 'vue';
 
 const GENDERS = ['FEMALE', 'MALE'] as const;
 
 const liveStore = useLiveStore();
+const authStore = useAuthStore();
 
 const genderLabel = (gender: (typeof GENDERS)[number]) =>
   gender === 'FEMALE' ? 'Female' : 'Male';

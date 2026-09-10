@@ -4,6 +4,9 @@ import { ref, type Component } from 'vue';
 import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
 import { RouterView } from 'vue-router';
 import LiveRoundSideBar from '@/components/admin/live_event/liveRoundSideBar.vue';
+import { useAuthStore } from '@/stores/auth/authStore';
+
+const authStore = useAuthStore();
 
 type SetupNavItem = {
   label: string;
@@ -15,7 +18,7 @@ const setupNavItems: SetupNavItem[] = [
   { label: 'Rounds', routeName: 'rounds', icon: Calendar },
   { label: 'Categories', routeName: 'categories', icon: LayoutGrid },
   { label: 'Contestants', routeName: 'contestants', icon: Users },
-  { label: 'Judges', routeName: 'judge', icon: Users },
+  { label: 'Judges & Chairman', routeName: 'judge', icon: Users },
 ];
 
 const getDropDownState = (): boolean | null => {
@@ -60,32 +63,36 @@ const toggleDropDown = () => {
             class="bg-main-light-brown flex h-full w-full flex-col gap-2 overflow-y-auto rounded-xl border border-black/20 drop-shadow-sm drop-shadow-black/10"
           >
             <div class="flex shrink-0 items-center justify-between px-6 py-2">
-              <p class="w-fulll text-xl font-bold text-black/70 sm:text-2xl">ADMIN</p>
+              <p class="w-fulll text-xl font-bold text-black/70 sm:text-2xl">
+                {{ authStore.isChairman ? 'CHAIRMAN' : 'ADMIN' }}
+              </p>
               <SquareArrowLeft
                 @click="toggleDropDown"
                 class="stroke bg-main-dark-brown h-10 w-10 rounded-md stroke-white p-2"
               ></SquareArrowLeft>
             </div>
 
-            <div class="flex shrink-0 flex-col">
-              <div class="flex h-full w-full px-4">
-                <p class="h-px flex-1 bg-black/30"></p>
+            <template v-if="authStore.isAdmin">
+              <div class="flex shrink-0 flex-col">
+                <div class="flex h-full w-full px-4">
+                  <p class="h-px flex-1 bg-black/30"></p>
+                </div>
+                <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">SETUP</p>
               </div>
-              <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">SETUP</p>
-            </div>
 
-            <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
-              <RouterLink
-                v-for="item in setupNavItems"
-                :key="item.routeName"
-                exact-active-class="bg-main-dark-brown text-white hover:bg-main-dark-brown"
-                :to="{ name: item.routeName }"
-                class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
-              >
-                <component :is="item.icon"></component>
-                <p class="cursor-pointer">{{ item.label }}</p>
-              </RouterLink>
-            </div>
+              <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
+                <RouterLink
+                  v-for="item in setupNavItems"
+                  :key="item.routeName"
+                  exact-active-class="bg-main-dark-brown text-white hover:bg-main-dark-brown"
+                  :to="{ name: item.routeName }"
+                  class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
+                >
+                  <component :is="item.icon"></component>
+                  <p class="cursor-pointer">{{ item.label }}</p>
+                </RouterLink>
+              </div>
+            </template>
 
             <div class="mt-2 flex shrink-0 flex-col">
               <div class="flex h-full w-full px-4">

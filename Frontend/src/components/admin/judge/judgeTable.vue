@@ -4,6 +4,7 @@
       <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
         <th class="px-2 text-nowrap">Name</th>
         <th class="px-2 text-nowrap">Username</th>
+        <th class="px-2 text-nowrap">Role</th>
         <th class="min-w-100 px-2 text-nowrap">Actions</th>
       </tr>
     </thead>
@@ -11,6 +12,7 @@
       <tr class="font-poppins" v-for="judge in items" :key="judge.id">
         <td class="border px-2 text-nowrap">{{ judge.name }}</td>
         <td class="border px-2 text-nowrap">{{ judge.username }}</td>
+        <td class="border px-2 text-nowrap">{{ judge.role === 'CHAIRMAN' ? 'Chairman' : 'Judge' }}</td>
         <td class="border px-2">
           <div class="flex h-12 items-center justify-center gap-4">
             <button

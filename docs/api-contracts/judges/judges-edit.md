@@ -85,5 +85,5 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 | `400` | `JUDGE_NAME_TOO_SHORT` | Name must be at least 3 characters long. | `field`: `judge_name_input` |
 | `400` | `JUDGE_USERNAME_TOO_SHORT` | Username must be at least 3 characters long. | `field`: `judge_username_input` |
 | `400` | `JUDGE_USERNAME_EXISTS` | Username already exists. | Applies to any existing user, including admins |
-| `404` | `JUDGE_NOT_FOUND` | Judge not found. | Includes admin IDs and non-existent IDs |
+| `404` | `JUDGE_NOT_FOUND` | Judge not found. | Works for both Judge and Chairman accounts; also returned for the Admin ID and non-existent IDs |
 | `500` | `JUDGE_EDIT_FAILED` | Unable to edit judge. | |

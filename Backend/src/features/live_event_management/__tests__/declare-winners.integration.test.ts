@@ -31,12 +31,18 @@ describe("Declare Winners Integration Test", () => {
         username: "test-declare-winners-judge-2",
         role: "JUDGE" as Role,
     }
+    const TEST_CHAIRMAN = {
+        name: "Declare Winners Chairman",
+        username: "test-declare-winners-chairman",
+        role: "CHAIRMAN" as Role,
+    }
 
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TEST_JUDGE_ONE.username,
         TEST_JUDGE_TWO.username,
+        TEST_CHAIRMAN.username,
     ]
 
     const deviceFingerprint = "{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"
@@ -116,6 +122,11 @@ describe("Declare Winners Integration Test", () => {
     const seedAdminCredentials = async () => {
         await seedUser(TEST_ADMIN)
         return loginAndGetCredentials(TEST_ADMIN.username)
+    }
+
+    const seedChairmanCredentials = async () => {
+        await seedUser(TEST_CHAIRMAN)
+        return loginAndGetCredentials(TEST_CHAIRMAN.username)
     }
 
     const seedRound = async (data: {
@@ -392,7 +403,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should declare winners on final round with tie resolution", async () => {
             const { top3, contestants } = await seedFinalRoundTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const resultsBefore = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
             expect(resultsBefore.data.advancement.hasTie).toBe(true)
@@ -459,7 +470,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should return PLACEMENT_ORDER_REQUIRED when declaring without resolving a placement tie", async () => {
             const { top3 } = await seedFinalRoundPlacementTie()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
             const json = await res.json() as { error: { code: string } }
@@ -470,7 +481,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should return PLACEMENT_ORDER_MISMATCH when placementOrder does not match the tied contestants", async () => {
             const { top3, contestants } = await seedFinalRoundPlacementTie()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
                 placementOrder: [contestants[2]!.id],
@@ -496,7 +507,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should declare winners honoring the submitted placement order", async () => {
             const { top3, contestants } = await seedFinalRoundPlacementTie()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             // contestants[1] scored equal to contestants[0] but is chosen to place higher.
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
@@ -513,6 +524,49 @@ describe("Declare Winners Integration Test", () => {
             expect(roundWinners[0]).toMatchObject({ contestantId: contestants[1]!.id, placement: 1 })
             expect(roundWinners[1]).toMatchObject({ contestantId: contestants[0]!.id, placement: 2 })
             expect(roundWinners[2]).toMatchObject({ contestantId: contestants[2]!.id, placement: 3 })
+        })
+    })
+
+    describe("role-conditional authorization", () => {
+        it("should return DECLARE_REQUIRES_CHAIRMAN when Admin attempts to declare a round with a cutoff tie", async () => {
+            const { top3 } = await seedFinalRoundTieAtCutoff()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(409)
+            expect(json.error.code).toBe("DECLARE_REQUIRES_CHAIRMAN")
+        })
+
+        it("should return DECLARE_REQUIRES_CHAIRMAN when Admin attempts to declare a round with a placement tie", async () => {
+            const { top3 } = await seedFinalRoundPlacementTie()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(409)
+            expect(json.error.code).toBe("DECLARE_REQUIRES_CHAIRMAN")
+        })
+
+        it("should return CHAIRMAN_ACTION_REQUIRES_TIE when Chairman attempts to declare a round with no tie", async () => {
+            const { top3 } = await seedFinalRoundReady()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(409)
+            expect(json.error.code).toBe("CHAIRMAN_ACTION_REQUIRES_TIE")
+        })
+
+        it("should allow Admin to declare winners on a round with no tie", async () => {
+            const { top3 } = await seedFinalRoundReady()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
+            expect(res.status).toBe(201)
         })
     })
 
@@ -648,7 +702,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should return SELECTED_CONTESTANT_IDS_REQUIRED when tie exists but body is empty", async () => {
             const { top3 } = await seedFinalRoundTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {})
             const json = await res.json() as { error: { code: string } }
@@ -659,7 +713,7 @@ describe("Declare Winners Integration Test", () => {
 
         it("should return SELECTED_CONTESTANT_IDS_COUNT_INVALID when tie selection count is wrong", async () => {
             const { top3, contestants } = await seedFinalRoundTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
                 selectedContestantIds: [contestants[3]!.id, contestants[4]!.id],
@@ -728,7 +782,7 @@ describe("Declare Winners Integration Test", () => {
             const male1 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5300, 85)
             const male2 = await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5301, 85)
 
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const before = await (await getRoundResults(cookieHeader, csrfToken, top3.id)).json() as GetRoundResultsResponse
             expect(before.data.advancement.hasTie).toBe(true)
@@ -759,7 +813,7 @@ describe("Declare Winners Integration Test", () => {
             await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5500, 85)
             await seedGenderScoredFinalist(top3, category, judgeOne, judgeTwo, "MALE", 5501, 85)
 
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
             const res = await postDeclareWinners(cookieHeader, csrfToken, top3.id, {
                 selectedContestantIds: [female1.id, female2.id],
             })

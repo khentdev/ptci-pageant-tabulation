@@ -68,6 +68,20 @@
         </div>
       </div>
 
+      <div class="h-full w-full">
+        <p>Role</p>
+        <select v-model="newJudgeRole" class="h-10 w-full border border-black px-3">
+          <option value="JUDGE">Judge</option>
+          <option value="CHAIRMAN">Chairman</option>
+        </select>
+        <div v-if="judgeStore.formErrors.judgeRole" class="mt-1 flex w-full items-start gap-1">
+          <CircleAlert class="shrink-0 stroke-red-500 stroke-2" :size="18" />
+          <p class="text-sm text-red-500">
+            {{ judgeStore.formErrors.judgeRole }}
+          </p>
+        </div>
+      </div>
+
       <BaseModalActions
         submitLabel="Save Judge"
         submittingLabel="Saving judge..."
@@ -81,7 +95,7 @@
 <script setup lang="ts">
 import { useJudgeStore } from '@/stores/admin/adminSetup/judge/judgeStore';
 import { useModalStore } from '@/stores/modals/modalStore';
-import type { AddJudgeInput } from '@/types/admin/adminSetup/judge/judge';
+import type { AddJudgeInput, JudgeAssignableRole } from '@/types/admin/adminSetup/judge/judge';
 import { CircleAlert } from '@lucide/vue';
 import { onUnmounted, ref, watch } from 'vue';
 import BaseModal from '@/components/shared/BaseModal.vue';
@@ -93,12 +107,14 @@ const modalStore = useModalStore();
 const newJudgeName = ref('');
 const newJudgeUsername = ref('');
 const newJudgePassword = ref('');
+const newJudgeRole = ref<JudgeAssignableRole>('JUDGE');
 
 const saveJudge = async () => {
   const payload: AddJudgeInput = {
     name: newJudgeName.value.trim(),
     username: newJudgeUsername.value.trim(),
     password: newJudgePassword.value.trim(),
+    role: newJudgeRole.value,
   };
 
   const success = await judgeStore.addJudges(payload);
@@ -107,10 +123,11 @@ const saveJudge = async () => {
     newJudgeName.value = '';
     newJudgeUsername.value = '';
     newJudgePassword.value = '';
+    newJudgeRole.value = 'JUDGE';
   }
 };
 
-watch([newJudgeName, newJudgeUsername, newJudgePassword], () => {
+watch([newJudgeName, newJudgeUsername, newJudgePassword, newJudgeRole], () => {
   judgeStore.clearFormErrors();
 });
 

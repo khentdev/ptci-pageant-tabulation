@@ -4,9 +4,9 @@
 
 Admin only.
 
-Returns all judge accounts. Used on the Admin Setup → Judges list page.
+Returns all Judge and Chairman accounts. Used on the Admin Setup → Judges & Chairman list page.
 
-Only users with role `JUDGE` are included — admin accounts are never returned.
+Only users with role `JUDGE` or `CHAIRMAN` are included — the Admin account is never returned.
 
 ## Request
 
@@ -34,12 +34,14 @@ Only users with role `JUDGE` are included — admin accounts are never returned.
     {
       "id": 1,
       "name": "Judge One",
-      "username": "judge.one"
+      "username": "judge.one",
+      "role": "JUDGE"
     },
     {
       "id": 2,
-      "name": "Judge Two",
-      "username": "judge.two"
+      "name": "Head Judge",
+      "username": "chairman.one",
+      "role": "CHAIRMAN"
     }
   ],
   "message": "Judge list fetched successfully."
@@ -48,15 +50,16 @@ Only users with role `JUDGE` are included — admin accounts are never returned.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `data` | `GetJudgeListDTO[]` | Judge accounts only |
-| `data[].id` | `number` | Judge ID |
-| `data[].name` | `string` | Judge display name |
+| `data` | `GetJudgeListDTO[]` | Judge and Chairman accounts |
+| `data[].id` | `number` | User ID |
+| `data[].name` | `string` | Display name |
 | `data[].username` | `string` | Login username |
+| `data[].role` | `"JUDGE" \| "CHAIRMAN"` | Which of the two roles this account holds |
 | `message` | `string` | Success message |
 
-Returns an empty array when no judges exist.
+Returns an empty array when no judges or chairmen exist.
 
-Password hash, role, and timestamps are never included in list entries.
+Password hash and timestamps are never included in list entries.
 
 ## Errors
 

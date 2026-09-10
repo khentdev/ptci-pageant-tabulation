@@ -22,7 +22,8 @@
           <select
             :value="ranks[contestant.id] ?? ''"
             @change="(e) => setRank(contestant.id, (e.target as HTMLSelectElement).value)"
-            class="text-main-dark-brown rounded border border-black bg-white px-2 py-1"
+            :disabled="!authStore.isChairman"
+            class="text-main-dark-brown rounded border border-black bg-white px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="" disabled>Select rank</option>
             <option v-for="rank in cluster.contestants.length" :key="rank" :value="rank">
@@ -42,10 +43,12 @@
 </template>
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
+import { useAuthStore } from '@/stores/auth/authStore';
 import { Check, TriangleAlert, X } from '@lucide/vue';
 import { computed, reactive, watch } from 'vue';
 
 const liveStore = useLiveStore();
+const authStore = useAuthStore();
 
 const genderLabel = (gender: 'MALE' | 'FEMALE') => (gender === 'FEMALE' ? 'Female' : 'Male');
 

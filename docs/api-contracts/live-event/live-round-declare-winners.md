@@ -2,23 +2,26 @@
 
 `POST /live-event/round-results/:id/declare-winners`
 
-Admin only.
+Admin or Chairman — role-conditional on whether a tie (cutoff or placement) exists (see **Business rules**).
 
 Locks final-round results by inserting `RoundWinner` rows and setting `winnersDeclaredAt` on the current round. Irreversible. Does not return rankings; refetch [[live-event/live-round-results]] after success for lock flags.
 
 **Placement is assigned independently per gender** — a Ms. and a Mr. can each hold placement 1 in the same round. `advancement`/tie resolution follow the same per-gender rules as [[live-event/live-round-advance]].
 
+**Role split:** resolving a tie (cutoff or placement) is a judging decision, not an operational one. Admin declares every routine (tie-free) final round; Chairman is the only role allowed to declare when `advancement.hasTie` or `placementTies.length > 0`. Sending the request as the wrong role for the current tie state is rejected — see `DECLARE_REQUIRES_CHAIRMAN` / `CHAIRMAN_ACTION_REQUIRES_TIE` below.
+
 **Related docs:** [[live-event/live-round-results]] (rankings preview and flags) · [[live-event/live-judge-submissions]] · [[live-event/live-results-sidebar]] · [[Wireframe & Flows]] §11 · [[System Documentation]] §3.3
 
 ## Consumers
 
-- Admin Live Event → Round Results page — **Declare Winners** button (final round only; no-tie and tie-resolution flows)
+- Admin Live Event → Round Results page — **Declare Winners** button, shown to Admin only when there is no tie
+- Chairman Live Event → Round Results page (same page, Chairman-scoped nav) — **Declare Winners** button, shown to Chairman only when a tie exists
 
 ## When to call
 
 | Trigger | Call? |
 |---------|-------|
-| Declare Winners button click (after confirmation) | Yes — only on explicit admin action |
+| Declare Winners button click (after confirmation) | Yes — only on explicit Admin or Chairman action |
 | Page mount / refresh | No |
 | Sidebar round change | No |
 | Auto-polling | No |
@@ -120,6 +123,7 @@ No `data` field. After success:
 | No tie | `winningContestantIds = advancement.included` |
 | Cutoff tie | `winningContestantIds = advancement.included + selectedContestantIds`, resolved per gender: each gender's own included + its own share of picks must equal the current round `contestantLimit` for that gender when the limit is set |
 | Placement tie | Recomputed server-side from the *final* `winningContestantIds` (after cutoff-tie resolution, if any) — clusters of 2+ same-gender winners sharing an identical `overallScore`. Rejected with `PLACEMENT_ORDER_REQUIRED` if any cluster exists and `placementOrder` is missing, `PLACEMENT_ORDER_MISMATCH` if it doesn't exactly cover every cluster's contestant IDs, `PLACEMENT_ORDER_NOT_ALLOWED` if sent with no cluster |
+| Role gate | Checked before the tie-selection logic above, using the caller's role from the session JWT (never client-supplied): Admin + (`advancement.hasTie` or `placementTies.length > 0`) → `409 DECLARE_REQUIRES_CHAIRMAN`. Chairman + neither → `409 CHAIRMAN_ACTION_REQUIRES_TIE` |
 | Eligible ≤ limit | `included` may be shorter than N **per gender** — valid declare with fewer scored contestants |
 | Idempotency | Second declare on same round → `DECLARE_NOT_ALLOWED` (`WINNERS_ALREADY_DECLARED`) — also rejected when `RoundWinner` rows already exist |
 | Irreversible | No undo endpoint |
@@ -142,10 +146,11 @@ Returned with HTTP `409` when declare is rejected.
 | Signal | Rule |
 |--------|------|
 | When to POST | Declare Winners button click only (after confirmation modal) — never on mount or poll |
-| Show button | Final round (`nextRound === null`); hide when `winnersDeclaredAt` is set |
+| Show button (Admin) | Final round (`nextRound === null`), no tie of either kind, `winnersDeclaredAt` not set; when a tie exists, hide the button and show "A tie must be resolved by the Chairman before declaring winners." instead |
+| Show button (Chairman) | Final round, `winnersDeclaredAt` not set, and a tie of either kind exists — nothing to do (and no button) otherwise |
 | No tie | Enable when `canDeclareWinners === true`; empty body or `{}` |
-| Cutoff tie | Show tie-resolution panel; **disable** Declare until local selection count === `requiredSelections`; then enable and POST `{ selectedContestantIds }` |
-| Placement tie | Show placement-order panel (one control per tied contestant, grouped by `placementTies[].gender`); **disable** Declare until every cluster has a unique finish order assigned; then enable and POST `{ placementOrder }` — combine with `selectedContestantIds` in the same body if a cutoff tie is also being resolved |
+| Cutoff tie | Show tie-resolution panel; **disable** Declare until local selection count === `requiredSelections`; then enable and POST `{ selectedContestantIds }`. Panel is read-only for Admin — only Chairman's checkboxes are interactive |
+| Placement tie | Show placement-order panel (one control per tied contestant, grouped by `placementTies[].gender`); **disable** Declare until every cluster has a unique finish order assigned; then enable and POST `{ placementOrder }` — combine with `selectedContestantIds` in the same body if a cutoff tie is also being resolved. Panel is read-only for Admin — only Chairman's rank selects are interactive |
 | After success | Refetch advancement GET for `winnersDeclaredAt`; refetch [[live-event/live-round-declared-winners]] for podium; clear local tie selection and placement order |
 | Advance button | Never on final round (`canAdvance` is `false`) |
 
@@ -181,7 +186,9 @@ See [[global/errors]] for shared codes (`FORBIDDEN`, etc.).
 | `400` | `PLACEMENT_ORDER_REQUIRED` | Placement order is required to resolve a score tie. | `placementTies` non-empty but `placementOrder` missing/empty |
 | `400` | `PLACEMENT_ORDER_MISMATCH` | Placement order must include exactly the tied contestants, with no extras or omissions. | `placementOrder`'s ID set doesn't exactly match the union of every cluster's contestant IDs |
 | `400` | `DECLARE_WINNER_COUNT_MISMATCH` | Declared winner count does not match the round limit. | One gender's merged count ≠ `contestantLimit` for that gender (tie path) — usually means picks weren't distributed correctly across the two genders' ties |
-| `403` | `FORBIDDEN` | *(shared)* | Non-admin session |
+| `403` | `FORBIDDEN` | *(shared)* | Session role is not Admin or Chairman (e.g. a Judge session) |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | Round `id` does not exist |
 | `409` | `DECLARE_NOT_ALLOWED` | Winners cannot be declared at this time. | `data.reason` — see table above |
+| `409` | `DECLARE_REQUIRES_CHAIRMAN` | This round has a tie. Only the Chairman can resolve it and declare winners. | Admin session, a cutoff or placement tie exists |
+| `409` | `CHAIRMAN_ACTION_REQUIRES_TIE` | There is no tie to resolve. The Chairman can only act when a tie exists. | Chairman session, no tie of either kind |
 | `500` | `DECLARE_WINNERS_ERROR` | Unable to declare winners. | Unexpected failure |

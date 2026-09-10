@@ -39,11 +39,18 @@ describe("Edit Judge Integration Test", () => {
         username: "test-edit-judge-updated",
     }
 
+    const TARGET_CHAIRMAN = {
+        name: "Head Judge",
+        username: "test-edit-judge-chairman",
+        role: "CHAIRMAN" as Role,
+    }
+
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TARGET_JUDGE.username,
         OTHER_JUDGE.username,
+        TARGET_CHAIRMAN.username,
         validBody.username,
     ]
 
@@ -239,6 +246,27 @@ describe("Edit Judge Integration Test", () => {
                 name: validBody.name,
                 username: validBody.username,
                 role: "JUDGE",
+            })
+        })
+
+        it("should update a Chairman account's name and username", async () => {
+            const targetChairman = await seedUser(TARGET_CHAIRMAN)
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await patchEditJudge(cookieHeader, csrfToken, targetChairman.id, validBody)
+            const json = await res.json() as EditJudgeResponse
+
+            expect(res.status).toBe(200)
+            expect(json.message).toBe("Judge updated successfully.")
+
+            const updatedChairman = await prisma.user.findUnique({
+                where: { id: targetChairman.id },
+                select: { name: true, username: true, role: true },
+            })
+            expect(updatedChairman).toEqual({
+                name: validBody.name,
+                username: validBody.username,
+                role: "CHAIRMAN",
             })
         })
 
