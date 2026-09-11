@@ -13,14 +13,6 @@
     </template>
 
     <JudgeSubmissions />
-    <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end">
-      <button
-        @click="handlePrint"
-        class="bg-jungle-green-800 flex gap-2 rounded-lg border border-black/10 px-6 py-3 font-semibold text-white"
-      >
-        <Printer></Printer>Print
-      </button>
-    </div>
     <div class="" ref="printTarget">
       <RankingsContestant />
     </div>
@@ -31,6 +23,14 @@
       v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
     >
       {{ advanceReasonText }}
+    </div>
+     <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end px-4">
+      <button
+        @click="handlePrint"
+        class="bg-slate-700 hover:bg-slate-800 flex gap-2 rounded-lg border border-black/10 px-6 py-3 font-semibold text-white"
+      >
+        <Printer></Printer>Print
+      </button>
     </div>
     <div
       v-if="liveStore.roundResult?.nextRound && showAdvanceSection"

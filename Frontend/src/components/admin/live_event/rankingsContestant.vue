@@ -1,5 +1,5 @@
 <template>
-  <div class="gap flex w-full flex-col">
+  <div class="gap flex w-full flex-col mt-6">
     <div class="h-full bg-amber-500/0" v-if="liveStore.declaredWinners?.declaredWinners">
       <div
         v-for="group in declaredGroups"
