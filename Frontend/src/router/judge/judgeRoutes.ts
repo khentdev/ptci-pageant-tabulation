@@ -10,12 +10,12 @@ export const judgeRoutes: RouteRecordRaw[] = [
       requiresJudge: true,
     },
     component: () => import('../../views/judge/judgeMain.vue'),
-    beforeEnter: (_, __, next) => {
+    beforeEnter: async () => {
       const authStore = useAuthStore();
       if (!authStore.isJudge) {
-        next({ name: 'login' });
+        return { name: 'login' };
       }
-      next();
+      return;
     },
     children: [
       {

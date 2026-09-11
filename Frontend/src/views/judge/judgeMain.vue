@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import NavMain from '@/components/navMain.vue';
-import { ref, type Component } from 'vue';
-import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
+import { ref } from 'vue';
+import { SquareArrowLeft, SquareArrowRight } from '@lucide/vue';
 import { RouterView } from 'vue-router';
 
 import JudgeRoundSidebar from '@/components/admin/judge_scoring/judgeRoundSidebar.vue';
-import JudgeScoringMain from './judgeScoringMain.vue';
 
 const getDropDownState = (): boolean | null => {
   const savedState = localStorage.getItem('toggleDropDown');
