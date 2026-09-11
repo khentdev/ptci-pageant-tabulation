@@ -19,7 +19,7 @@ export const useLiveStore = defineStore('liveStore', () => {
   const judgeList = ref<GetJudgeSubmissionsDTO | null>(null);
   const roundResult = ref<GetRoundResultsDTO | null>(null);
   const declaredWinners = ref<GetDeclaredWinnersDTO | null>(null);
-  const printTarget = ref<HTMLElement | null>(null);
+  
 
   const isTieResolved = computed(() => {
     const hasTie = roundResult.value?.advancement.hasTie;
@@ -297,7 +297,7 @@ export const useLiveStore = defineStore('liveStore', () => {
   };
 
   return {
-    printTarget,
+
     addDeclareWinners,
     isTieResolved,
     selectedContestantIds,
