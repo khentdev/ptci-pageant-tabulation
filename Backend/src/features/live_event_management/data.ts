@@ -1,7 +1,9 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
 import type { AdvanceRoundServiceInput, CanAdvanceReason, DeclareWinnersServiceInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
-import { Gender, Role } from "../../../generated/prisma/enums.js";
+import { AuditActionType, Gender, Role } from "../../../generated/prisma/enums.js";
+import { buildAuditLogCreateData } from "../audit_trail/data.js";
+import type { AuditTieResolution, ContestantSnapshot } from "../audit_trail/types.js";
 
 type JudgeRow = { id: number, name: string }
 type CategoryRow = { id: number, name: string }
@@ -16,6 +18,13 @@ const contestantSelect = {
 } as const
 
 const roundTo2 = (value: number) => Math.round(value * 100) / 100
+
+const toContestantSnapshot = (c: { id: number, candidateNumber: number, name: string, gender: Gender }): ContestantSnapshot => ({
+    id: c.id,
+    candidateNumber: c.candidateNumber,
+    name: c.name,
+    gender: c.gender,
+})
 
 function computeAllJudgesSubmitted(
     judges: { id: number }[],
@@ -270,7 +279,7 @@ async function getRoundResultsInTx(
         && advancementLimit > 0
         && winnersDeclaredAt === null
 
-    type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+    type AdvancementContestantRow = { id: number, candidateNumber: number, name: string, gender: Gender, overallScore: number }
     type AdvancementGroup = {
         hasTie: boolean
         requiredSelections: number
@@ -292,6 +301,7 @@ async function getRoundResultsInTx(
         const eligible = rankedRows.filter(row => row.overallScore !== null)
         const toAdvancementContestant = (row: (typeof eligible)[number]): AdvancementContestantRow => ({
             id: row.contestant.id,
+            candidateNumber: row.contestant.candidateNumber,
             name: row.contestant.name,
             gender: row.contestant.gender,
             overallScore: row.overallScore!,
@@ -395,7 +405,7 @@ async function getRoundResultsInTx(
     }
 }
 
-type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+type AdvancementContestantRow = { id: number, candidateNumber: number, name: string, gender: Gender, overallScore: number }
 type AdvancementPreview = {
     hasTie: boolean
     requiredSelections: number
@@ -470,7 +480,21 @@ function resolveTieAdvancingIds(
     ]
 }
 
-export async function advanceRound({ id, selectedContestantIds, callerRole }: AdvanceRoundServiceInput) {
+function buildAdvancementTieResolution(
+    advancement: AdvancementPreview,
+    selectedContestantIds: number[] | undefined,
+): AuditTieResolution["advancementTie"] | undefined {
+    if (!advancement.hasTie) return undefined
+    return {
+        requiredSelections: advancement.requiredSelections,
+        tiedContestants: advancement.tied.map(toContestantSnapshot),
+        selectedContestants: advancement.tied
+            .filter(contestant => selectedContestantIds!.includes(contestant.id))
+            .map(toContestantSnapshot),
+    }
+}
+
+export async function advanceRound({ id, selectedContestantIds, callerRole, callerUserId }: AdvanceRoundServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -559,6 +583,17 @@ export async function advanceRound({ id, selectedContestantIds, callerRole }: Ad
                 contestantId,
             })),
         })
+
+        const advancementTie = buildAdvancementTieResolution(advancement, selectedContestantIds)
+        await tx.auditLog.create({
+            data: buildAuditLogCreateData({
+                action: AuditActionType.ROUND_ADVANCED,
+                actorId: callerUserId,
+                actorRole: callerRole,
+                roundId: id,
+                tieResolution: advancementTie ? { advancementTie } : null,
+            }),
+        })
     })
 }
 
@@ -613,7 +648,7 @@ function buildDeclaredWinnerRows(
     })
 }
 
-export async function declareWinners({ id, selectedContestantIds, placementOrder, callerRole }: DeclareWinnersServiceInput) {
+export async function declareWinners({ id, selectedContestantIds, placementOrder, callerRole, callerUserId }: DeclareWinnersServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -725,6 +760,7 @@ export async function declareWinners({ id, selectedContestantIds, placementOrder
                 if (!row || row.overallScore === null) return null
                 return {
                     id: contestantId,
+                    candidateNumber: row.contestant.candidateNumber,
                     name: row.contestant.name,
                     gender: row.contestant.gender,
                     overallScore: row.overallScore,
@@ -776,6 +812,27 @@ export async function declareWinners({ id, selectedContestantIds, placementOrder
         await tx.round.update({
             where: { id },
             data: { winnersDeclaredAt: new Date() },
+        })
+
+        const advancementTie = buildAdvancementTieResolution(advancement, selectedContestantIds)
+        const placementTie: AuditTieResolution["placementTie"] = placementClusters.length > 0
+            ? placementClusters.map(cluster => ({
+                gender: cluster.gender,
+                tiedContestants: cluster.contestants.map(toContestantSnapshot),
+                placementOrder: placementOrder!
+                    .filter(contestantId => cluster.contestants.some(c => c.id === contestantId))
+                    .map(contestantId => toContestantSnapshot(cluster.contestants.find(c => c.id === contestantId)!)),
+            }))
+            : undefined
+
+        await tx.auditLog.create({
+            data: buildAuditLogCreateData({
+                action: AuditActionType.WINNERS_DECLARED,
+                actorId: callerUserId,
+                actorRole: callerRole,
+                roundId: id,
+                tieResolution: (advancementTie || placementTie) ? { advancementTie, placementTie } : null,
+            }),
         })
     })
 }

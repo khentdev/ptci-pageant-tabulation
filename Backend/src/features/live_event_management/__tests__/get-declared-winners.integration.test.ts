@@ -248,6 +248,7 @@ describe("Get Declared Winners Integration Test", () => {
         await prisma.roundContestant.deleteMany()
         await prisma.contestant.deleteMany()
         await prisma.category.deleteMany()
+        await prisma.auditLog.deleteMany()
         await prisma.round.deleteMany()
         await prisma.user.deleteMany({ where: { role: "JUDGE" } })
         await prisma.user.deleteMany({

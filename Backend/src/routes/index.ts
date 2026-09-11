@@ -8,6 +8,7 @@ import contestantsRoutes from "../features/contestants_management/route.js"
 import { judgeRoutes } from "../features/judge_management/route.js";
 import liveEventRoutes from "../features/live_event_management/route.js";
 import judgeScoringRoutes from "../features/judge_scoring_management/route.js";
+import auditTrailRoutes from "../features/audit_trail/route.js";
 
 export function registerAppRoutes(app: Hono) {
     app.get("/", (c) => c.redirect("/health-check"))
@@ -20,5 +21,6 @@ export function registerAppRoutes(app: Hono) {
     app.route("/judges", judgeRoutes)
     app.route("/live-event", liveEventRoutes)
     app.route("/judge-scoring", judgeScoringRoutes)
+    app.route("/audit-trail", auditTrailRoutes)
 }
 

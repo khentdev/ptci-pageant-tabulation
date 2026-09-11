@@ -35,6 +35,11 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import('../../views/admin/judge/judgeMain.vue'),
       },
       {
+        path: 'audit-trail',
+        name: 'audit-trail',
+        component: () => import('../../views/admin/auditTrail/auditTrailMain.vue'),
+      },
+      {
         path: ':roundId',
         name: 'live-event-results',
         component: () => import('../../views/admin/live_event/liveEventMain.vue'),

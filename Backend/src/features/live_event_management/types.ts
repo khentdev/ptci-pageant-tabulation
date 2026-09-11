@@ -108,8 +108,8 @@ export type AdvanceRoundInput = {
 export type AdvanceRoundInputVariables = {
     advanceRound: AdvanceRoundInput
 }
-/** `callerRole` is set by the controller from the caller's JWT — never accepted from the request body. */
-export type AdvanceRoundServiceInput = AdvanceRoundInput & { callerRole: Role }
+/** `callerRole`/`callerUserId` are set by the controller from the caller's JWT — never accepted from the request body. */
+export type AdvanceRoundServiceInput = AdvanceRoundInput & { callerRole: Role, callerUserId: number }
 export type AdvanceRoundResponse = {
     message: string
 }
@@ -134,8 +134,8 @@ export type DeclareWinnersInput = {
 export type DeclareWinnersInputVariables = {
     declareWinners: DeclareWinnersInput
 }
-/** `callerRole` is set by the controller from the caller's JWT — never accepted from the request body. */
-export type DeclareWinnersServiceInput = DeclareWinnersInput & { callerRole: Role }
+/** `callerRole`/`callerUserId` are set by the controller from the caller's JWT — never accepted from the request body. */
+export type DeclareWinnersServiceInput = DeclareWinnersInput & { callerRole: Role, callerUserId: number }
 export type DeclareWinnersResponse = {
     message: string
 }

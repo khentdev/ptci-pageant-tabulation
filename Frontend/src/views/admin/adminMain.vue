@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import NavMain from '@/components/navMain.vue';
 import { ref, type Component } from 'vue';
-import { Calendar, LayoutGrid, SquareArrowLeft, SquareArrowRight, Users } from '@lucide/vue';
+import {
+  Calendar,
+  History,
+  LayoutGrid,
+  SquareArrowLeft,
+  SquareArrowRight,
+  Users,
+} from '@lucide/vue';
 import { RouterView } from 'vue-router';
 import LiveRoundSideBar from '@/components/admin/live_event/liveRoundSideBar.vue';
 import { useAuthStore } from '@/stores/auth/authStore';
@@ -101,10 +108,29 @@ const toggleDropDown = () => {
               <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">LIVE EVENT</p>
             </div>
 
-            <!--  <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4"></div>-->
-            <div class="flex shrink-0 flex-col gap-2 px-4 pb-4 transition-all">
+            <div class="flex shrink-0 flex-col gap-2 px-4 transition-all">
               <LiveRoundSideBar></LiveRoundSideBar>
             </div>
+
+            <template v-if="authStore.isAdmin || authStore.isChairman">
+              <div class="mt-2 flex shrink-0 flex-col">
+                <div class="flex h-full w-full px-4">
+                  <p class="h-px flex-1 bg-black/30"></p>
+                </div>
+                <p class="px-6 py-1 text-base font-medium text-black/70 sm:text-lg">AUDIT TRAIL</p>
+              </div>
+
+              <div class="flex shrink-0 flex-col gap-2 px-4 pb-4 transition-all">
+                <RouterLink
+                  :to="{ name: 'audit-trail' }"
+                  exact-active-class="bg-main-dark-brown text-white hover:bg-main-dark-brown"
+                  class="flex items-center gap-4 rounded-lg border border-black/30 px-4 py-2 hover:bg-black/5 sm:p-4"
+                >
+                  <History></History>
+                  <p class="cursor-pointer">Audit Trail</p>
+                </RouterLink>
+              </div>
+            </template>
           </div>
         </div>
       </Transition>

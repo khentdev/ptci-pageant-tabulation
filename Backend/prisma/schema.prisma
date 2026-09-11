@@ -19,6 +19,11 @@ enum Gender {
   FEMALE
 }
 
+enum AuditActionType {
+  ROUND_ADVANCED
+  WINNERS_DECLARED
+}
+
 model User {
   id             Int       @id @default(autoincrement())
   name           String
@@ -27,7 +32,8 @@ model User {
   role           Role      @default(JUDGE)
   createdAt      DateTime  @default(now())
 
-  scores Score[]
+  scores    Score[]
+  auditLogs AuditLog[]
 }
 
 model Round {
@@ -41,6 +47,7 @@ model Round {
   categories       Category[]
   roundContestants RoundContestant[]
   roundWinners     RoundWinner[]
+  auditLogs        AuditLog[]
 }
 
 model Category {
@@ -106,6 +113,22 @@ model RoundWinner {
 
   @@id([roundId, gender, placement])
   @@unique([roundId, contestantId])
+}
+
+model AuditLog {
+  id            Int              @id @default(autoincrement())
+  action        AuditActionType
+  actorId       Int
+  actorRole     Role // snapshot of the actor's role at action time
+  roundId       Int
+  tieResolution Json? // present when a Chairman resolved a cutoff and/or placement tie
+  createdAt     DateTime         @default(now())
+
+  actor User  @relation(fields: [actorId], references: [id])
+  round Round @relation(fields: [roundId], references: [id])
+
+  @@index([roundId])
+  @@index([createdAt])
 }
 
 model Score {

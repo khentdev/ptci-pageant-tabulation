@@ -46,7 +46,7 @@ export async function getRoundResultsByIdService({ id }: Omit<GetRoundResultsByI
     }
 }
 
-export async function advanceRoundService({ id, selectedContestantIds, callerRole }: AdvanceRoundServiceInput) {
+export async function advanceRoundService({ id, selectedContestantIds, callerRole, callerUserId }: AdvanceRoundServiceInput) {
 
     const round = await prisma.round.findUnique({
         where: { id },
@@ -58,7 +58,7 @@ export async function advanceRoundService({ id, selectedContestantIds, callerRol
     }
 
     try {
-        await advanceRound({ id, selectedContestantIds, callerRole })
+        await advanceRound({ id, selectedContestantIds, callerRole, callerUserId })
     } catch (err) {
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error advancing round")
@@ -66,7 +66,7 @@ export async function advanceRoundService({ id, selectedContestantIds, callerRol
     }
 }
 
-export async function declareWinnersService({ id, selectedContestantIds, placementOrder, callerRole }: DeclareWinnersServiceInput) {
+export async function declareWinnersService({ id, selectedContestantIds, placementOrder, callerRole, callerUserId }: DeclareWinnersServiceInput) {
     const round = await prisma.round.findUnique({
         where: { id },
         select: { id: true },
@@ -77,7 +77,7 @@ export async function declareWinnersService({ id, selectedContestantIds, placeme
     }
 
     try {
-        await declareWinners({ id, selectedContestantIds, placementOrder, callerRole })
+        await declareWinners({ id, selectedContestantIds, placementOrder, callerRole, callerUserId })
     } catch (err) {
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error declaring winners")
