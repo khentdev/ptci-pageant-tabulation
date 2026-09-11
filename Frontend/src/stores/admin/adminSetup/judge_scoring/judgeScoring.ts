@@ -3,6 +3,7 @@ import {
   type GetCategoryScoringFieldsDTO,
   type GetJudgeRoundsDTO,
   type GetMyCategoryScoresDTO,
+  type SubmitCategoryScoreEntry,
 } from '@/types/admin/adminSetup/judge_scoring/judgeScoring';
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
@@ -20,6 +21,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
   const categoryFieldsList = ref<GetCategoryScoringFieldsDTO | null>(null);
   const contestantsList = ref<GetRoundContestantsDTO[]>([]);
   const categoryScoresList = ref<GetMyCategoryScoresDTO | null>(null);
+  const formScores = ref<Record<number, Record<number, string>>>({});
 
   const loadingStates = reactive({
     isSubmittingCategoryScores: false,
@@ -36,6 +38,27 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     isFetchingCategoryScoresError: false,
   });
 
+  const initializeFormScores = () => {
+    const newScores: Record<number, Record<number, string>> = {};
+    const contestants = contestantsList.value;
+    const fields = categoryFieldsList.value?.fields || [];
+    const existingScores = categoryScoresList.value?.scores || [];
+
+    contestants.forEach((con) => {
+      const contestantScores: Record<number, string> = {};
+
+      fields.forEach((f) => {
+        const foundScore = existingScores.find(
+          (s) => s.contestantId === con.id && s.criteriaFieldId === f.id,
+        );
+        contestantScores[f.id] = foundScore ? String(foundScore.value) : '';
+      });
+      newScores[con.id] = contestantScores;
+    });
+
+    formScores.value = newScores;
+  };
+
   const getJudgeScoringRounds = async () => {
     if (loadingStates.isFetchingRounds) {
       return;
@@ -44,7 +67,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     try {
       const res = await judgeScoringService.getJudgeRounds();
       judgeScoringRoundList.value = res.data;
-      toast.success(res.message);
+
       errorStates.isFetchingRoundsError = false;
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
@@ -77,7 +100,6 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
       const res = await judgeScoringService.getCategoryFields(id);
       categoryFieldsList.value = res.data;
       errorStates.isFetchingCategoryFieldsError = false;
-      toast.success(res.message);
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeScoringErrorCodes>>,
@@ -178,10 +200,40 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     if (loadingStates.isSubmittingCategoryScores) {
       return false;
     }
+
+    const payload: SubmitCategoryScoreEntry[] = [];
+    const fields = categoryFieldsList.value?.fields || [];
+    for (const con of contestantsList.value) {
+      for (const f of fields) {
+        const val = formScores.value[con.id]?.[f.id];
+
+        if (val === undefined || val === null || String(val).trim() === '') {
+          toast.warning(`Please enter a score for ${con.name} in ${f.name}.`);
+          return false;
+        }
+
+        const numVal = parseFloat(String(val));
+
+        if (isNaN(numVal) || numVal < 1 || numVal > f.maxValue) {
+          toast.warning(`Score for ${con.name} in ${f.name} must be between 1 and ${f.maxValue}.`);
+          return false;
+        }
+
+        payload.push({
+          contestantId: con.id,
+          criteriaFieldId: f.id,
+          value: numVal.toFixed(2),
+        });
+      }
+    }
+
     loadingStates.isSubmittingCategoryScores = true;
     try {
-      const res = await judgeScoringService.submitCategoryScores(id);
+      const res = await judgeScoringService.submitCategoryScores(id, payload);
       toast.success(res.message);
+      if (categoryScoresList.value) {
+        categoryScoresList.value.isSubmitted = true;
+      }
       return true;
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
@@ -236,13 +288,15 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     submitCategoryScores,
     getCategoryScores,
     getRoundContestants,
+    getCategoryFields,
+    getJudgeScoringRounds,
+    initializeFormScores,
     contestantsList,
     categoryScoresList,
     categoryFieldsList,
-    getCategoryFields,
+    judgeScoringRoundList,
+    formScores,
     loadingStates,
     errorStates,
-    getJudgeScoringRounds,
-    judgeScoringRoundList,
   };
 });

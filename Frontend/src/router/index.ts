@@ -33,7 +33,18 @@ router.beforeEach(async (to) => {
     await authStore.checkAuth();
   }
 
-  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+  if (
+    to.meta.requiresAdmin &&
+    !authStore.isAdmin &&
+    !(to.meta.allowChairman && authStore.isChairman)
+  ) {
+    return { name: 'login' };
+  }
+
+  if (
+    to.meta.requiresJudge &&
+    !authStore.isJudge
+  ) {
     return { name: 'login' };
   }
 });

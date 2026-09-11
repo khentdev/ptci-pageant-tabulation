@@ -11,7 +11,7 @@ withDefaults(
   }>(),
   {
     showCloseButton: true,
-    cardClass: 'bg-amber-200',
+    cardClass: 'bg-main-light-brown',
     titleClass: 'text-2xl',
   },
 );
@@ -30,7 +30,7 @@ const emit = defineEmits<{
     >
       <div
         :class="cardClass"
-        class="flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl sm:w-lg md:h-auto"
+        class="border border-black/15 flex h-full max-h-full flex-col items-center overflow-hidden overflow-y-auto rounded-xl sm:w-lg md:h-auto"
       >
         <div class="flex w-full items-center justify-between p-4" :class="titleClass">
           <p>{{ title }}</p>

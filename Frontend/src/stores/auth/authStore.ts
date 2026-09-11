@@ -33,13 +33,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAdmin = computed(() => currentUser.value?.user?.role === 'ADMIN');
   const isJudge = computed(() => currentUser.value?.user?.role === 'JUDGE');
+  const isChairman = computed(() => currentUser.value?.user?.role === 'CHAIRMAN');
 
   const loginUser = async (user: loginInput) => {
     loadingStates.isLoggingIn = true;
     try {
       const res = await authService.loginUser(user);
       currentUser.value = { user: res.data.user };
-      if (currentUser.value.user.role === 'ADMIN') {
+      if (currentUser.value.user.role === 'ADMIN' || currentUser.value.user.role === 'CHAIRMAN') {
         await router.push({ name: 'admin-homepage' });
       } else if (currentUser.value.user.role === 'JUDGE') {
         await router.push({ name: 'judge-homepage' });
@@ -132,6 +133,7 @@ export const useAuthStore = defineStore('auth', () => {
     isInvalidCredentials,
     loadingStates,
     isAdmin,
+    isChairman,
     checkAuth,
     currentUser,
     logoutUser,

@@ -13,16 +13,27 @@
     </template>
 
     <JudgeSubmissions />
-    <RankingsContestant />
+    <div class="" ref="printTarget">
+      <RankingsContestant />
+    </div>
     <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
+    <PlacementOrderResolution v-if="liveStore.roundResult?.placementTies?.length" />
     <div
       class="mt-3 font-medium text-red-600/70"
       v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
     >
       {{ advanceReasonText }}
     </div>
+     <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end px-4">
+      <button
+        @click="handlePrint"
+        class="bg-slate-700 hover:bg-slate-800 flex gap-2 rounded-lg border border-black/10 px-6 py-3 font-semibold text-white"
+      >
+        <Printer></Printer>Print
+      </button>
+    </div>
     <div
-      v-if="liveStore.roundResult?.nextRound"
+      v-if="liveStore.roundResult?.nextRound && showAdvanceSection"
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -38,9 +49,21 @@
         }}
       </button>
     </div>
+    <div
+      v-else-if="
+        liveStore.roundResult?.nextRound &&
+        authStore.isAdmin &&
+        liveStore.roundResult.advancement.hasTie
+      "
+      class="mt-3 font-medium text-red-600/70"
+    >
+      A tie must be resolved by the Chairman before advancing.
+    </div>
 
     <div
-      v-else-if="liveStore.roundResult?.canDeclareWinners"
+      v-else-if="
+        liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt && showDeclareSection
+      "
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -51,22 +74,80 @@
         {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
       </button>
     </div>
+    <div
+      v-else-if="
+        liveStore.roundResult &&
+        !liveStore.roundResult.winnersDeclaredAt &&
+        authStore.isAdmin &&
+        (liveStore.roundResult.advancement.hasTie ||
+          Boolean(liveStore.roundResult.placementTies?.length))
+      "
+      class="mt-3 font-medium text-red-600/70"
+    >
+      A tie must be resolved by the Chairman before declaring winners.
+    </div>
   </BasePanel>
 </template>
 <script setup lang="ts">
 import JudgeSubmissions from '@/components/admin/live_event/judgeSubmissions.vue';
 import NotFoundOverlay from '@/components/admin/live_event/NotFoundOverlay.vue';
+import PlacementOrderResolution from '@/components/admin/live_event/placementOrderResolution.vue';
 import RankingsContestant from '@/components/admin/live_event/rankingsContestant.vue';
 import TieResolution from '@/components/admin/live_event/tieResolution.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
+import { useAuthStore } from '@/stores/auth/authStore';
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import html2canvas from 'html2canvas-pro';
+import printJS from 'print-js';
+import { Printer } from '@lucide/vue';
 
 const route = useRoute();
 const roundStore = useRoundStore();
 const liveStore = useLiveStore();
+const authStore = useAuthStore();
+const printTarget = ref<HTMLElement | null>(null);
+const handlePrint = async (): Promise<void> => {
+  if (!printTarget.value) {
+    return;
+  }
+
+  const canvas = await html2canvas(printTarget.value, {
+    scale: 2,
+    useCORS: true,
+  });
+
+  const imageDataUrl = canvas.toDataURL('image/png');
+
+  printJS({
+    printable: imageDataUrl,
+    type: 'image',
+    style: `@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+      * {
+        font-family: 'Poppins', sans-serif !important;
+      }`,
+    header: `Official Results - ${currentRound.value?.name ?? 'Round'}`,
+    headerStyle:
+      'font-size: 2rem; font-weight: 600; text-align: center; margin-bottom: 16px; color: #000; font-family: Poppins, sans-serif; ',
+    documentTitle: '',
+  });
+};
+// Ties are a judging call — Chairman resolves them, Admin handles every
+// routine (tie-free) advance/declare. Each side's action section is only
+// shown to the role actually allowed to perform it right now.
+const showAdvanceSection = computed(() => {
+  const hasTie = liveStore.roundResult?.advancement.hasTie ?? false;
+  return authStore.isChairman ? hasTie : !hasTie;
+});
+
+const showDeclareSection = computed(() => {
+  const hasTie =
+    (liveStore.roundResult?.advancement.hasTie ?? false) ||
+    Boolean(liveStore.roundResult?.placementTies?.length);
+  return authStore.isChairman ? hasTie : !hasTie;
+});
 
 const activeRoundId = computed<number | null>(() => {
   const raw = route.params.roundId;
@@ -94,7 +175,6 @@ const canAdvanceRound = computed(() => {
 const canDeclareRound = computed(() => {
   if (
     !liveStore.roundResult ||
-    !liveStore.roundResult.canDeclareWinners ||
     !liveStore.roundResult.allJudgesSubmitted ||
     liveStore.isLiveEventServerError
   ) {
@@ -105,7 +185,11 @@ const canDeclareRound = computed(() => {
     return liveStore.isTieResolved;
   }
 
-  return true;
+  if (liveStore.roundResult.placementTies?.length) {
+    return liveStore.isPlacementOrderResolved;
+  }
+
+  return liveStore.roundResult.canDeclareWinners;
 });
 
 const handleAdvanceRound = async () => {

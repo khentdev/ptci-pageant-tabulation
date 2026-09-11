@@ -31,12 +31,18 @@ describe("Advance Round Integration Test", () => {
         username: "test-advance-round-judge-2",
         role: "JUDGE" as Role,
     }
+    const TEST_CHAIRMAN = {
+        name: "Advance Round Chairman",
+        username: "test-advance-round-chairman",
+        role: "CHAIRMAN" as Role,
+    }
 
     const testUsernames = [
         TEST_ADMIN.username,
         TEST_JUDGE.username,
         TEST_JUDGE_ONE.username,
         TEST_JUDGE_TWO.username,
+        TEST_CHAIRMAN.username,
     ]
 
     const deviceFingerprint = "{\"userAgent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36\",\"language\":\"en-US\",\"platform\":\"Win32\",\"screen\":{\"width\":1920,\"height\":1080,\"colorDepth\":24},\"timezone\":\"Asia/Manila\",\"hardwareConcurrency\":8,\"deviceMemory\":16,\"touchSupport\":false,\"canvas\":\"7f3c8d2a91b4e6ff\",\"webgl\":\"Intel Iris Xe Graphics\"}"
@@ -116,6 +122,11 @@ describe("Advance Round Integration Test", () => {
     const seedAdminCredentials = async () => {
         await seedUser(TEST_ADMIN)
         return loginAndGetCredentials(TEST_ADMIN.username)
+    }
+
+    const seedChairmanCredentials = async () => {
+        await seedUser(TEST_CHAIRMAN)
+        return loginAndGetCredentials(TEST_CHAIRMAN.username)
     }
 
     const seedRound = async (data: {
@@ -292,6 +303,7 @@ describe("Advance Round Integration Test", () => {
         await prisma.roundContestant.deleteMany()
         await prisma.contestant.deleteMany()
         await prisma.category.deleteMany()
+        await prisma.auditLog.deleteMany()
         await prisma.round.deleteMany()
         await prisma.user.deleteMany({ where: { role: "JUDGE" } })
         await prisma.user.deleteMany({
@@ -537,7 +549,7 @@ describe("Advance Round Integration Test", () => {
     describe("tie body rejections", () => {
         it("should return SELECTED_CONTESTANT_IDS_REQUIRED when tie exists and body is omitted", async () => {
             const { prelims } = await seedSevenContestantTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id)
             const json = await res.json() as { error: { code: string; field: string } }
@@ -549,7 +561,7 @@ describe("Advance Round Integration Test", () => {
 
         it("should return SELECTED_CONTESTANT_IDS_REQUIRED when tie exists and empty array is sent", async () => {
             const { prelims } = await seedSevenContestantTieAtCutoff()
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [],
@@ -563,7 +575,7 @@ describe("Advance Round Integration Test", () => {
         it("should return SELECTED_CONTESTANT_IDS_COUNT_INVALID when too many tied picks are sent", async () => {
             const { prelims, contestants } = await seedSevenContestantTieAtCutoff()
             const tiedIds = contestants.slice(4, 7).map((c) => c.id)
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: tiedIds,
@@ -578,7 +590,7 @@ describe("Advance Round Integration Test", () => {
         it("should return SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP when an included contestant is selected", async () => {
             const { prelims, contestants } = await seedSevenContestantTieAtCutoff()
             const includedId = contestants[0]!.id
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [includedId],
@@ -600,6 +612,48 @@ describe("Advance Round Integration Test", () => {
 
             expect(res.status).toBe(400)
             expect(json.error.code).toBe("SELECTED_CONTESTANT_IDS_NOT_ALLOWED")
+        })
+    })
+
+    describe("role-conditional authorization", () => {
+        it("should return ADVANCE_REQUIRES_CHAIRMAN when Admin attempts to advance a round with a tie", async () => {
+            const { prelims } = await seedSevenContestantTieAtCutoff()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
+                selectedContestantIds: [1],
+            })
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(409)
+            expect(json.error.code).toBe("ADVANCE_REQUIRES_CHAIRMAN")
+        })
+
+        it("should return CHAIRMAN_ACTION_REQUIRES_TIE when Chairman attempts to advance a round with no tie", async () => {
+            const { prelims } = await seedReadyToAdvanceClearTop5()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
+
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id)
+            const json = await res.json() as { error: { code: string } }
+
+            expect(res.status).toBe(409)
+            expect(json.error.code).toBe("CHAIRMAN_ACTION_REQUIRES_TIE")
+        })
+
+        it("should allow Admin to advance a round with no tie", async () => {
+            const { prelims } = await seedReadyToAdvanceClearTop5()
+            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+
+            const res = await postAdvance(cookieHeader, csrfToken, prelims.id)
+            expect(res.status).toBe(201)
+        })
+
+        it("should allow Chairman to view round results without a tie", async () => {
+            const { prelims } = await seedReadyToAdvanceClearTop5()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
+
+            const res = await getRoundResults(cookieHeader, csrfToken, prelims.id)
+            expect(res.status).toBe(200)
         })
     })
 
@@ -703,7 +757,7 @@ describe("Advance Round Integration Test", () => {
             const { prelims, top5, contestants } = await seedSevenContestantTieAtCutoff()
             const selectedId = contestants[4]!.id
             const includedIds = contestants.slice(0, 4).map((c) => c.id)
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [selectedId],
@@ -716,7 +770,7 @@ describe("Advance Round Integration Test", () => {
         it("should return completed state with empty advancement after tie advance", async () => {
             const { prelims, contestants } = await seedSevenContestantTieAtCutoff()
             const selectedId = contestants[5]!.id
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [selectedId],
@@ -733,7 +787,7 @@ describe("Advance Round Integration Test", () => {
         it("should include advanced contestant in the next round rankings pool", async () => {
             const { prelims, top5, contestants } = await seedSevenContestantTieAtCutoff()
             const selectedId = contestants[6]!.id
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [selectedId],
@@ -797,7 +851,7 @@ describe("Advance Round Integration Test", () => {
             const females = await seedGenderScoredContestants(category, judge.id, "FEMALE", [90, 80, 80], 4200)
             const males = await seedGenderScoredContestants(category, judge.id, "MALE", [70, 60], 4300)
 
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
             const res = await postAdvance(cookieHeader, csrfToken, prelims.id, {
                 selectedContestantIds: [females[1]!.id],
             })
@@ -818,7 +872,7 @@ describe("Advance Round Integration Test", () => {
             const females = await seedGenderScoredContestants(category, judge.id, "FEMALE", [90, 90], 4400)
             const males = await seedGenderScoredContestants(category, judge.id, "MALE", [70, 70], 4500)
 
-            const { cookieHeader, csrfToken } = await seedAdminCredentials()
+            const { cookieHeader, csrfToken } = await seedChairmanCredentials()
 
             const getJson = await (await getRoundResults(cookieHeader, csrfToken, prelims.id)).json() as GetRoundResultsResponse
             expect(getJson.data.advancement.requiredSelections).toBe(2)

@@ -1,3 +1,5 @@
+import type { Role } from "../../../generated/prisma/enums.js"
+
 export type GetJudgeSubmissions = {
     id: number
 }
@@ -64,6 +66,10 @@ type AdvancementContestant = {
     gender: "MALE" | "FEMALE"
     overallScore: number
 }
+export type PlacementTieCluster = {
+    gender: "MALE" | "FEMALE"
+    contestants: AdvancementContestant[]
+}
 export type GetRoundResultsDTO = {
     rankings: RankingRow[]
     allJudgesSubmitted: boolean
@@ -84,6 +90,7 @@ export type GetRoundResultsDTO = {
         included: AdvancementContestant[]
         tied: AdvancementContestant[]
     }
+    placementTies: PlacementTieCluster[]
 }
 export type GetRoundResultsResponse = {
     data: GetRoundResultsDTO
@@ -101,6 +108,8 @@ export type AdvanceRoundInput = {
 export type AdvanceRoundInputVariables = {
     advanceRound: AdvanceRoundInput
 }
+/** `callerRole`/`callerUserId` are set by the controller from the caller's JWT — never accepted from the request body. */
+export type AdvanceRoundServiceInput = AdvanceRoundInput & { callerRole: Role, callerUserId: number }
 export type AdvanceRoundResponse = {
     message: string
 }
@@ -115,14 +124,18 @@ export type CanDeclareReason =
 
 export type DeclareWinnersRequestBody = {
     selectedContestantIds?: unknown
+    placementOrder?: unknown
 }
 export type DeclareWinnersInput = {
     id: number
     selectedContestantIds?: number[]
+    placementOrder?: number[]
 }
 export type DeclareWinnersInputVariables = {
     declareWinners: DeclareWinnersInput
 }
+/** `callerRole`/`callerUserId` are set by the controller from the caller's JWT — never accepted from the request body. */
+export type DeclareWinnersServiceInput = DeclareWinnersInput & { callerRole: Role, callerUserId: number }
 export type DeclareWinnersResponse = {
     message: string
 }

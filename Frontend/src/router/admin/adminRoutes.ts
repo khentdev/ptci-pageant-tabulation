@@ -1,4 +1,3 @@
-import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore.ts';
 import { type RouteRecordRaw } from 'vue-router';
 
 export const adminRoutes: RouteRecordRaw[] = [
@@ -8,6 +7,7 @@ export const adminRoutes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
+      allowChairman: true,
     },
     component: () => import('../../views/admin/adminMain.vue'),
     children: [
@@ -33,6 +33,11 @@ export const adminRoutes: RouteRecordRaw[] = [
         path: 'judge',
         name: 'judge',
         component: () => import('../../views/admin/judge/judgeMain.vue'),
+      },
+      {
+        path: 'audit-trail',
+        name: 'audit-trail',
+        component: () => import('../../views/admin/auditTrail/auditTrailMain.vue'),
       },
       {
         path: ':roundId',

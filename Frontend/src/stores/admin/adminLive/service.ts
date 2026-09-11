@@ -30,7 +30,10 @@ export const liveService = {
     return GetTypeResponse<AdvanceRoundResponse>(res);
   },
 
-  declareWinners: async (id: number, payload?: { selectedContestantIds?: number[] }) => {
+  declareWinners: async (
+    id: number,
+    payload?: { selectedContestantIds?: number[]; placementOrder?: number[] },
+  ) => {
     const res = await axiosInstance.post(
       `/live-event/round-results/${id}/declare-winners`,
       payload,

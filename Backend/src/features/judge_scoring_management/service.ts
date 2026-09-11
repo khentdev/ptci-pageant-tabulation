@@ -163,7 +163,7 @@ export async function submitCategoryScoresService({ id, judgeId, scores }: Submi
         }
 
         const numericValue = Number(score.value)
-        if (numericValue < 0 || numericValue > Number(field.maxValue)) {
+        if (numericValue < 1 || numericValue > Number(field.maxValue)) {
             logger.warn({ score }, "Score value out of range")
             throw new AppError("SCORING_VALUE_OUT_OF_RANGE", {
                 data: {

@@ -24,7 +24,7 @@ const emit = defineEmits<{
     :to="{ name: 'rounds' }"
   />
   <div v-else class="flex flex-col gap-8">
-    <table v-for="round in items" :key="round.id" class="relative w-full ">
+    <table v-for="round in items" :key="round.id" class="relative w-full">
       <thead class="sticky top-0 z-20 h-full rounded-xl">
         <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
           <th class="px-2 text-nowrap">{{ round.name }}</th>
@@ -44,35 +44,35 @@ const emit = defineEmits<{
           </td>
         </tr>
         <tr v-for="categories in round.categories" :key="categories.id" class="font-poppins">
-          <td class="border px-2 text-nowrap">
+          <td class="border border-black/40 px-2 text-nowrap">
             {{ categories.name }}
           </td>
-          <td class="border px-2 text-nowrap">
+          <td class="border border-black/40 px-2 text-nowrap">
             <div class="flex h-full w-full items-center justify-center gap-4">
               {{ categories.fieldCount === 0 ? 'No fields' : categories.fieldCount
               }}<Check
                 v-if="categories.fieldCount > 0 && categories.totalScore === 100"
-                class="stroke stroke-green-500"
+                class="stroke stroke-jungle-green-700"
               />
             </div>
           </td>
-          <td class="border px-2">
+          <td class="border border-black/40 px-2">
             <div class="flex h-12 items-center justify-center gap-4">
               <button
                 @click="emit('edit', categories.id)"
-                class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 hover:bg-amber-400"
+                class="bg-custom-light-brown1/50 hover:bg-custom-light-brown1/30 h-10 cursor-pointer rounded-xl border border-black/10 px-6"
               >
                 Edit
               </button>
               <button
                 @click="emit('openFields', categories.id)"
-                class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 hover:bg-amber-400"
+                class="bg-custom-light-brown1/50 hover:bg-custom-light-brown1/30 h-10 cursor-pointer rounded-xl border border-black/10 px-6"
               >
                 Fields
               </button>
               <button
                 @click="emit('delete', categories.id)"
-                class="h-10 cursor-pointer rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
+                class="bg-main-dark-brown hover:bg-main-dark-brown/70 h-10 cursor-pointer rounded-xl px-6 text-white"
               >
                 Delete
               </button>

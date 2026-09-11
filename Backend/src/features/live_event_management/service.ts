@@ -2,7 +2,7 @@ import { AppError } from "../../errors/appError.js";
 import logger from "../../infra/logger.js";
 import { prisma } from "../../infra/prisma.js";
 import { advanceRound, declareWinners, getDeclaredWinners, getJudgeSubmissions, getRoundResultsById } from "./data.js";
-import type { AdvanceRoundInput, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import type { AdvanceRoundServiceInput, DeclareWinnersServiceInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
 
 export async function getJudgeSubmissionsService({ id }: GetJudgeSubmissions) {
     const roundExists = await prisma.round.findUnique({
@@ -46,7 +46,7 @@ export async function getRoundResultsByIdService({ id }: Omit<GetRoundResultsByI
     }
 }
 
-export async function advanceRoundService({ id, selectedContestantIds }: AdvanceRoundInput) {
+export async function advanceRoundService({ id, selectedContestantIds, callerRole, callerUserId }: AdvanceRoundServiceInput) {
 
     const round = await prisma.round.findUnique({
         where: { id },
@@ -58,7 +58,7 @@ export async function advanceRoundService({ id, selectedContestantIds }: Advance
     }
 
     try {
-        await advanceRound({ id, selectedContestantIds })
+        await advanceRound({ id, selectedContestantIds, callerRole, callerUserId })
     } catch (err) {
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error advancing round")
@@ -66,7 +66,7 @@ export async function advanceRoundService({ id, selectedContestantIds }: Advance
     }
 }
 
-export async function declareWinnersService({ id, selectedContestantIds }: DeclareWinnersInput) {
+export async function declareWinnersService({ id, selectedContestantIds, placementOrder, callerRole, callerUserId }: DeclareWinnersServiceInput) {
     const round = await prisma.round.findUnique({
         where: { id },
         select: { id: true },
@@ -77,7 +77,7 @@ export async function declareWinnersService({ id, selectedContestantIds }: Decla
     }
 
     try {
-        await declareWinners({ id, selectedContestantIds })
+        await declareWinners({ id, selectedContestantIds, placementOrder, callerRole, callerUserId })
     } catch (err) {
         if (err instanceof AppError) throw err
         logger.error({ err }, "Error declaring winners")

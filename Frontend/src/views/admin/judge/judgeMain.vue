@@ -47,7 +47,7 @@ const handleDelete = async (id: number) => {
     :judgeId="selectedJudgeId"
   ></ResetPassword>
   <BasePanel
-    title="Judge Management"
+    title="Judge & Chairman Management"
     addButtonLabel="Add Judge"
     :isLoading="judgeStore.loadingStates.isFetchingJudgeList"
     :isError="judgeStore.errorStates.isFetchingJudgeListError"

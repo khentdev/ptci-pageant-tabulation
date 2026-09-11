@@ -21,12 +21,14 @@ export const useJudgeStore = defineStore('judge', () => {
     judgeName: '',
     judgeUsername: '',
     judgePassword: '',
+    judgeRole: '',
   });
 
   const clearFormErrors = () => {
     formErrors.judgeName = '';
     formErrors.judgeUsername = '';
     formErrors.judgePassword = '';
+    formErrors.judgeRole = '';
   };
 
   const loadingStates = reactive({
@@ -96,6 +98,8 @@ export const useJudgeStore = defineStore('judge', () => {
         formErrors.judgeUsername = message;
       } else if (code === 'JUDGE_PASSWORD_TOO_SHORT') {
         formErrors.judgePassword = message;
+      } else if (code === 'JUDGE_ROLE_INVALID') {
+        formErrors.judgeRole = message;
       }
 
       if (code === 'JUDGE_USERNAME_EXISTS') {

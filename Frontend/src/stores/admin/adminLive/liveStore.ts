@@ -15,9 +15,11 @@ import type { AxiosError } from 'axios';
 export const useLiveStore = defineStore('liveStore', () => {
   const { toast } = useToast();
   const selectedContestantIds = ref<number[]>([]);
+  const placementOrder = ref<number[]>([]);
   const judgeList = ref<GetJudgeSubmissionsDTO | null>(null);
   const roundResult = ref<GetRoundResultsDTO | null>(null);
   const declaredWinners = ref<GetDeclaredWinnersDTO | null>(null);
+  
 
   const isTieResolved = computed(() => {
     const hasTie = roundResult.value?.advancement.hasTie;
@@ -27,6 +29,17 @@ export const useLiveStore = defineStore('liveStore', () => {
 
     const required = roundResult.value?.advancement.requiredSelections;
     return selectedContestantIds.value.length === required;
+  });
+
+  const isPlacementOrderResolved = computed(() => {
+    const clusters = roundResult.value?.placementTies;
+    if (!clusters || clusters.length === 0) {
+      return true;
+    }
+
+    return clusters.every((cluster) =>
+      cluster.contestants.every((contestant) => placementOrder.value.includes(contestant.id)),
+    );
   });
 
   const loadingStates = reactive({
@@ -45,8 +58,18 @@ export const useLiveStore = defineStore('liveStore', () => {
   });
 
   const isLiveEventNotFound = computed(() => errorStates.isFetchingRoundPhaseNotFound);
-  const isLiveEventServerError = computed(() => errorStates.isFetchingJudgeSubmissionsError || errorStates.isFetchingRoundResultsError || errorStates.isFetchingDeclaredWinnersError);
-  const isFetchingLiveEvent = computed(() => loadingStates.isFetchingJudgeSubmissions || loadingStates.isFetchingRoundResults || loadingStates.isFetchingDeclaredWinners);
+  const isLiveEventServerError = computed(
+    () =>
+      errorStates.isFetchingJudgeSubmissionsError ||
+      errorStates.isFetchingRoundResultsError ||
+      errorStates.isFetchingDeclaredWinnersError,
+  );
+  const isFetchingLiveEvent = computed(
+    () =>
+      loadingStates.isFetchingJudgeSubmissions ||
+      loadingStates.isFetchingRoundResults ||
+      loadingStates.isFetchingDeclaredWinners,
+  );
 
   const getJudgeSubmissionsById = async (id: number) => {
     if (loadingStates.isFetchingJudgeSubmissions) {
@@ -88,6 +111,7 @@ export const useLiveStore = defineStore('liveStore', () => {
       const res = await liveService.getRoundResults(id);
       roundResult.value = res.data;
       selectedContestantIds.value = [];
+      placementOrder.value = [];
       errorStates.isFetchingRoundResultsError = false;
       errorStates.isFetchingRoundPhaseNotFound = false;
     } catch (error) {
@@ -185,6 +209,10 @@ export const useLiveStore = defineStore('liveStore', () => {
         toast.error(message);
       } else if (code === 'ADVANCE_NOT_ALLOWED') {
         toast.warning(message);
+      } else if (code === 'ADVANCE_REQUIRES_CHAIRMAN') {
+        toast.warning(message, { title: 'Chairman Required' });
+      } else if (code === 'CHAIRMAN_ACTION_REQUIRES_TIE') {
+        toast.warning(message, { title: 'No Tie To Resolve' });
       } else if (code === 'ROUND_ADVANCEMENT_ERROR') {
         toast.error(message);
       }
@@ -202,11 +230,18 @@ export const useLiveStore = defineStore('liveStore', () => {
     loadingStates.isAddingDeclaredWinners = true;
 
     try {
-      const payload = roundResult.value?.advancement.hasTie
-        ? { selectedContestantIds: selectedContestantIds.value }
-        : undefined;
+      const payload: { selectedContestantIds?: number[]; placementOrder?: number[] } = {};
+      if (roundResult.value?.advancement.hasTie) {
+        payload.selectedContestantIds = selectedContestantIds.value;
+      }
+      if (roundResult.value?.placementTies?.length) {
+        payload.placementOrder = placementOrder.value;
+      }
 
-      const res = await liveService.declareWinners(id, payload);
+      const res = await liveService.declareWinners(
+        id,
+        Object.keys(payload).length > 0 ? payload : undefined,
+      );
       toast.success(res.message);
       return true;
     } catch (error) {
@@ -216,7 +251,8 @@ export const useLiveStore = defineStore('liveStore', () => {
 
       if (type === 'offline') {
         toast.warning(message, { title: 'You are Offline' });
-      } if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+      }
+      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
         toast.error(message, { title: 'Server Error' });
       } else if (code === 'ROUND_PHASE_NOT_FOUND') {
         toast.warning(message, { title: 'Phase Not Found' });
@@ -230,13 +266,29 @@ export const useLiveStore = defineStore('liveStore', () => {
         toast.warning(message);
       } else if (code === 'SELECTED_CONTESTANT_IDS_COUNT_INVALID') {
         toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_REQUIRED') {
+        toast.warning(message, { title: 'Placement Order Required' });
+      } else if (code === 'PLACEMENT_ORDER_MISMATCH') {
+        toast.warning(message, { title: 'Placement Order Mismatch' });
+      } else if (code === 'PLACEMENT_ORDER_NOT_ALLOWED') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_INVALID') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_ID_INVALID') {
+        toast.warning(message);
+      } else if (code === 'PLACEMENT_ORDER_IDS_DUPLICATE') {
+        toast.warning(message);
       } else if (code === 'DECLARE_WINNER_COUNT_MISMATCH') {
         toast.warning(message, { title: 'Count Mismatch' });
       } else if (code === 'DECLARE_NOT_ALLOWED') {
         toast.warning(message, { title: 'Declaration Not Allowed' });
+      } else if (code === 'DECLARE_REQUIRES_CHAIRMAN') {
+        toast.warning(message, { title: 'Chairman Required' });
+      } else if (code === 'CHAIRMAN_ACTION_REQUIRES_TIE') {
+        toast.warning(message, { title: 'No Tie To Resolve' });
       } else if (code === 'FORBIDDEN') {
         toast.error(message, { title: 'Access Denied' });
-      } 
+      }
 
       return false;
     } finally {
@@ -245,9 +297,12 @@ export const useLiveStore = defineStore('liveStore', () => {
   };
 
   return {
+
     addDeclareWinners,
     isTieResolved,
     selectedContestantIds,
+    placementOrder,
+    isPlacementOrderResolved,
     addAdvanceRound,
     isLiveEventNotFound,
     getDeclaredWinners,

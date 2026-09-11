@@ -5,6 +5,7 @@ import type {
   GetJudgeRoundsResponse,
   GetMyCategoryScoresResponse,
   SubmitCategoryScoresResponse,
+  SubmitCategoryScoreEntry,
 } from '@/types/admin/adminSetup/judge_scoring/judgeScoring';
 
 export const GetTypeResponse = <T>(res: unknown): T => res as T;
@@ -30,8 +31,8 @@ export const judgeScoringService = {
     return GetTypeResponse<GetMyCategoryScoresResponse>(res);
   },
 
-  submitCategoryScores: async (id: number) => {
-    const res = await axiosInstance.post(`/judge-scoring/categories/${id}/scores`);
+  submitCategoryScores: async (id: number, scores: SubmitCategoryScoreEntry[]) => {
+    const res = await axiosInstance.post(`/judge-scoring/categories/${id}/scores`, { scores });
     return GetTypeResponse<SubmitCategoryScoresResponse>(res);
   },
 };

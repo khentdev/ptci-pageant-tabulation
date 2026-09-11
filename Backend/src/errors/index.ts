@@ -7,6 +7,7 @@ import { CONTESTANT_ERROR_CODES, CONTESTANT_ERROR_DEF } from "../features/contes
 import { JUDGE_ERROR_CODES, JUDGE_ERROR_DEF } from "../features/judge_management/error.js";
 import { LIVE_EVENT_ERROR_CODES, LIVE_EVENT_ERROR_DEF } from "../features/live_event_management/error.js";
 import { SCORING_ERROR_CODES, SCORING_ERROR_DEF } from "../features/judge_scoring_management/error.js";
+import { AUDIT_TRAIL_ERROR_CODES, AUDIT_TRAIL_ERROR_DEF } from "../features/audit_trail/error.js";
 
 export type ErrorDefinitions = {
     code: ErrorCodes,
@@ -31,6 +32,7 @@ export const FEATURE_ERROR_CODES = {
     ...JUDGE_ERROR_CODES,
     ...LIVE_EVENT_ERROR_CODES,
     ...SCORING_ERROR_CODES,
+    ...AUDIT_TRAIL_ERROR_CODES,
     SERVER_ERROR: "SERVER_ERROR",
     TOKEN_INVALID: "TOKEN_INVALID",
     TOKEN_EXPIRED: "TOKEN_EXPIRED",
@@ -50,6 +52,7 @@ export const FEATURE_ERROR_DEFINITIONS: Record<ErrorCodes, ErrorDefinitions> = {
     ...JUDGE_ERROR_DEF,
     ...LIVE_EVENT_ERROR_DEF,
     ...SCORING_ERROR_DEF,
+    ...AUDIT_TRAIL_ERROR_DEF,
     TOKEN_INVALID: {
         code: "TOKEN_INVALID",
         status: 401,

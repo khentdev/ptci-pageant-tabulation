@@ -2,23 +2,26 @@
 
 `POST /live-event/round-results/:id/advancement`
 
-Admin only.
+Admin or Chairman — role-conditional on whether a tie exists (see **Business rules**).
 
 Confirms advancement for the current round — inserts advancing contestants into the **next** round's `round_contestants`. Does not return rankings; refetch [[live-event/live-round-results]] after success.
 
 **Advancement runs independently per gender** against the same `nextRound.contestantLimit` (e.g. a limit of 5 advances up to 5 females and up to 5 males). A tie can exist in one gender only, both genders at once, or neither — `selectedContestantIds` is still one flat array covering picks from whichever gender(s) have a tie; the backend partitions it by gender internally and validates each gender's pick count independently.
 
+**Role split:** resolving a tie is a judging decision, not an operational one. Admin performs every routine (tie-free) advance; Chairman is the only role allowed to advance when `advancement.hasTie` is `true`. Sending the request as the wrong role for the current tie state is rejected — see `ADVANCE_REQUIRES_CHAIRMAN` / `CHAIRMAN_ACTION_REQUIRES_TIE` below.
+
 **Related docs:** [[live-event/live-round-results]] (rankings preview and flags) · [[live-event/live-judge-submissions]] · [[live-event/live-results-sidebar]] · [[Wireframe & Flows]] §6 · [[System Documentation]] §3.2
 
 ## Consumers
 
-- Admin Live Event → Round Results page — **Advance** button (no-tie and tie-resolution flows)
+- Admin Live Event → Round Results page — **Advance** button, shown to Admin only when there is no tie
+- Chairman Live Event → Round Results page (same page, Chairman-scoped nav) — **Advance** button, shown to Chairman only when a tie exists
 
 ## When to call
 
 | Trigger | Call? |
 |---------|-------|
-| Advance button click | Yes — only on explicit admin action |
+| Advance button click | Yes — only on explicit Admin or Chairman action |
 | Page mount / refresh | No |
 | Sidebar round change | No |
 | Auto-polling | No |
@@ -106,6 +109,7 @@ No `data` field. Refetch `GET /live-event/round-results/:id/advancement` to see 
 | Write target | Inserts into **next** round (`nextRound.id`), not the current round |
 | No tie | `advancingContestantIds = advancement.included` |
 | Tie | `advancingContestantIds = advancement.included + selectedContestantIds`, resolved per gender: each gender's own included + its own share of `selectedContestantIds` must equal `nextRound.contestantLimit` for that gender — a `400 SELECTED_CONTESTANT_IDS_COUNT_INVALID`/`ADVANCE_CONTESTANT_COUNT_MISMATCH` is returned if picks are misallocated across genders (e.g. both extra picks taken from one gender's tie while the other gender's tie is left unresolved) |
+| Role gate | Checked before the tie-selection logic above, using the caller's role from the session JWT (never client-supplied): Admin + `hasTie` → `409 ADVANCE_REQUIRES_CHAIRMAN`. Chairman + `!hasTie` → `409 CHAIRMAN_ACTION_REQUIRES_TIE` |
 | Eligible ≤ limit | `included` may be shorter than N **per gender** — valid advance with fewer rows |
 | Idempotency | Second advance on same round → `ADVANCE_NOT_ALLOWED` (`ROUND_COMPLETED` or `NEXT_ROUND_ALREADY_FILLED`) |
 | Rankings | Not returned — use GET round results after success |
@@ -130,9 +134,11 @@ When `canAdvance` is `false` on GET, `canAdvanceReason` uses the same codes (exc
 | Signal | Rule |
 |--------|------|
 | When to POST | Advance button click only — never on mount or poll |
+| Button visibility (Admin) | Show only when `!advancement.hasTie`; when a tie exists, hide the button and show "A tie must be resolved by the Chairman before advancing." instead |
+| Button visibility (Chairman) | Show only when `advancement.hasTie` — nothing to do (and no button) otherwise |
 | Enable gate | `canAdvance === true`; if `advancement.hasTie`, also require selection count === `requiredSelections` |
 | No-tie body | Empty body or `{}` — do not send `selectedContestantIds` |
-| Tie body | `{ selectedContestantIds }` from checked rows in `advancement.tied`, combined across both gender tie panels into one array |
+| Tie body | `{ selectedContestantIds }` from checked rows in `advancement.tied`, combined across both gender tie panels into one array. Checkboxes are only interactive for the Chairman session — Admin sees the tie panel read-only |
 | After success | Refetch GET round results (and optionally judge submissions); clear local tie selection |
 | Button hidden | When `isCompleted === true` |
 
@@ -162,7 +168,9 @@ See [[global/errors]] for shared codes (`FORBIDDEN`, etc.).
 | `400` | `SELECTED_CONTESTANT_IDS_COUNT_INVALID` | Selected contestant count does not match the required tie selections. | Length ≠ `requiredSelections` |
 | `400` | `SELECTED_CONTESTANT_ID_NOT_IN_TIE_GROUP` | One or more selected contestants are not in the tied group. | ID not in `advancement.tied` |
 | `400` | `ADVANCE_CONTESTANT_COUNT_MISMATCH` | Advancing contestant count does not match the next round limit. | One gender's merged count ≠ `contestantLimit` for that gender (tie path) — usually means picks weren't distributed correctly across the two genders' ties |
-| `403` | `FORBIDDEN` | *(shared)* | Non-admin session |
+| `403` | `FORBIDDEN` | *(shared)* | Session role is not Admin or Chairman (e.g. a Judge session) |
 | `404` | `ROUND_PHASE_NOT_FOUND` | Round phase not found. | Round `id` does not exist |
 | `409` | `ADVANCE_NOT_ALLOWED` | Round cannot be advanced at this time. | `data.reason` — see table above |
+| `409` | `ADVANCE_REQUIRES_CHAIRMAN` | This round has a tie. Only the Chairman can resolve it and advance. | Admin session, `advancement.hasTie === true` |
+| `409` | `CHAIRMAN_ACTION_REQUIRES_TIE` | There is no tie to resolve. The Chairman can only act when a tie exists. | Chairman session, `advancement.hasTie === false` |
 | `500` | `ROUND_ADVANCEMENT_ERROR` | Unable to advance round. | Unexpected failure |

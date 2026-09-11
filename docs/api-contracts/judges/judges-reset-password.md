@@ -80,5 +80,5 @@ See [[global/errors]] for shared error codes handled by the axios interceptor.
 |--------|------|---------|-------|
 | `400` | `JUDGE_ID_INVALID` | Judge ID must be a positive whole number. | Backend API layer only. Do not handle in frontend. `field`: `reset_judge_password_input_id` |
 | `400` | `JUDGE_PASSWORD_TOO_SHORT` | Password must be at least 8 characters long. | `field`: `judge_password_input` |
-| `404` | `JUDGE_NOT_FOUND` | Judge not found. | Includes admin IDs and non-existent IDs |
+| `404` | `JUDGE_NOT_FOUND` | Judge not found. | Works for both Judge and Chairman accounts; also returned for the Admin ID and non-existent IDs |
 | `500` | `JUDGE_RESET_PASSWORD_FAILED` | Unable to reset judge password. | |

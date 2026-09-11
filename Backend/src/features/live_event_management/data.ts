@@ -1,7 +1,9 @@
 import { prisma, type Prisma } from "../../infra/prisma.js";
 import { AppError } from "../../errors/appError.js";
-import type { AdvanceRoundInput, CanAdvanceReason, DeclareWinnersInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
-import { Gender, Role } from "../../../generated/prisma/enums.js";
+import type { AdvanceRoundServiceInput, CanAdvanceReason, DeclareWinnersServiceInput, GetDeclaredWinners, GetJudgeSubmissions, GetRoundResultsById } from "./types.js";
+import { AuditActionType, Gender, Role } from "../../../generated/prisma/enums.js";
+import { buildAuditLogCreateData } from "../audit_trail/data.js";
+import type { AuditTieResolution, ContestantSnapshot } from "../audit_trail/types.js";
 
 type JudgeRow = { id: number, name: string }
 type CategoryRow = { id: number, name: string }
@@ -14,6 +16,15 @@ const contestantSelect = {
     name: true,
     gender: true,
 } as const
+
+const roundTo2 = (value: number) => Math.round(value * 100) / 100
+
+const toContestantSnapshot = (c: { id: number, candidateNumber: number, name: string, gender: Gender }): ContestantSnapshot => ({
+    id: c.id,
+    candidateNumber: c.candidateNumber,
+    name: c.name,
+    gender: c.gender,
+})
 
 function computeAllJudgesSubmitted(
     judges: { id: number }[],
@@ -96,8 +107,6 @@ async function getRoundResultsInTx(
     tx: Prisma.TransactionClient,
     { id, phaseOrder }: GetRoundResultsById,
 ) {
-    const roundTo2 = (value: number) => Math.round(value * 100) / 100
-
     const currentRound = await tx.round.findUnique({
         where: { id },
         select: {
@@ -258,13 +267,19 @@ async function getRoundResultsInTx(
         ? currentRound?.contestantLimit ?? null
         : nextRound?.contestantLimit ?? null
 
+    const winnersDeclaredAt = currentRound?.winnersDeclaredAt?.toISOString() ?? null
+
+    // Once winners are declared, the tie/advancement preview is no longer
+    // actionable (Declare is a one-shot, irreversible write) — suppress it so
+    // stale tie-resolution UI doesn't linger after the round is locked.
     const shouldComputeAdvancement = allJudgesSubmitted
         && !isCompleted
         && categories.length > 0
         && advancementLimit !== null
         && advancementLimit > 0
+        && winnersDeclaredAt === null
 
-    type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+    type AdvancementContestantRow = { id: number, candidateNumber: number, name: string, gender: Gender, overallScore: number }
     type AdvancementGroup = {
         hasTie: boolean
         requiredSelections: number
@@ -286,6 +301,7 @@ async function getRoundResultsInTx(
         const eligible = rankedRows.filter(row => row.overallScore !== null)
         const toAdvancementContestant = (row: (typeof eligible)[number]): AdvancementContestantRow => ({
             id: row.contestant.id,
+            candidateNumber: row.contestant.candidateNumber,
             name: row.contestant.name,
             gender: row.contestant.gender,
             overallScore: row.overallScore!,
@@ -339,6 +355,14 @@ async function getRoundResultsInTx(
         }
     }
 
+    // Placement ties (who is 1st vs 2nd, etc. among an already-decided winner
+    // set) are only knowable once the winner set itself is settled — skipped
+    // while a cutoff tie is unresolved, since `advancement.included` isn't
+    // final yet in that case.
+    const placementTies = isFinalRound && !advancement.hasTie
+        ? findPlacementTies(advancement.included)
+        : []
+
     let canAdvance = false
     let canAdvanceReason: CanAdvanceReason | null = null
 
@@ -360,12 +384,12 @@ async function getRoundResultsInTx(
         canAdvance = true
     }
 
-    const winnersDeclaredAt = currentRound?.winnersDeclaredAt?.toISOString() ?? null
     const canDeclareWinners = isFinalRound
         && categories.length > 0
         && allJudgesSubmitted
         && winnersDeclaredAt === null
         && !advancement.hasTie
+        && placementTies.length === 0
 
     return {
         rankings: sortedRankings,
@@ -377,15 +401,45 @@ async function getRoundResultsInTx(
         winnersDeclaredAt,
         nextRound,
         advancement,
+        placementTies,
     }
 }
 
-type AdvancementContestantRow = { id: number, name: string, gender: Gender, overallScore: number }
+type AdvancementContestantRow = { id: number, candidateNumber: number, name: string, gender: Gender, overallScore: number }
 type AdvancementPreview = {
     hasTie: boolean
     requiredSelections: number
     included: AdvancementContestantRow[]
     tied: AdvancementContestantRow[]
+}
+type PlacementTieCluster = { gender: Gender, contestants: AdvancementContestantRow[] }
+
+/**
+ * A placement tie is 2+ same-gender contestants with equal `overallScore`
+ * (2dp) who are adjacent when sorted descending — their relative finish
+ * order (1st vs 2nd, etc.) is otherwise ambiguous and must be resolved
+ * explicitly rather than silently broken by candidate number.
+ */
+function findPlacementTies(rows: AdvancementContestantRow[]): PlacementTieCluster[] {
+    return GENDERS.flatMap(gender => {
+        const sorted = rows
+            .filter(row => row.gender === gender)
+            .sort((a, b) => b.overallScore - a.overallScore)
+
+        const clusters: PlacementTieCluster[] = []
+        let i = 0
+        while (i < sorted.length) {
+            let j = i + 1
+            while (j < sorted.length && roundTo2(sorted[j]!.overallScore) === roundTo2(sorted[i]!.overallScore)) {
+                j++
+            }
+            if (j - i >= 2) {
+                clusters.push({ gender, contestants: sorted.slice(i, j) })
+            }
+            i = j
+        }
+        return clusters
+    })
 }
 
 /**
@@ -426,7 +480,21 @@ function resolveTieAdvancingIds(
     ]
 }
 
-export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundInput) {
+function buildAdvancementTieResolution(
+    advancement: AdvancementPreview,
+    selectedContestantIds: number[] | undefined,
+): AuditTieResolution["advancementTie"] | undefined {
+    if (!advancement.hasTie) return undefined
+    return {
+        requiredSelections: advancement.requiredSelections,
+        tiedContestants: advancement.tied.map(toContestantSnapshot),
+        selectedContestants: advancement.tied
+            .filter(contestant => selectedContestantIds!.includes(contestant.id))
+            .map(toContestantSnapshot),
+    }
+}
+
+export async function advanceRound({ id, selectedContestantIds, callerRole, callerUserId }: AdvanceRoundServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -443,6 +511,15 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
             throw new AppError("ADVANCE_NOT_ALLOWED", {
                 data: { reason: results.canAdvanceReason },
             })
+        }
+
+        // Ties are a judging call, not an operational one — Admin handles
+        // every routine (non-tie) advance, Chairman resolves ties only.
+        if (callerRole === Role.ADMIN && results.advancement.hasTie) {
+            throw new AppError("ADVANCE_REQUIRES_CHAIRMAN")
+        }
+        if (callerRole === Role.CHAIRMAN && !results.advancement.hasTie) {
+            throw new AppError("CHAIRMAN_ACTION_REQUIRES_TIE")
         }
 
         const { advancement, nextRound } = results
@@ -506,6 +583,17 @@ export async function advanceRound({ id, selectedContestantIds }: AdvanceRoundIn
                 contestantId,
             })),
         })
+
+        const advancementTie = buildAdvancementTieResolution(advancement, selectedContestantIds)
+        await tx.auditLog.create({
+            data: buildAuditLogCreateData({
+                action: AuditActionType.ROUND_ADVANCED,
+                actorId: callerUserId,
+                actorRole: callerRole,
+                roundId: id,
+                tieResolution: advancementTie ? { advancementTie } : null,
+            }),
+        })
     })
 }
 
@@ -518,6 +606,7 @@ type RankingRowForDeclare = {
 function buildDeclaredWinnerRows(
     winningContestantIds: number[],
     rankings: RankingRowForDeclare[],
+    placementOrder?: number[],
 ) {
     const rankingByContestantId = new Map(
         rankings.map(row => [row.contestant.id, row]),
@@ -542,6 +631,11 @@ function buildDeclaredWinnerRows(
             .filter(row => row.contestant.gender === gender)
             .sort((a, b) => {
                 if (b.overallScore! !== a.overallScore!) return b.overallScore! - a.overallScore!
+                if (placementOrder) {
+                    const aIndex = placementOrder.indexOf(a.contestant.id)
+                    const bIndex = placementOrder.indexOf(b.contestant.id)
+                    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+                }
                 return a.contestant.candidateNumber - b.contestant.candidateNumber
             })
 
@@ -554,7 +648,7 @@ function buildDeclaredWinnerRows(
     })
 }
 
-export async function declareWinners({ id, selectedContestantIds }: DeclareWinnersInput) {
+export async function declareWinners({ id, selectedContestantIds, placementOrder, callerRole, callerUserId }: DeclareWinnersServiceInput) {
     return prisma.$transaction(async (tx) => {
         const currentRound = await tx.round.findUnique({
             where: { id },
@@ -603,6 +697,17 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
             })
         }
 
+        // Ties (cutoff or placement) are a judging call, not an operational
+        // one — Admin declares every routine (tie-free) round, Chairman
+        // resolves ties only.
+        const hasUnresolvedTie = results.advancement.hasTie || results.placementTies.length > 0
+        if (callerRole === Role.ADMIN && hasUnresolvedTie) {
+            throw new AppError("DECLARE_REQUIRES_CHAIRMAN")
+        }
+        if (callerRole === Role.CHAIRMAN && !hasUnresolvedTie) {
+            throw new AppError("CHAIRMAN_ACTION_REQUIRES_TIE")
+        }
+
         const { advancement } = results
         let winningContestantIds: number[]
 
@@ -649,9 +754,49 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
             })
         }
 
+        const winnerScoreRows = winningContestantIds
+            .map((contestantId): AdvancementContestantRow | null => {
+                const row = results.rankings.find(r => r.contestant.id === contestantId)
+                if (!row || row.overallScore === null) return null
+                return {
+                    id: contestantId,
+                    candidateNumber: row.contestant.candidateNumber,
+                    name: row.contestant.name,
+                    gender: row.contestant.gender,
+                    overallScore: row.overallScore,
+                }
+            })
+            .filter((row): row is AdvancementContestantRow => row !== null)
+
+        const placementClusters = findPlacementTies(winnerScoreRows)
+
+        if (placementClusters.length > 0) {
+            if (!placementOrder) {
+                throw new AppError("PLACEMENT_ORDER_REQUIRED", {
+                    field: "declare_winners_input_placement_order",
+                })
+            }
+
+            const requiredIds = new Set(placementClusters.flatMap(cluster => cluster.contestants.map(c => c.id)))
+            const providedIds = new Set(placementOrder)
+            const matches = requiredIds.size === providedIds.size
+                && [...requiredIds].every(contestantId => providedIds.has(contestantId))
+
+            if (!matches) {
+                throw new AppError("PLACEMENT_ORDER_MISMATCH", {
+                    field: "declare_winners_input_placement_order",
+                })
+            }
+        } else if (placementOrder !== undefined) {
+            throw new AppError("PLACEMENT_ORDER_NOT_ALLOWED", {
+                field: "declare_winners_input_placement_order",
+            })
+        }
+
         const declaredWinnerRows = buildDeclaredWinnerRows(
             winningContestantIds,
             results.rankings,
+            placementOrder,
         )
 
         await tx.roundWinner.createMany({
@@ -667,6 +812,27 @@ export async function declareWinners({ id, selectedContestantIds }: DeclareWinne
         await tx.round.update({
             where: { id },
             data: { winnersDeclaredAt: new Date() },
+        })
+
+        const advancementTie = buildAdvancementTieResolution(advancement, selectedContestantIds)
+        const placementTie: AuditTieResolution["placementTie"] = placementClusters.length > 0
+            ? placementClusters.map(cluster => ({
+                gender: cluster.gender,
+                tiedContestants: cluster.contestants.map(toContestantSnapshot),
+                placementOrder: placementOrder!
+                    .filter(contestantId => cluster.contestants.some(c => c.id === contestantId))
+                    .map(contestantId => toContestantSnapshot(cluster.contestants.find(c => c.id === contestantId)!)),
+            }))
+            : undefined
+
+        await tx.auditLog.create({
+            data: buildAuditLogCreateData({
+                action: AuditActionType.WINNERS_DECLARED,
+                actorId: callerUserId,
+                actorRole: callerRole,
+                roundId: id,
+                tieResolution: (advancementTie || placementTie) ? { advancementTie, placementTie } : null,
+            }),
         })
     })
 }

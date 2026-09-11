@@ -86,7 +86,7 @@ export async function validateDeclareWinners(c: Context, next: Next) {
         body = {}
     }
 
-    const { selectedContestantIds } = body
+    const { selectedContestantIds, placementOrder } = body
     let parsedSelectedIds: number[] | undefined
 
     if (selectedContestantIds !== undefined) {
@@ -117,9 +117,40 @@ export async function validateDeclareWinners(c: Context, next: Next) {
         }
     }
 
+    let parsedPlacementOrder: number[] | undefined
+
+    if (placementOrder !== undefined) {
+        if (!Array.isArray(placementOrder)) {
+            throw new AppError("PLACEMENT_ORDER_INVALID", {
+                field: "declare_winners_input_placement_order",
+            })
+        }
+
+        parsedPlacementOrder = placementOrder.map((contestantId, index) => {
+            const parsed = Number(contestantId)
+            if (!Number.isInteger(parsed) || parsed <= 0) {
+                throw new AppError("PLACEMENT_ORDER_ID_INVALID", {
+                    field: `declare_winners_input_placement_order_${index}`,
+                })
+            }
+            return parsed
+        })
+
+        if (new Set(parsedPlacementOrder).size !== parsedPlacementOrder.length) {
+            throw new AppError("PLACEMENT_ORDER_IDS_DUPLICATE", {
+                field: "declare_winners_input_placement_order",
+            })
+        }
+
+        if (parsedPlacementOrder.length === 0) {
+            parsedPlacementOrder = undefined
+        }
+    }
+
     c.set("declareWinners", {
         id: parsedId,
         selectedContestantIds: parsedSelectedIds,
+        placementOrder: parsedPlacementOrder,
     })
 
     await next()

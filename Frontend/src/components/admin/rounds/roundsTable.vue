@@ -10,19 +10,21 @@
     </thead>
     <tbody class="w-full">
       <tr class="font-poppins" v-for="item in items" :key="item.id">
-        <td class="border px-2 text-nowrap">{{ item.name }}</td>
-        <td class="border px-2 text-nowrap">{{ item.phaseOrder }}</td>
-        <td class="border px-2 text-nowrap">{{ item.contestantLimit }}</td>
-        <td class="border px-2">
+        <td class="border border-black/40 px-2 text-nowrap">{{ item.name }}</td>
+        <td class="border border-black/40 px-2 text-nowrap">{{ item.phaseOrder }}</td>
+        <td class="border border-black/40 px-2 text-nowrap">
+          {{ item.contestantLimit ?? 'Unlimited' }}
+        </td>
+        <td class="border border-black/40 px-2">
           <div class="flex h-12 items-center justify-center gap-4">
             <button
               @click="emit('edit', item.id)"
-              class="h-10 cursor-pointer rounded-xl bg-amber-300 px-6 text-black hover:bg-amber-400"
+              class="bg-custom-light-brown1/50 hover:bg-custom-light-brown1/30 h-10 cursor-pointer rounded-xl border border-black/10 px-6"
             >
               Edit</button
             ><button
               @click="emit('delete', item.id)"
-              class="h-10 cursor-pointer rounded-xl bg-amber-600 px-6 text-white hover:bg-amber-700"
+              class="bg-main-dark-brown hover:bg-main-dark-brown/70 h-10 cursor-pointer rounded-xl border border-black/10 px-6 text-white"
             >
               Delete
             </button>
