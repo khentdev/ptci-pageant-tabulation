@@ -96,9 +96,9 @@ watch(
         <button
           v-for="button in genderFilterButtons"
           :key="button.label"
-          :class="{ 'bg-amber-400': selectedGenderFilter === button.value }"
+          :class="{ 'bg-main-dark-brown text-white': selectedGenderFilter === button.value }"
           @click="setSelectedGenderFilter(button.value)"
-          class="cursor-pointer border border-black px-6 py-2"
+          class="cursor-pointer border border-black/40 rounded-md px-6 py-2"
         >
           {{ button.label }}
         </button>

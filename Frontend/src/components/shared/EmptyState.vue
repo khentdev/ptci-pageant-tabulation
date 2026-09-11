@@ -24,7 +24,7 @@ const emit = defineEmits<{
 <template>
   <div
     v-if="variant === 'inline'"
-    class="font-poppins flex w-full items-center justify-center gap-3 py-6 text-center"
+    class="font-poppins flex w-full items-center justify-center gap-3 border border-black/40 py-6 text-center"
     role="status"
   >
     <component

@@ -2,6 +2,7 @@
   <table class="relative w-full border-collapse">
     <thead class="sticky top-0 z-20 h-full rounded-xl">
       <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
+        <th class="px-4 text-center text-nowrap">Candidate Number</th>
         <th class="px-4 text-center text-nowrap">Contestants</th>
         <th
           class="px-4 text-center"
@@ -20,9 +21,16 @@
         :key="con.id"
       >
         <td class="border border-black/40 p-3 font-medium text-nowrap">
-          <span class="mr-2 text-sm text-black/50">#{{ con.candidateNumber }}</span>
+          <span class="mr-2 text-sm font-semibold">#{{ con.candidateNumber }}</span>
+        </td>
+        <td class="border border-black/40 p-3 font-medium text-nowrap">
           {{ con.name }}
-          <span class="block text-xs font-normal opacity-80">( {{ con.gender }} )</span>
+          <span
+            class="block text-xs font-semibold  opacity-80"
+            :class="con.gender === 'FEMALE' ? 'text-pink-600' : 'text-blue-500'"
+          >
+            ( {{ con.gender }} )</span
+          >
         </td>
         <td
           class="border border-black/40 p-2 text-nowrap"

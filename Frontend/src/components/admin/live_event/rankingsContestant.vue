@@ -1,21 +1,30 @@
 <template>
-  <div class="gap mt-2 flex w-full flex-col gap-2">
-    <div class="mt-4 flex justify-between">
-      <p class="text-xl font-medium text-black/70">Rankings</p>
-      <span
-        v-if="liveStore.roundResult?.winnersDeclaredAt"
-        class="bg-jungle-green-800/10 text-jungle-green-800 rounded-lg px-3 py-1 text-sm font-semibold"
-      >
-        Winners Declared
-      </span>
-    </div>
+  <div class="gap mt-6 flex w-full flex-col">
     <div class="h-full bg-amber-500/0" v-if="liveStore.declaredWinners?.declaredWinners">
       <div
         v-for="group in declaredGroups"
         :key="group.gender"
         class="mb-4 flex flex-col gap-1 last:mb-0"
       >
-        <p class="text-sm font-semibold text-black/60">{{ genderLabel(group.gender) }}</p>
+        <div class="flex w-full items-center justify-between">
+          <div class="flex flex-col">
+            <p class="text-xl font-medium text-black/70">Rankings</p>
+            <p
+              class="text-sm font-semibold"
+              :class="group.gender === 'FEMALE' ? 'text-pink-600' : 'text-blue-500'"
+            >
+              {{ genderLabel(group.gender) }}
+            </p>
+          </div>
+
+          <span
+            v-if="liveStore.roundResult?.winnersDeclaredAt"
+            class="bg-jungle-green-800/10 text-jungle-green-800 rounded-lg px-3 py-1 text-sm font-semibold"
+          >
+            Winners Declared
+          </span>
+        </div>
+
         <table class="w-full">
           <thead class="sticky top-0 z-20 h-full rounded-xl">
             <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
@@ -46,7 +55,9 @@
                   <span v-else>{{ contestant.placement }}</span>
                 </div>
               </td>
-              <td class="border border-black/40 p-2 text-nowrap">{{ contestant.contestant.name }}</td>
+              <td class="border border-black/40 p-2 text-nowrap">
+                {{ contestant.contestant.name }}
+              </td>
 
               <td class="border border-black/40 p-2 font-semibold text-nowrap">
                 {{ contestant.overallScore }}
@@ -70,7 +81,15 @@
         :key="group.gender"
         class="mb-4 flex flex-col gap-1 last:mb-0"
       >
-        <p class="text-sm font-semibold text-black/60">{{ genderLabel(group.gender) }}</p>
+        <div class="flex flex-col">
+          <p class="text-xl font-medium text-black/70">Rankings</p>
+          <p
+            class="text-sm font-semibold"
+            :class="group.gender === 'FEMALE' ? 'text-pink-600' : 'text-blue-500'"
+          >
+            {{ genderLabel(group.gender) }}
+          </p>
+        </div>
         <table class="w-full">
           <thead class="sticky top-0 z-20 h-full rounded-xl">
             <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
@@ -144,15 +163,15 @@
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import EmptyState from '@/components/shared/EmptyState.vue';
-import { Award, Users } from '@lucide/vue';
-import { computed } from 'vue';
+import { Award, Printer, Users } from '@lucide/vue';
+import { computed, ref } from 'vue';
+
 
 const GENDERS = ['FEMALE', 'MALE'] as const;
 
 const liveStore = useLiveStore();
 
-const genderLabel = (gender: (typeof GENDERS)[number]) =>
-  gender === 'FEMALE' ? 'Female' : 'Male';
+const genderLabel = (gender: (typeof GENDERS)[number]) => (gender === 'FEMALE' ? 'Female' : 'Male');
 
 const tiedContestantIds = computed(() => {
   const tiedList = liveStore.roundResult?.advancement?.tied || [];

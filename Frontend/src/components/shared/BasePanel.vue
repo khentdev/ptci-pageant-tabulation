@@ -38,7 +38,7 @@ const emit = defineEmits<{
       <button
         v-if="addButtonLabel"
         @click="emit('add')"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-lg p-4 text-xs text-white sm:h-15 sm:text-base"
+        class="bg-jungle-green-800 border border-white/30 hover:bg-jungle-green-900 flex h-10 items-center gap-2 rounded-lg p-4 text-xs text-white sm:h-15 sm:text-base"
       >
         <Plus class="stroke-white stroke-2 sm:h-8 sm:w-8" /> {{ addButtonLabel }}
       </button>
