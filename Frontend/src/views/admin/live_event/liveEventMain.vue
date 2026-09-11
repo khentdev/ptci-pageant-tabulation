@@ -13,7 +13,17 @@
     </template>
 
     <JudgeSubmissions />
-    <RankingsContestant />
+    <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end">
+      <button
+        @click="handlePrint"
+        class="bg-jungle-green-800 flex gap-2 rounded-lg border border-black/10 px-6 py-3 font-semibold text-white"
+      >
+        <Printer></Printer>Print
+      </button>
+    </div>
+    <div class="" ref="printTarget">
+      <RankingsContestant />
+    </div>
     <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
     <PlacementOrderResolution v-if="liveStore.roundResult?.placementTies?.length" />
     <div
@@ -40,14 +50,20 @@
       </button>
     </div>
     <div
-      v-else-if="liveStore.roundResult?.nextRound && authStore.isAdmin && liveStore.roundResult.advancement.hasTie"
+      v-else-if="
+        liveStore.roundResult?.nextRound &&
+        authStore.isAdmin &&
+        liveStore.roundResult.advancement.hasTie
+      "
       class="mt-3 font-medium text-red-600/70"
     >
       A tie must be resolved by the Chairman before advancing.
     </div>
 
     <div
-      v-else-if="liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt && showDeclareSection"
+      v-else-if="
+        liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt && showDeclareSection
+      "
       class="mt-4 flex w-full items-center justify-end px-4"
     >
       <button
@@ -63,7 +79,8 @@
         liveStore.roundResult &&
         !liveStore.roundResult.winnersDeclaredAt &&
         authStore.isAdmin &&
-        (liveStore.roundResult.advancement.hasTie || Boolean(liveStore.roundResult.placementTies?.length))
+        (liveStore.roundResult.advancement.hasTie ||
+          Boolean(liveStore.roundResult.placementTies?.length))
       "
       class="mt-3 font-medium text-red-600/70"
     >
@@ -81,14 +98,42 @@ import BasePanel from '@/components/shared/BasePanel.vue';
 import { useAuthStore } from '@/stores/auth/authStore';
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import html2canvas from 'html2canvas-pro';
+import printJS from 'print-js';
+import { Printer } from '@lucide/vue';
 
 const route = useRoute();
 const roundStore = useRoundStore();
 const liveStore = useLiveStore();
 const authStore = useAuthStore();
+const printTarget = ref<HTMLElement | null>(null);
+const handlePrint = async (): Promise<void> => {
+  if (!printTarget.value) {
+    return;
+  }
 
+  const canvas = await html2canvas(printTarget.value, {
+    scale: 2,
+    useCORS: true,
+  });
+
+  const imageDataUrl = canvas.toDataURL('image/png');
+
+  printJS({
+    printable: imageDataUrl,
+    type: 'image',
+    style: `@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+      * {
+        font-family: 'Poppins', sans-serif !important;
+      }`,
+    header: `Official Results - ${currentRound.value?.name ?? 'Round'}`,
+    headerStyle:
+      'font-size: 2rem; font-weight: 600; text-align: center; margin-bottom: 16px; color: #000; font-family: Poppins, sans-serif; ',
+    documentTitle: '',
+  });
+};
 // Ties are a judging call — Chairman resolves them, Admin handles every
 // routine (tie-free) advance/declare. Each side's action section is only
 // shown to the role actually allowed to perform it right now.

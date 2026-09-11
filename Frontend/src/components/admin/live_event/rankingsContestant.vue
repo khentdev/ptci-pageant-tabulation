@@ -1,5 +1,5 @@
 <template>
-  <div class="gap mt-6 flex w-full flex-col">
+  <div class="gap flex w-full flex-col">
     <div class="h-full bg-amber-500/0" v-if="liveStore.declaredWinners?.declaredWinners">
       <div
         v-for="group in declaredGroups"
@@ -163,9 +163,8 @@
 <script setup lang="ts">
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
 import EmptyState from '@/components/shared/EmptyState.vue';
-import { Award, Printer, Users } from '@lucide/vue';
-import { computed, ref } from 'vue';
-
+import { Award, Users } from '@lucide/vue';
+import { computed } from 'vue';
 
 const GENDERS = ['FEMALE', 'MALE'] as const;
 

@@ -19,6 +19,7 @@ export const useLiveStore = defineStore('liveStore', () => {
   const judgeList = ref<GetJudgeSubmissionsDTO | null>(null);
   const roundResult = ref<GetRoundResultsDTO | null>(null);
   const declaredWinners = ref<GetDeclaredWinnersDTO | null>(null);
+  const printTarget = ref<HTMLElement | null>(null);
 
   const isTieResolved = computed(() => {
     const hasTie = roundResult.value?.advancement.hasTie;
@@ -57,8 +58,18 @@ export const useLiveStore = defineStore('liveStore', () => {
   });
 
   const isLiveEventNotFound = computed(() => errorStates.isFetchingRoundPhaseNotFound);
-  const isLiveEventServerError = computed(() => errorStates.isFetchingJudgeSubmissionsError || errorStates.isFetchingRoundResultsError || errorStates.isFetchingDeclaredWinnersError);
-  const isFetchingLiveEvent = computed(() => loadingStates.isFetchingJudgeSubmissions || loadingStates.isFetchingRoundResults || loadingStates.isFetchingDeclaredWinners);
+  const isLiveEventServerError = computed(
+    () =>
+      errorStates.isFetchingJudgeSubmissionsError ||
+      errorStates.isFetchingRoundResultsError ||
+      errorStates.isFetchingDeclaredWinnersError,
+  );
+  const isFetchingLiveEvent = computed(
+    () =>
+      loadingStates.isFetchingJudgeSubmissions ||
+      loadingStates.isFetchingRoundResults ||
+      loadingStates.isFetchingDeclaredWinners,
+  );
 
   const getJudgeSubmissionsById = async (id: number) => {
     if (loadingStates.isFetchingJudgeSubmissions) {
@@ -240,7 +251,8 @@ export const useLiveStore = defineStore('liveStore', () => {
 
       if (type === 'offline') {
         toast.warning(message, { title: 'You are Offline' });
-      } if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
+      }
+      if (type === 'server_error' || type === 'timeout' || type === 'unreachable') {
         toast.error(message, { title: 'Server Error' });
       } else if (code === 'ROUND_PHASE_NOT_FOUND') {
         toast.warning(message, { title: 'Phase Not Found' });
@@ -285,6 +297,7 @@ export const useLiveStore = defineStore('liveStore', () => {
   };
 
   return {
+    printTarget,
     addDeclareWinners,
     isTieResolved,
     selectedContestantIds,
