@@ -6,7 +6,7 @@ import {
   type SubmitCategoryScoreEntry,
 } from '@/types/admin/adminSetup/judge_scoring/judgeScoring';
 import { defineStore } from 'pinia';
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { judgeScoringService } from './service';
 import { useToast } from '@/composables/Toast/useToast';
 import { errorHandler } from '@/api/errors/errorHandler';
@@ -37,6 +37,31 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     isFetchingContestantsError: false,
     isFetchingCategoryScoresError: false,
   });
+
+  const isCategoryFieldsNotFound = ref(false);
+  const isRoundContestantsNotFound = ref(false);
+  const isCategoryScoresNotFound = ref(false);
+
+  const isCategoryNotFound = computed(
+    () =>
+      isCategoryFieldsNotFound.value ||
+      isRoundContestantsNotFound.value ||
+      isCategoryScoresNotFound.value,
+  );
+
+  const isFetchingCategoryDetails = computed(
+    () =>
+      loadingStates.isFetchingCategoryFields ||
+      loadingStates.isFetchingContestants ||
+      loadingStates.iFetchingCategoryScores,
+  );
+
+  const isFetchingCategoryDetailsError = computed(
+    () =>
+      errorStates.isFetchingCategoryFieldsError ||
+      errorStates.isFetchingContestantsError ||
+      errorStates.isFetchingCategoryScoresError,
+  );
 
   const initializeFormScores = () => {
     const newScores: Record<number, Record<number, string>> = {};
@@ -70,7 +95,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
 
       errorStates.isFetchingRoundsError = false;
     } catch (error) {
-      const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
+      const { type } = errorHandler<JudgeScoringErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeScoringErrorCodes>>,
       );
 
@@ -81,10 +106,6 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         type === 'unreachable'
       ) {
         errorStates.isFetchingRoundsError = true;
-      }
-
-      if (code === 'SCORING_ROUNDS_GET_ERROR') {
-        toast.error(message);
       }
     } finally {
       loadingStates.isFetchingRounds = false;
@@ -100,6 +121,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
       const res = await judgeScoringService.getCategoryFields(id);
       categoryFieldsList.value = res.data;
       errorStates.isFetchingCategoryFieldsError = false;
+      isCategoryFieldsNotFound.value = false;
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeScoringErrorCodes>>,
@@ -114,12 +136,11 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         errorStates.isFetchingCategoryFieldsError = true;
       }
 
-      if (code === 'SCORING_FIELDS_GET_ERROR') {
-        toast.error(message);
-      } else if (code === 'SCORING_CATEGORY_ID_INVALID') {
+      if (code === 'SCORING_CATEGORY_ID_INVALID') {
         toast.warning(message);
       } else if (code === 'SCORING_CATEGORY_NOT_FOUND') {
         toast.warning(message);
+        isCategoryFieldsNotFound.value = true;
       }
     } finally {
       loadingStates.isFetchingCategoryFields = false;
@@ -135,6 +156,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
       const res = await judgeScoringService.getRoundContestants(id);
       contestantsList.value = res.data;
       errorStates.isFetchingContestantsError = false;
+      isRoundContestantsNotFound.value = false;
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeScoringErrorCodes>>,
@@ -153,8 +175,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         toast.warning(message);
       } else if (code === 'SCORING_ROUND_NOT_FOUND') {
         toast.warning(message);
-      } else if (code === 'SCORING_CONTESTANTS_GET_ERROR') {
-        toast.error(message);
+        isRoundContestantsNotFound.value = true;
       }
     } finally {
       loadingStates.isFetchingContestants = false;
@@ -170,6 +191,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
       const res = await judgeScoringService.getCategoryScores(id);
       categoryScoresList.value = res.data;
       errorStates.isFetchingCategoryScoresError = false;
+      isCategoryScoresNotFound.value = false;
     } catch (error) {
       const { type, code, message } = errorHandler<JudgeScoringErrorCodes>(
         error as AxiosError<ErrorResponse<JudgeScoringErrorCodes>>,
@@ -188,8 +210,7 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         toast.warning(message);
       } else if (code === 'SCORING_CATEGORY_NOT_FOUND') {
         toast.warning(message);
-      } else if (code === 'SCORING_SCORES_GET_ERROR') {
-        toast.error(message);
+        isCategoryScoresNotFound.value = true;
       }
     } finally {
       loadingStates.iFetchingCategoryScores = false;
@@ -276,8 +297,6 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         toast.warning(message);
       } else if (code === 'SCORING_ROUND_COMPLETED') {
         toast.warning(message);
-      } else if (code === 'SCORING_SUBMIT_ERROR') {
-        toast.error(message);
       }
       return false;
     } finally {
@@ -298,5 +317,11 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
     formScores,
     loadingStates,
     errorStates,
+    isCategoryFieldsNotFound,
+    isRoundContestantsNotFound,
+    isCategoryScoresNotFound,
+    isCategoryNotFound,
+    isFetchingCategoryDetails,
+    isFetchingCategoryDetailsError,
   };
 });
