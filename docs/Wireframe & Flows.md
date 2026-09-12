@@ -545,12 +545,12 @@ Frontend never computes the cutoff tie itself. **No tie:** Advance sends an empt
 ├──────────────────────────────────────────────────────────────────────┤
 │ Rankings (partial — refresh page to update)                          │
 │ ───────────────────────────────────────────────────────────────────  │
-│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
-│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
-│    1   Lungcay, Keanna       91.00   97.00     —         —       94.00│
-│    2   Palay, Roldan         88.00   94.00     —         —       91.00│
-│    3   Badang, Ethel         85.00     —       —         —         —  │
-│   ...  (— means no scores yet for that category)                     │
+│  Rank  #    Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ──   ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   03   Lungcay, Keanna       91.00   97.00     —         —       94.00│
+│    2   12   Palay, Roldan         88.00   94.00     —         —       91.00│
+│    3   07   Badang, Ethel         85.00     —       —         —         —  │
+│   ...  (— means no scores yet for that category; # is candidate number)  │
 │                                                                       │
 │  [ Advance to Top 5 ]   ← disabled (not all judges submitted)        │
 └──────────────────────────────────────────────────────────────────────┘
@@ -571,17 +571,17 @@ Frontend never computes the cutoff tie itself. **No tie:** Advance sends an empt
 │  3 of 3 judges fully submitted                                        │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Rankings                                                              │
-│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
-│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
-│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
-│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
-│    3   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
-│    4   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
-│    5   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │
+│  Rank  #    Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ──   ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   03   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   12   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│    3   07   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
+│    4   19   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
+│    5   21   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │
 │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ cutoff ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
-│    6   Dela Cruz, Christine  78.00   80.00   79.00     77.00    78.50 │
-│    7   Aniar, Andrea         75.00   77.00   76.00     74.00    75.50 │
-│   ...                                                                 │
+│    6   14   Dela Cruz, Christine  78.00   80.00   79.00     77.00    78.50 │
+│    7   05   Aniar, Andrea         75.00   77.00   76.00     74.00    75.50 │
+│   ...  (# is candidate number)                                       │
 │                                                                       │
 │              [ Advance to Top 5 ]  ← enabled                         │
 └──────────────────────────────────────────────────────────────────────┘
@@ -604,17 +604,17 @@ Same as State 2 — full rankings table with all category columns stays visible.
 │  3 of 3 judges fully submitted                                        │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Rankings                                                              │
-│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
-│  ────  ─────────────────   ────────  ──────  ──────  ──────────  ─────│
-│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
-│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
-│    3   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
-│    4   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
+│  Rank  #    Contestant          Swimwear  Talent  Formal  Production Overall│
+│  ────  ──   ─────────────────   ────────  ──────  ──────  ──────────  ─────│
+│    1   03   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   12   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│    3   07   Badang, Ethel         85.00   88.00   86.00     84.00    85.75 │
+│    4   19   Tenorio, Sean         82.00   85.00   83.00     81.00    82.75 │
 │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ cutoff ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
-│    5   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │  ← tied
-│    6   Dela Cruz, Christine  80.00   80.00   79.00     77.00    80.75 │  ← tied
-│    7   Aniar, Andrea         80.00   77.00   76.00     74.00    80.75 │  ← tied
-│   ...                                                                 │
+│    5   21   Reyes, Julian         80.00   83.00   81.00     79.00    80.75 │  ← tied
+│    6   14   Dela Cruz, Christine  80.00   80.00   79.00     77.00    80.75 │  ← tied
+│    7   05   Aniar, Andrea         80.00   77.00   76.00     74.00    80.75 │  ← tied
+│   ...  (# is candidate number)                                       │
 │                                                                       │
 │  ── Tie Resolution (shown only when advancement.hasTie) ───────────  │
 │                                                                       │
@@ -659,10 +659,10 @@ After admin selects 1:
 │  Judge 3     ✓    ✓    ✓    ✓    ✓                                   │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Final Rankings                                                        │
-│  Rank  Contestant          Swimwear  Talent  Formal  Production Overall│
-│    1   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
-│    2   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
-│   ...                                                                 │
+│  Rank  #    Contestant          Swimwear  Talent  Formal  Production Overall│
+│    1   03   Lungcay, Keanna       92.00   97.00   93.00     90.00    93.00 │
+│    2   12   Palay, Roldan         88.00   94.00   90.00     87.00    89.75 │
+│   ...  (# is candidate number)                                       │
 │                                                                       │
 │  (no advance button — this round is completed)                        │
 └──────────────────────────────────────────────────────────────────────┘
@@ -733,13 +733,13 @@ See **§6 State 2b** for layout. Flow summary:
 │                                                               │
 │  Contestants advanced from Preliminary:                       │
 │                                                               │
-│  Rank  Contestant             Overall Score                   │
-│  ────  ─────────────────────  ─────────────                   │
-│    —   Lungcay, Keanna              —                         │
-│    —   Palay, Roldan                —                         │
-│    —   Badang, Ethel                —                         │
-│    —   Tenorio, Sean                —                         │
-│    —   Reyes, Julian                —                         │
+│  Rank  #    Contestant             Overall Score               │
+│  ────  ──   ─────────────────────  ─────────────                │
+│    —   03   Lungcay, Keanna              —                     │
+│    —   12   Palay, Roldan                —                     │
+│    —   07   Badang, Ethel                —                     │
+│    —   19   Tenorio, Sean                —                     │
+│    —   21   Reyes, Julian                —                     │
 │                                                               │
 │  ⏳ Waiting for judges to submit scores...                    │
 │                                                               │
@@ -783,10 +783,10 @@ Podium appears only after declare — no declared-winners GET while `winnersDecl
 ┌──────────────────────────────────────────────────────────────┐
 │ Round Results: Top 3                         ✓ Declared       │
 │                                                               │
-│  🥇  declaredWinners[0].contestant.name    overallScore      │
-│  🥈  declaredWinners[1].contestant.name    overallScore      │
-│  🥉  declaredWinners[2].contestant.name    overallScore      │
-│       (placement 1..3 from GET — tie 3rd place = admin pick)  │
+│  🥇  #declaredWinners[0].contestant.candidateNumber  declaredWinners[0].contestant.name    overallScore      │
+│  🥈  #declaredWinners[1].contestant.candidateNumber  declaredWinners[1].contestant.name    overallScore      │
+│  🥉  #declaredWinners[2].contestant.candidateNumber  declaredWinners[2].contestant.name    overallScore      │
+│       (placement 1..3 from GET — tie 3rd place = admin pick; candidate number shown next to placement) │
 │                                                               │
 │  (Declare hidden — fetch [[live-event/live-round-declared-winners]]) │
 └──────────────────────────────────────────────────────────────┘

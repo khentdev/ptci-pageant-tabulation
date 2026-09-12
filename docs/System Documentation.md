@@ -219,6 +219,7 @@ Used **during** the actual pageant event. Separate view from Setup.
 - One action per round: **Advance to [Next Round Name]** (or **Declare Winners** on the final round)
 - Tie detection at the advancement cutoff
 - Manual tie resolution UI on the same page
+- Rankings table shows candidate number (`contestant.candidateNumber`) in its own column immediately after the Rank column, alongside contestant name
 
 **Advancement is gender-based, not overall.** Ranking, rank numbering, the cutoff, and tie detection are all computed **independently for males and females** against the same round `contestant_limit` — a limit of 5 advances the top 5 females and the top 5 males (up to 10 total), not the 5 highest scores regardless of gender. This prevents one gender's stronger scores from crowding the other out of the round entirely. A tie can surface in one gender only, both at once, or neither.
 
@@ -365,6 +366,7 @@ Admin must pick exactly (N - A) from that gender's T tied contestants
 - Final round results view shows final rankings
 - Declare Winners button locks all results
 - Displays 1st Place, 2nd Place, 3rd Place prominently, **per gender** (a Ms. podium and a Mr. podium)
+- Declared-winners table shows candidate number (`contestant.candidateNumber`) in its own column immediately after the Placement column, alongside contestant name
 
 **Business Rules**
 

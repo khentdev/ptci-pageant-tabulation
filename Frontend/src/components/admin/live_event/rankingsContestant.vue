@@ -29,6 +29,7 @@
           <thead class="sticky top-0 z-20 h-full rounded-xl">
             <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
               <th class="px-2 text-nowrap">Placement</th>
+              <th class="px-2 text-nowrap">Cand. #</th>
               <th class="px-2 text-nowrap">Contestant</th>
               <th class="px-2 text-nowrap">Overall</th>
             </tr>
@@ -54,6 +55,9 @@
                   </template>
                   <span v-else>{{ contestant.placement }}</span>
                 </div>
+              </td>
+              <td class="border border-black/40 p-2 text-nowrap font-bold">
+                {{ contestant.contestant.candidateNumber }}
               </td>
               <td class="border border-black/40 p-2 text-nowrap">
                 {{ contestant.contestant.name }}
@@ -94,6 +98,7 @@
           <thead class="sticky top-0 z-20 h-full rounded-xl">
             <tr class="bg-main-dark-brown h-10 text-left text-sm text-white sm:h-20 sm:text-xl">
               <th class="px-2 text-nowrap">Rank</th>
+              <th class="px-2 text-nowrap">Cand. #</th>
               <th class="px-2 text-nowrap">Contestant</th>
               <th
                 class="px-2 text-nowrap"
@@ -113,7 +118,7 @@
                 class="bg-red-800 font-bold text-white"
               >
                 <td
-                  :colspan="3 + (group.rows[0]?.categories.length || 0)"
+                  :colspan="4 + (group.rows[0]?.categories.length || 0)"
                   class="py-1 text-center text-xs tracking-widest uppercase"
                 >
                   — — — — — — Cutoff Line — — — — — —
@@ -127,6 +132,10 @@
                 }"
               >
                 <td class="border border-black/40 p-2 text-nowrap">{{ r.rank ?? '-' }}</td>
+
+                <td class="border border-black/40 p-2 text-nowrap font-bold">
+                  {{ r.contestant.candidateNumber }}
+                </td>
 
                 <td class="border border-black/40 p-2 text-nowrap">
                   <div class="flex items-center justify-between gap-2">
