@@ -213,17 +213,17 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 - [x] JWT auth middleware — validate token on all protected routes
 - [x] Role guard middleware — `adminOnly` and `judgeOnly` guards
 - [x] Global error handler — consistent error response shape
-- [ ] Input validation — field-level validation on all mutation endpoints
+- [x] Input validation — field-level validation on all mutation endpoints
 
 ### Frontend
 
 - [x] Admin route protection — redirect to login if not admin
 - [x] Judge route protection — redirect to login if not judge
-- [ ] Public route — candidates page accessible without auth
+- [x] Public route — candidates page accessible without auth
 - [x] Toast notifications — success and error feedback
 - [x] Loading states on all data-fetching pages
 - [x] Error states with retry on all data-fetching pages
-- [ ] Empty states on all list pages
+- [x] Empty states on all list pages
 
 ---
 
@@ -231,7 +231,7 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 
 _(Add issues here as they are discovered during testing)_
 
-- [ ] Full smoke test: admin setup → judges score → advance → declare winners
+- [x] Full smoke test: admin setup → judges score → advance → declare winners
 
 ---
 
