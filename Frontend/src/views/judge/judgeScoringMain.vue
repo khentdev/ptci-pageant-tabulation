@@ -2,7 +2,7 @@
   <div
     class="bg-main-light-brown font-poppins relative flex h-full w-full flex-col items-center gap-2 rounded-xl border border-black/20 px-6 py-4 drop-shadow-sm drop-shadow-black/10"
   >
-    <div class="flex w-full justify-between gap-2">
+    <div class="flex w-full justify-between gap-2" v-if="!isCategoryNotFound">
       <div class="w-full">
         <p class="font-semibold text-black/70 sm:text-2xl">{{ currentRound?.name }}</p>
         <p class="font-normal text-black/70 sm:text-lg">{{ currentCategory?.name }}</p>
@@ -20,15 +20,7 @@
       </div>
     </div>
 
-    <div
-      v-if="!currentRound?.hasContestants"
-      class="flex h-full w-full flex-col items-center justify-center rounded-lg border border-black/30"
-    >
-      <p class="text-black/80">No data yet.</p>
-      <p class="text-sm text-black/50">This round has not started.</p>
-    </div>
-
-    <div v-else class="mt-4 flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto">
+    <div class="mt-4 flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto">
       <BaseFetchOverlay v-if="judgeScoringStore.isFetchingCategoryDetails" />
       <ServerErrorOverlay
         v-else-if="judgeScoringStore.isFetchingCategoryDetailsError"
@@ -36,6 +28,14 @@
         description="We couldn't load this category's scoring details. Please try again."
         :onRetry="retryFetchCategories"
       />
+      <NotFoundOverlay v-else-if="isCategoryNotFound" />
+      <div
+        v-else-if="!currentRound?.hasContestants"
+        class="flex h-full w-full flex-col items-center justify-center rounded-lg border border-black/30"
+      >
+        <p class="text-black/80">No data yet.</p>
+        <p class="text-sm text-black/50">This round has not started.</p>
+      </div>
       <template v-else>
         <JudgeScoringFieldsTable />
         <div class="flex justify-end">
@@ -61,6 +61,7 @@
 import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
 import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
 import JudgeScoringFieldsTable from '@/components/admin/judge_scoring/judgeScoringFieldsTable.vue';
+import NotFoundOverlay from '@/components/admin/judge_scoring/NotFoundOverlay.vue';
 import { useJudgeScoringStore } from '@/stores/admin/adminSetup/judge_scoring/judgeScoring';
 import { Check } from '@lucide/vue';
 import { computed, watch } from 'vue';
@@ -71,12 +72,19 @@ const judgeScoringStore = useJudgeScoringStore();
 
 const activeCategoryId = computed(() => {
   const id = route.params.categoriesId;
-  return id ? Number(id) : null;
+  const parsed = Number(id);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 });
+
+const isCategoryIdInvalid = computed(() => activeCategoryId.value === undefined);
+
+const isCategoryNotFound = computed(
+  () => isCategoryIdInvalid.value || judgeScoringStore.isCategoryNotFound,
+);
 
 const currentRound = computed(() => {
   if (!activeCategoryId.value) {
-    return null;
+    return undefined;
   }
   return judgeScoringStore.judgeScoringRoundList.find((r) =>
     r.categories.some((cat) => cat.id === activeCategoryId.value),
@@ -85,25 +93,34 @@ const currentRound = computed(() => {
 
 const currentCategory = computed(() => {
   if (!currentRound.value || !activeCategoryId.value) {
-    return null;
+    return undefined;
   }
   return currentRound.value.categories.find((cat) => cat.id === activeCategoryId.value);
 });
 
-const fetchCategories = async (categoryId: number, roundId: number) => {
+const fetchCategoryDetails = async (categoryId: number) => {
   try {
     await Promise.all([
       judgeScoringStore.getCategoryFields(categoryId),
-      judgeScoringStore.getRoundContestants(roundId),
       judgeScoringStore.getCategoryScores(categoryId),
     ]);
     judgeScoringStore.initializeFormScores();
   } catch {}
 };
 
+const fetchContestants = async (roundId: number) => {
+  try {
+    await judgeScoringStore.getRoundContestants(roundId);
+    judgeScoringStore.initializeFormScores();
+  } catch {}
+};
+
 const retryFetchCategories = () => {
-  if (activeCategoryId.value && currentRound.value) {
-    fetchCategories(activeCategoryId.value, currentRound.value.id);
+  if (activeCategoryId.value) {
+    fetchCategoryDetails(activeCategoryId.value);
+  }
+  if (currentRound.value) {
+    fetchContestants(currentRound.value.id);
   }
 };
 
@@ -115,10 +132,20 @@ const handleSubmit = async () => {
 };
 
 watch(
-  [activeCategoryId, currentRound],
-  ([categoryId, round]) => {
-    if (categoryId && round) {
-      fetchCategories(categoryId, round.id);
+  activeCategoryId,
+  (categoryId) => {
+    if (categoryId) {
+      fetchCategoryDetails(categoryId);
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  currentRound,
+  (round) => {
+    if (round) {
+      fetchContestants(round.id);
     }
   },
   { immediate: true },

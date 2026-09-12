@@ -6,7 +6,7 @@
     errorTitle="Failed to Load Round Results"
     errorDescription="We couldn't load the round results. Please try again."
     :onRetry="() => fetchRoundResults(activeRoundId ?? 0)"
-    :isNotFound="liveStore.isLiveEventNotFound"
+    :isNotFound="isRoundNotFound"
   >
     <template #not-found>
       <NotFoundOverlay />
@@ -149,11 +149,17 @@ const showDeclareSection = computed(() => {
   return authStore.isChairman ? hasTie : !hasTie;
 });
 
-const activeRoundId = computed<number | null>(() => {
+const activeRoundId = computed<number | undefined>(() => {
   const raw = route.params.roundId;
   const parsed = Number(raw);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 });
+
+const isRoundIdInvalid = computed(() => activeRoundId.value === undefined);
+
+const isRoundNotFound = computed(
+  () => isRoundIdInvalid.value || liveStore.isLiveEventNotFound,
+);
 
 const canAdvanceRound = computed(() => {
   if (
