@@ -154,27 +154,27 @@ Task checklist for build progress. Each module links to its flow in [[Wireframe 
 
 _Build order (Wireframe §6): sidebar → Round Results page shell → judge submissions (API ready) → rankings & advancement read APIs ready; advance POST API ready — [[live-event/live-round-advance]]._
 
-- [ ] Admin Live Event sidebar — one navigation item per round, ordered by phase order (API contract: [[live-event/live-results-sidebar]] — reuses `GET /rounds`)
-- [ ] Round Results page (shared component, driven by round ID — two sections: Judge Submissions on top, Rankings below)
-  - [ ] Judge submission status display (per judge per category: ✓ / ✗; Done? column; "X of Y judges fully submitted") — build first after sidebar; consumes [[live-event/live-judge-submissions]]
-  - [ ] Ranking table: contestant rows × (one column per category avg + overall score column + rank) — consumes [[live-event/live-round-results]]
-  - [ ] Advance button — hidden when `isCompleted` is `true`; enabled when `canAdvance` is `true`; disabled helper from `canAdvanceReason` otherwise
-  - [ ] Advance button label dynamically reads next round name (`Advance to [Next Round Name]`)
-- [ ] No-tie advancement flow — `canAdvance` true and no tie → one click, empty body, backend advances top N
-- [ ] Tie resolution UI (below full rankings table when `advancement.hasTie`):
-  - [ ] Full rankings table unchanged (all category columns, same as no-tie state)
-  - [ ] Tie-resolution panel rendered under table from `advancement.included` / `advancement.tied`
-  - [ ] Selection counter ("Selected: X of Y required")
-  - [ ] Disable extra checkboxes once required count is reached
-  - [ ] Advance button disabled until selection count matches required (non-final rounds)
-  - [ ] Declare Winners button disabled until selection count matches required (final round)
-  - [ ] One click on enabled Advance advances all (auto + selected tied via `selectedContestantIds`)
-  - [ ] One click on enabled Declare locks winners (auto + selected tied via `selectedContestantIds` on final round)
-- [ ] Final round view — "Declare Winners" button instead of Advance
-  - [ ] Declare Winners confirmation modal (warn: irreversible)
-  - [ ] Winners display after declaration (🥇 🥈 🥉 with names and scores) — consumes [[live-event/live-round-declared-winners]]; not `rankings[0..2]`
-- [ ] Past rounds remain visible and browsable after advancement (`isCompleted` — read-only)
-- [ ] Refetch on page mount and manual browser refresh only — no auto-polling
+- [x] Admin Live Event sidebar — one navigation item per round, ordered by phase order (API contract: [[live-event/live-results-sidebar]] — reuses `GET /rounds`)
+- [x] Round Results page (shared component, driven by round ID — two sections: Judge Submissions on top, Rankings below)
+  - [x] Judge submission status display (per judge per category: ✓ / ✗; Done? column; "X of Y judges fully submitted") — build first after sidebar; consumes [[live-event/live-judge-submissions]]
+  - [x] Ranking table: contestant rows × (one column per category avg + overall score column + rank) — consumes [[live-event/live-round-results]]
+  - [x] Advance button — hidden when `isCompleted` is `true`; enabled when `canAdvance` is `true`; disabled helper from `canAdvanceReason` otherwise
+  - [x] Advance button label dynamically reads next round name (`Advance to [Next Round Name]`)
+- [x] No-tie advancement flow — `canAdvance` true and no tie → one click, empty body, backend advances top N
+- [x] Tie resolution UI (below full rankings table when `advancement.hasTie`):
+  - [x] Full rankings table unchanged (all category columns, same as no-tie state)
+  - [x] Tie-resolution panel rendered under table from `advancement.included` / `advancement.tied`
+  - [x] Selection counter ("Selected: X of Y required")
+  - [x] Disable extra checkboxes once required count is reached
+  - [x] Advance button disabled until selection count matches required (non-final rounds)
+  - [x] Declare Winners button disabled until selection count matches required (final round)
+  - [x] One click on enabled Advance advances all (auto + selected tied via `selectedContestantIds`)
+  - [x] One click on enabled Declare locks winners (auto + selected tied via `selectedContestantIds` on final round)
+- [x] Final round view — "Declare Winners" button instead of Advance
+  - [x] Declare Winners confirmation modal (warn: irreversible)
+  - [x] Winners display after declaration (🥇 🥈 🥉 with names and scores) — consumes [[live-event/live-round-declared-winners]]; not `rankings[0..2]`
+- [x] Past rounds remain visible and browsable after advancement (`isCompleted` — read-only)
+- [x] Refetch on page mount and manual browser refresh only — no auto-polling
 
 ---
 
@@ -192,17 +192,17 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 
 ### Frontend
 
-- [ ] Judge shell layout — sidebar + content area
-- [ ] Route: `/judge/scoring/:categoryId?` — categoryId optional; no categoryId redirects to first available category
-- [ ] On page load: read categoryId from URL → fetch and display that category automatically (survives refresh)
-- [ ] Sidebar rounds list — all rounds, expandable, fetches categories on expand; refetch on page refresh only (no polling)
-- [ ] Active category highlighted in sidebar based on current URL categoryId
-- [ ] Rounds without contestants show "No contestants yet" when expanded
-- [ ] Category scoring grid — contestants as rows, fields as columns with max label
-- [ ] All inputs freely editable before Submit All — no per-contestant locking
-- [ ] Submit All button (enabled only when all fields for all contestants are filled)
-- [ ] Submitted state per category — if scores exist for this judge + category → all inputs read-only, submitted values retained, Submit All hidden, ✓ Submitted shown in header
-- [ ] Inline field validation — value cannot exceed max_value; all fields required before Submit All
+- [x] Judge shell layout — sidebar + content area
+- [x] Route: `/judge/scoring/:categoryId?` — categoryId optional; no categoryId redirects to first available category
+- [x] On page load: read categoryId from URL → fetch and display that category automatically (survives refresh)
+- [x] Sidebar rounds list — all rounds, expandable, fetches categories on expand; refetch on page refresh only (no polling)
+- [x] Active category highlighted in sidebar based on current URL categoryId
+- [x] Rounds without contestants show "No contestants yet" when expanded
+- [x] Category scoring grid — contestants as rows, fields as columns with max label
+- [x] All inputs freely editable before Submit All — no per-contestant locking
+- [x] Submit All button (enabled only when all fields for all contestants are filled)
+- [x] Submitted state per category — if scores exist for this judge + category → all inputs read-only, submitted values retained, Submit All hidden, ✓ Submitted shown in header
+- [x] Inline field validation — value cannot exceed max_value; all fields required before Submit All
 
 ---
 
@@ -213,17 +213,17 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 - [x] JWT auth middleware — validate token on all protected routes
 - [x] Role guard middleware — `adminOnly` and `judgeOnly` guards
 - [x] Global error handler — consistent error response shape
-- [ ] Input validation — field-level validation on all mutation endpoints
+- [x] Input validation — field-level validation on all mutation endpoints
 
 ### Frontend
 
-- [ ] Admin route protection — redirect to login if not admin
-- [ ] Judge route protection — redirect to login if not judge
-- [ ] Public route — candidates page accessible without auth
-- [ ] Toast notifications — success and error feedback
-- [ ] Loading states on all data-fetching pages
-- [ ] Error states with retry on all data-fetching pages
-- [ ] Empty states on all list pages
+- [x] Admin route protection — redirect to login if not admin
+- [x] Judge route protection — redirect to login if not judge
+- [x] Public route — candidates page accessible without auth
+- [x] Toast notifications — success and error feedback
+- [x] Loading states on all data-fetching pages
+- [x] Error states with retry on all data-fetching pages
+- [x] Empty states on all list pages
 
 ---
 
@@ -231,7 +231,7 @@ _Build order (Wireframe §6): sidebar → Round Results page shell → judge sub
 
 _(Add issues here as they are discovered during testing)_
 
-- [ ] Full smoke test: admin setup → judges score → advance → declare winners
+- [x] Full smoke test: admin setup → judges score → advance → declare winners
 
 ---
 
