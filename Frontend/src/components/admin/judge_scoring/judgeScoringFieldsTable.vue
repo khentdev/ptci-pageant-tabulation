@@ -26,7 +26,7 @@
         <td class="border border-black/40 p-3 font-medium text-nowrap">
           {{ con.name }}
           <span
-            class="block text-xs font-semibold  opacity-80"
+            class="block text-xs font-semibold opacity-80"
             :class="con.gender === 'FEMALE' ? 'text-pink-600' : 'text-blue-500'"
           >
             ( {{ con.gender }} )</span
@@ -66,6 +66,9 @@ const handleScoreInput = (e: Event, contestantId: number, fieldId: number, maxVa
 
   rawValue = rawValue.replace(/[^0-9.]/g, '');
 
+  if (rawValue === '0') {
+    rawValue = '1';
+  }
   const decimalParts = rawValue.split('.');
   if (decimalParts.length > 2) {
     rawValue = `${decimalParts[0]}.${decimalParts.slice(1).join('')}`;
@@ -84,5 +87,7 @@ const handleScoreInput = (e: Event, contestantId: number, fieldId: number, maxVa
   if (judgeScoringStore.formScores[contestantId]) {
     judgeScoringStore.formScores[contestantId][fieldId] = rawValue;
   }
+
+  localStorage.setItem(`judge-draft-${contestantId}-${fieldId}`, rawValue);
 };
 </script>

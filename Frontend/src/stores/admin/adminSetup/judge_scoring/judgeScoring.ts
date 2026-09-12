@@ -76,7 +76,8 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
         const foundScore = existingScores.find(
           (s) => s.contestantId === con.id && s.criteriaFieldId === f.id,
         );
-        contestantScores[f.id] = foundScore ? String(foundScore.value) : '';
+        const draftScore = localStorage.getItem(`judge-draft-${con.id}-${f.id}`);
+        contestantScores[f.id] = foundScore ? String(foundScore.value) : draftScore || '';
       });
       newScores[con.id] = contestantScores;
     });
@@ -254,6 +255,11 @@ export const useJudgeScoringStore = defineStore('judgeScoringStore', () => {
       toast.success(res.message);
       if (categoryScoresList.value) {
         categoryScoresList.value.isSubmitted = true;
+      }
+      for (const con of contestantsList.value) {
+        for (const f of fields) {
+          localStorage.removeItem(`judge-draft-${con.id}-${f.id}`);
+        }
       }
       return true;
     } catch (error) {
