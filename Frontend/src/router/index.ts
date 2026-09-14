@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth/authStore';
 import { authRoutes } from './auth/authRoutes';
 import { adminRoutes } from './admin/adminRoutes';
 import { judgeRoutes } from './judge/judgeRoutes';
+import { candidatesRoutes } from './candidates/candidatesRoutes';
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -12,6 +13,7 @@ export const routes: RouteRecordRaw[] = [
   ...authRoutes,
   ...adminRoutes,
   ...judgeRoutes,
+  ...candidatesRoutes,
 ];
 
 const router = createRouter({
@@ -24,8 +26,10 @@ router.beforeEach(async (to) => {
   if (authStore.currentUser) {
     return;
   }
-  const hasAuthPages = to.matched.some((record) => record.meta.isAuthPage);
-  if (hasAuthPages) {
+  const isPublicOrAuthPage = to.matched.some(
+    (record) => record.meta.isAuthPage || record.meta.isPublic,
+  );
+  if (isPublicOrAuthPage) {
     return;
   }
 
@@ -41,10 +45,7 @@ router.beforeEach(async (to) => {
     return { name: 'login' };
   }
 
-  if (
-    to.meta.requiresJudge &&
-    !authStore.isJudge
-  ) {
+  if (to.meta.requiresJudge && !authStore.isJudge) {
     return { name: 'login' };
   }
 });
