@@ -14,7 +14,7 @@ const handleErrorImages = (canNumber: string) => {
 <template>
   <div
     class="w-full rounded-2xl border border-black/15"
-    v-for="can in candidateStore.malesCandidatesItems"
+    v-for="can in candidateStore.femalesCandidatesItems"
     :key="can.canNumber"
   >
     <div

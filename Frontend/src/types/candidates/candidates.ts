@@ -6,10 +6,11 @@ export interface FilterButtons {
   value: Gender | undefined;
 }
 
-export type MaleCandidatesItems = {
+export type CandidatesItems = {
   canPicture: string | Component;
   canNumber: string;
   canName: string;
   canTeamLogo: string | Component;
   canTeamName: string;
+  canCourse: string;
 };
