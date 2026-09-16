@@ -156,7 +156,7 @@ const saveContestant = async () => {
     teamColor: newContestantTeamColor.value.trim(),
   };
 
-  const success = await contestantStore.addContestant(payload);
+  const success = await contestantStore.addContestant(payload, selectedGender.value);
   if (success) {
     modalStore.toggleAddContestant();
     newContestantNumber.value = '';
@@ -185,5 +185,6 @@ watch(newContestantNumber, (value) => {
 
 const props = defineProps<{
   showModal: boolean;
+  selectedGenderFilter?: Gender;
 }>();
 </script>

@@ -31,6 +31,7 @@ const genderFilterButtons: FilterButtons[] = [
 ];
 
 const setSelectedGenderFilter = (filter: Gender | undefined) => {
+  selectedGenderFilter.value = filter;
   router.replace({ query: { filter } });
 };
 
@@ -73,6 +74,7 @@ watch(
 <template>
   <AddContestant
     :showModal="modalStore.contestantModalStates.isAddContestantVisible"
+    :selectedGenderFilter
   ></AddContestant>
   <EditContestant
     :showModal="modalStore.contestantModalStates.isEditContestantVisible"
@@ -98,7 +100,7 @@ watch(
           :key="button.label"
           :class="{ 'bg-main-dark-brown text-white': selectedGenderFilter === button.value }"
           @click="setSelectedGenderFilter(button.value)"
-          class="cursor-pointer border border-black/40 rounded-md px-6 py-2"
+          class="cursor-pointer rounded-md border border-black/40 px-6 py-2"
         >
           {{ button.label }}
         </button>
