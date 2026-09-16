@@ -9,7 +9,10 @@ async function seedAdmin() {
     const adminPassword = env.ADMIN_PASSWORD;
 
     const admin = await prisma.user.findFirst({ where: { username: adminUsername } })
-    if (admin) throw new Error("Admin already exists: Skipping seeding...");
+    if (admin) {
+        logger.info("Admin already exists: Skipping seeding...")
+        return
+    }
 
     const hashedPassword = await argon2.hash(adminPassword)
     const adminCreated = await prisma.user.create({

@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json && node dist/prisma/seeds/admin.js",
+    "build": "prisma generate && tsc -p tsconfig.build.json && prisma migrate deploy && node dist/prisma/seeds/admin.js",
     "start": "prisma migrate deploy && node dist/src/server.js",
     "seed:admin": "tsx prisma/seeds/admin.ts",
     "seed:dev": "tsx prisma/seeds/dev.ts",
