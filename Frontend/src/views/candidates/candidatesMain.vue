@@ -29,7 +29,7 @@ const candidateStore = useCandidateStore();
       </div>
 
       <div
-        class="bg-main-light-brown grid h-[calc(100vh-1rem)] w-full grid-cols-5 gap-9 overflow-y-auto rounded-lg border border-black/15 p-8"
+        class="bg-main-light-brown grid h-[calc(100vh-1rem)] w-full grid-cols-1 gap-2 overflow-y-auto rounded-lg border border-black/15 p-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:gap-9 2xl:p-8"
       >
         <BaseMale></BaseMale>
         <BaseFemales></BaseFemales>
