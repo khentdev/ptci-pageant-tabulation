@@ -42,11 +42,11 @@ router.beforeEach(async (to) => {
     !authStore.isAdmin &&
     !(to.meta.allowChairman && authStore.isChairman)
   ) {
-    return { name: 'login' };
+    return { name: 'candidates' };
   }
 
   if (to.meta.requiresJudge && !authStore.isJudge) {
-    return { name: 'login' };
+    return { name: 'candidates' };
   }
 });
 

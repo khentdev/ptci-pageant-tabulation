@@ -1,4 +1,4 @@
-**Last synced with codebase:** Aug 23, 2026
+**Last synced with codebase:** Sep 17, 2026
 User flows and wireframes in plain English with ASCII layouts.
 See [[System Documentation]] for business rules.
 
@@ -15,7 +15,7 @@ See [[System Documentation]] for business rules.
   - On invalid credentials → show "Invalid username or password", stay on page
   - On success (role = `admin`) → redirect to `/admin/live/results/:roundId` where `roundId` is the round with `phase_order = 1` (Preliminary)
   - On success (role = `judge`) → redirect to `/judge/scoring`
-- Expired or invalid session on any protected page → redirected back to `/login`
+- Attempting to access a protected Admin or Judge page without the required role (including when not logged in, or when a session has expired) → redirected to `/candidates` instead of `/login`
 
 **Wireframe — Login Page**
 
@@ -59,8 +59,8 @@ See [[System Documentation]] for business rules.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  PTCI Pageant 2026 — Candidates                              │
-│                                                               │
+│  PTCI                                    [Candidates] [Login] │  ← shared top nav (see Admin/Judge Shell)
+├──────────────────────────────────────────────────────────────┤
 │  Filter: [ All ]  [ Male ]  [ Female ]                        │
 │                                                               │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
@@ -81,6 +81,9 @@ See [[System Documentation]] for business rules.
 └──────────────────────────────────────────────────────────────┘
 ```
 
+- Top nav bar is shared across the whole app (`navMain.vue`): shows the `PTCI` brand mark, a `Candidates` button (always visible, shown active here), and either a `Login` button (guest) or, when logged in, the user's `Name (Role)` plus their role button (`Rounds` for Admin/Chairman, `Judge` for Judge) and `Logout`
+- On mobile widths, button labels collapse to icon-only (`Candidates`, `Login`/`Rounds`/`Judge`, `Logout`), each with an accessible label
+
 ---
 
 ## Admin Flows
@@ -89,7 +92,7 @@ See [[System Documentation]] for business rules.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  PTCI Admin                                       [ Logout ]      │
+│  PTCI    Jane Dela Cruz (Admin)   [Candidates] [Rounds] [Logout]  │
 ├────────────────┬─────────────────────────────────────────────────┤
 │ SETUP          │                                                  │
 │  Rounds        │   [ Main Content Area ]                          │
@@ -108,6 +111,8 @@ See [[System Documentation]] for business rules.
 
 - Round Results sidebar items are dynamically generated from the rounds in the database, ordered by phase_order
 - Sidebar links to each round's individual results page
+- Top nav bar shows the logged-in user as `Name (Role)`, a `Candidates` button (links to the public candidates page), a role button, and `Logout`; the role button reads `Rounds` and links to Setup → Rounds. On mobile widths, labels collapse to icon-only buttons
+- Chairman can view the Admin homepage and Live Event results, but is redirected back to the Admin homepage if navigating directly to any Setup page (Rounds, Categories, Contestants, Judges) — those pages are Admin-only
 
 ---
 
@@ -800,7 +805,7 @@ Podium appears only after declare — no declared-winners GET while `winnersDecl
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  PTCI Judging Panel    Welcome, Judge 1          [ Logout ]    │
+│  PTCI    Judge 1 (Judge)       [Candidates] [Judge] [Logout]   │
 ├───────────────────┬────────────────────────────────────────────┤
 │ ▼ Preliminary     │                                            │
 │    Swimwear        │   [ Scoring Content Area ]                │
@@ -813,6 +818,7 @@ Podium appears only after declare — no declared-winners GET while `winnersDecl
 └───────────────────┴────────────────────────────────────────────┘
 ```
 
+- Top nav bar mirrors the Admin shell: shows the judge as `Name (Judge)`, a `Candidates` button, a `Judge` button (active, links back to the scoring homepage), and `Logout`. Collapses to icon-only buttons on mobile
 - No active round indicator — no status column exists to derive it from
 - Rounds with contestants show interactive categories; rounds without contestants show "No contestants yet" when expanded
 - Judge naturally knows which round is current by which categories are scoreable
@@ -949,6 +955,9 @@ Podium appears only after declare — no declared-winners GET while `winnersDecl
 | `/admin/live/results/:roundId` | Admin  | Round results, advancement, tie resolution                                  |
 | `/judge/scoring`               | Judge  | Scoring interface — redirects to first available category                   |
 | `/judge/scoring/:categoryId`   | Judge  | Scoring grid for a specific category; categoryId in URL persists on refresh |
+
+- Setup pages under `/admin/live/results` (Rounds, Categories, Contestants, Judges) are Admin-only; Chairman is redirected to the Admin homepage if it navigates there directly
+- Accessing any Admin or Judge route without the required role (or without being logged in) redirects to `/candidates`, not `/login`
 
 ---
 
