@@ -3,7 +3,7 @@
     <template #head>
       <BaseTableHeader>Name</BaseTableHeader>
       <BaseTableHeader>Phase Order</BaseTableHeader>
-      <BaseTableHeader wrap>Contestant Limit (per gender)</BaseTableHeader>
+      <BaseTableHeader wrap class="px-3 py-2 lg:px-0 lg:py-0">Contestant Limit (per gender)</BaseTableHeader>
       <BaseTableHeader>Action</BaseTableHeader>
     </template>
     <tr class="font-poppins" v-for="item in items" :key="item.id">

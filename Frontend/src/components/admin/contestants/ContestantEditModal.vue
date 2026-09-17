@@ -16,7 +16,7 @@
       @submit.prevent="saveContestant()"
       class="flex h-full w-full flex-col justify-start gap-4 p-4"
     >
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Contestant No.</p>
         <input
           v-model="newContestantNumber"
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Name</p>
         <input
           v-model="newContestantName"
@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Gender</p>
         <select
           v-model="selectedGender"
@@ -83,7 +83,7 @@
         </div>
       </div>
 
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Team Name</p>
         <input
           v-model="newContestantTeamName"
@@ -105,7 +105,7 @@
         </div>
       </div>
 
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Team Color</p>
         <input
           v-model="newContestantTeamColor"

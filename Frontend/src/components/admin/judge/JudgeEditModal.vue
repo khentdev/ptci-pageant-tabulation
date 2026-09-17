@@ -8,7 +8,7 @@
       @submit.prevent="saveJudge()"
       class="flex h-full w-full flex-col justify-start gap-4 p-4"
     >
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Name</p>
         <input
           v-model="newJudgeName"
@@ -26,7 +26,7 @@
         </div>
       </div>
 
-      <div class="h-full w-full">
+      <div class="flex flex-col">
         <p>Username</p>
         <input
           v-model="newJudgeUsername"

@@ -37,6 +37,7 @@
         <template #head>
           <BaseTableHeader>Judge</BaseTableHeader>
           <BaseTableHeader
+            class="px-3 py-2 lg:px-0 lg:py-0"
             v-for="categories in liveStore.judgeList?.judgeSubmissions[0]?.categories"
             :key="categories.id"
             align="center"
