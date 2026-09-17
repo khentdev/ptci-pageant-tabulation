@@ -1,4 +1,3 @@
-import { useAuthStore } from '@/stores/auth/authStore.ts';
 import { type RouteRecordRaw } from 'vue-router';
 
 export const judgeRoutes: RouteRecordRaw[] = [
@@ -10,13 +9,6 @@ export const judgeRoutes: RouteRecordRaw[] = [
       requiresJudge: true,
     },
     component: () => import('../../views/judge/judgeMain.vue'),
-    beforeEnter: async () => {
-      const authStore = useAuthStore();
-      if (!authStore.isJudge) {
-        return { name: 'login' };
-      }
-      return;
-    },
     children: [
       {
         path: ':categoriesId',

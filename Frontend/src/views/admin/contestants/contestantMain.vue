@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import ContestantTable from '@/components/admin/contestants/contestantTable.vue';
+import ContestantTable from '@/components/admin/contestants/ContestantTable.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
-import EmptyState from '@/components/shared/EmptyState.vue';
-import AddContestant from '@/components/admin/contestants/addContestant.vue';
+import BaseEmptyState from '@/components/shared/BaseEmptyState.vue';
+import ContestantAddModal from '@/components/admin/contestants/ContestantAddModal.vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-import EditContestant from '@/components/admin/contestants/editContestant.vue';
+import ContestantEditModal from '@/components/admin/contestants/ContestantEditModal.vue';
 import { computed, ref, watch } from 'vue';
 import { useContestantStore } from '@/stores/admin/adminSetup/contestants/contestantStore';
 import { useRoute, useRouter } from 'vue-router';
@@ -72,14 +72,14 @@ watch(
 </script>
 
 <template>
-  <AddContestant
+  <ContestantAddModal
     :showModal="modalStore.contestantModalStates.isAddContestantVisible"
     :selectedGenderFilter
-  ></AddContestant>
-  <EditContestant
+  ></ContestantAddModal>
+  <ContestantEditModal
     :showModal="modalStore.contestantModalStates.isEditContestantVisible"
     :contestantId="selectedContestantid"
-  ></EditContestant>
+  ></ContestantEditModal>
   <BasePanel
     title="Contestant Management"
     addButtonLabel="Add Contestant"
@@ -92,7 +92,7 @@ watch(
   >
     <template #toolbar>
       <div
-        class="flex gap-4 self-start"
+        class="flex w-full gap-4 self-start"
         v-if="contestantStore.contestantList.length > 0 || hasActiveFilter"
       >
         <button
@@ -100,13 +100,13 @@ watch(
           :key="button.label"
           :class="{ 'bg-main-dark-brown text-white': selectedGenderFilter === button.value }"
           @click="setSelectedGenderFilter(button.value)"
-          class="cursor-pointer rounded-md border border-black/40 px-6 py-2"
+          class="w-full cursor-pointer rounded-md border border-black/40 px-2 py-2 md:w-fit md:px-6"
         >
           {{ button.label }}
         </button>
       </div>
     </template>
-    <EmptyState
+    <BaseEmptyState
       v-if="contestantStore.contestantList.length === 0 && hasActiveFilter"
       :icon="Users"
       title="No contestants match this filter"
@@ -114,7 +114,7 @@ watch(
       actionLabel="Clear Filter"
       @action="setSelectedGenderFilter(undefined)"
     />
-    <EmptyState
+    <BaseEmptyState
       v-else-if="contestantStore.contestantList.length === 0"
       :icon="Users"
       title="No contestants yet"

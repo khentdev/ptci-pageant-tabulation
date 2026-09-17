@@ -30,7 +30,7 @@ const emit = defineEmits<{
     <button
       type="submit"
       :disabled="isSubmitting || disabled"
-      class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
+      class="bg-main-dark-brown hover:bg-main-dark-brown/80 w-full rounded-xl p-4 text-sm text-nowrap text-white disabled:cursor-not-allowed disabled:opacity-50"
     >
       {{ isSubmitting ? submittingLabel : submitLabel }}
     </button>

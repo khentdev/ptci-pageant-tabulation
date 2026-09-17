@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import BasePanel from '@/components/shared/BasePanel.vue';
-import EmptyState from '@/components/shared/EmptyState.vue';
+import BaseEmptyState from '@/components/shared/BaseEmptyState.vue';
 import { onMounted } from 'vue';
-import JudgeTable from '@/components/admin/judge/judgeTable.vue';
+import JudgeTable from '@/components/admin/judge/JudgeTable.vue';
 import { useJudgeStore } from '@/stores/admin/adminSetup/judge/judgeStore';
-import AddJudge from '@/components/admin/judge/addJudge.vue';
-import EditJudge from '@/components/admin/judge/editJudge.vue';
+import JudgeAddModal from '@/components/admin/judge/JudgeAddModal.vue';
+import JudgeEditModal from '@/components/admin/judge/JudgeEditModal.vue';
 import { ref } from 'vue';
-import ResetPassword from '@/components/admin/judge/resetPassword.vue';
+import JudgeResetPasswordModal from '@/components/admin/judge/JudgeResetPasswordModal.vue';
 import { Gavel } from '@lucide/vue';
 
 const modalStore = useModalStore();
@@ -37,15 +37,15 @@ const handleDelete = async (id: number) => {
 </script>
 
 <template>
-  <AddJudge :showModal="modalStore.judgeModalStates.isAddingJudgeVisible"></AddJudge>
-  <EditJudge
+  <JudgeAddModal :showModal="modalStore.judgeModalStates.isAddingJudgeVisible"></JudgeAddModal>
+  <JudgeEditModal
     :showModal="modalStore.judgeModalStates.isEditJudgeVisible"
     :judgeId="selectedJudgeId"
-  ></EditJudge>
-  <ResetPassword
+  ></JudgeEditModal>
+  <JudgeResetPasswordModal
     :showModal="modalStore.judgeModalStates.isResetPasswordJudgeVisible"
     :judgeId="selectedJudgeId"
-  ></ResetPassword>
+  ></JudgeResetPasswordModal>
   <BasePanel
     title="Judge & Chairman Management"
     addButtonLabel="Add Judge"
@@ -56,7 +56,7 @@ const handleDelete = async (id: number) => {
     :onRetry="judgeStore.getJudgesList"
     @add="modalStore.judgesModalFunction().toggleAddingJudgesModal()"
   >
-    <EmptyState
+    <BaseEmptyState
       v-if="judgeStore.judgeList.length === 0"
       :icon="Gavel"
       title="No judges yet"

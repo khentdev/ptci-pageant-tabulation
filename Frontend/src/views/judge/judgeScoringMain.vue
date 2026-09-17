@@ -22,13 +22,13 @@
 
     <div class="mt-4 flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto">
       <BaseFetchOverlay v-if="judgeScoringStore.isFetchingCategoryDetails" />
-      <ServerErrorOverlay
+      <BaseServerErrorOverlay
         v-else-if="judgeScoringStore.isFetchingCategoryDetailsError"
         title="Failed to Load Category"
         description="We couldn't load this category's scoring details. Please try again."
         :onRetry="retryFetchCategories"
       />
-      <NotFoundOverlay v-else-if="isCategoryNotFound" />
+      <JudgeScoringNotFoundOverlay v-else-if="isCategoryNotFound" />
       <div
         v-else-if="!currentRound?.hasContestants"
         class="flex h-full w-full flex-col items-center justify-center rounded-lg border border-black/30"
@@ -37,13 +37,13 @@
         <p class="text-sm text-black/50">This round has not started.</p>
       </div>
       <template v-else>
-        <JudgeScoringFieldsTable />
+        <JudgeScoringTable />
         <div class="flex justify-end">
           <button
             v-if="!judgeScoringStore.categoryScoresList?.isSubmitted"
             @click="handleSubmit"
             :disabled="judgeScoringStore.loadingStates.isSubmittingCategoryScores"
-            class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 cursor-pointer items-center gap-2 rounded-lg px-6 py-4 text-xs text-white transition disabled:opacity-50 sm:h-15 sm:text-base"
+            class="bg-main-dark-brown hover:bg-main-dark-brown-900 flex h-10 cursor-pointer items-center gap-2 rounded-lg px-6 py-4 text-xs text-white transition disabled:opacity-50 sm:h-15 sm:text-base"
           >
             {{
               judgeScoringStore.loadingStates.isSubmittingCategoryScores
@@ -59,9 +59,9 @@
 
 <script setup lang="ts">
 import BaseFetchOverlay from '@/components/shared/BaseFetchOverlay.vue';
-import ServerErrorOverlay from '@/components/shared/ServerErrorOverlay.vue';
-import JudgeScoringFieldsTable from '@/components/admin/judge_scoring/judgeScoringFieldsTable.vue';
-import NotFoundOverlay from '@/components/admin/judge_scoring/NotFoundOverlay.vue';
+import BaseServerErrorOverlay from '@/components/shared/BaseServerErrorOverlay.vue';
+import JudgeScoringTable from '@/components/judge/JudgeScoringTable.vue';
+import JudgeScoringNotFoundOverlay from '@/components/judge/JudgeScoringNotFoundOverlay.vue';
 import { useJudgeScoringStore } from '@/stores/admin/adminSetup/judge_scoring/judgeScoring';
 import { Check } from '@lucide/vue';
 import { computed, watch } from 'vue';
