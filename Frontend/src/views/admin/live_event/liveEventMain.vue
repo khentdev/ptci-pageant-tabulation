@@ -9,91 +9,78 @@
     :isNotFound="isRoundNotFound"
   >
     <template #not-found>
-      <NotFoundOverlay />
+      <LiveEventNotFoundOverlay />
     </template>
 
-    <JudgeSubmissions />
+    <LiveEventJudgeSubmissions />
     <div class="" ref="printTarget">
-      <RankingsContestant />
+      <LiveEventRankingsTable />
     </div>
-    <TieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
-    <PlacementOrderResolution v-if="liveStore.roundResult?.placementTies?.length" />
-    <div
-      class="mt-3 font-medium text-red-600/70"
-      v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
-    >
-      {{ advanceReasonText }}
-    </div>
-    <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end px-4">
-      <button
-        @click="handlePrint"
-        class="flex gap-2 rounded-lg border border-black/10 bg-slate-700 px-6 py-3 font-semibold text-white hover:bg-slate-800"
-      >
-        <Printer></Printer>Print
-      </button>
-    </div>
-    <div
-      v-if="liveStore.roundResult?.nextRound && showAdvanceSection"
-      class="mt-4 flex w-full items-center justify-end px-4"
-    >
-      <button
-        @click="handleAdvanceRound"
-        :hidden="liveStore.roundResult.isCompleted"
-        :disabled="!canAdvanceRound || liveStore.loadingStates.isAddingAdvanceRound"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
-      >
-        {{
-          liveStore.loadingStates.isAddingAdvanceRound
-            ? 'Advancing...'
-            : `Advance to ${liveStore.roundResult?.nextRound?.name}`
-        }}
-      </button>
-    </div>
-    <div
-      v-else-if="
-        liveStore.roundResult?.nextRound &&
-        authStore.isAdmin &&
-        liveStore.roundResult.advancement.hasTie
-      "
-      class="mt-3 font-medium text-red-600/70"
-    >
-      A tie must be resolved by the Chairman before advancing.
-    </div>
+    <LiveEventTieResolution v-if="liveStore.roundResult?.advancement.hasTie" />
+    <LiveEventPlacementOrderResolution v-if="liveStore.roundResult?.placementTies?.length" />
 
-    <div
-      v-else-if="
-        liveStore.roundResult && !liveStore.roundResult.winnersDeclaredAt && showDeclareSection
-      "
-      class="mt-4 flex w-full items-center justify-end px-4"
-    >
-      <button
-        :disabled="!canDeclareRound || liveStore.loadingStates.isAddingDeclaredWinners"
-        @click="handleDeclareWinners"
-        class="bg-main-dark-brown hover:bg-main-dark-brown/80 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
+    <div class="mt-6 flex w-full flex-col gap-3">
+      <p
+        v-if="!liveStore.roundResult?.canAdvance && advanceReasonText"
+        class="flex items-start gap-1.5 text-sm text-black/70"
       >
-        {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
-      </button>
-    </div>
-    <div
-      v-else-if="
-        liveStore.roundResult &&
-        !liveStore.roundResult.winnersDeclaredAt &&
-        authStore.isAdmin &&
-        (liveStore.roundResult.advancement.hasTie ||
-          Boolean(liveStore.roundResult.placementTies?.length))
-      "
-      class="mt-3 font-medium text-red-600/70"
-    >
-      A tie must be resolved by the Chairman before declaring winners.
+        <CircleAlert class="mt-0.5 size-4 shrink-0 text-red-600" aria-hidden="true" />
+        {{ advanceReasonText }}
+      </p>
+      <p
+        v-if="roundAction === 'advance-tie' || roundAction === 'declare-tie'"
+        class="flex items-start gap-1.5 text-sm text-black/70"
+      >
+        <CircleAlert class="mt-0.5 size-4 shrink-0 text-red-600" aria-hidden="true" />
+        A tie must be resolved by the Chairman before
+        {{ roundAction === 'advance-tie' ? 'advancing' : 'declaring winners' }}.
+      </p>
+
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          v-if="authStore.isAdmin"
+          type="button"
+          class="max-md:hidden"
+          :class="secondaryButtonClass"
+          @click="handlePrint"
+        >
+          <Printer class="size-4 shrink-0" aria-hidden="true" />
+          Print
+        </button>
+        <button
+          v-if="roundAction === 'advance' && !liveStore.roundResult?.isCompleted"
+          type="button"
+          :disabled="!canAdvanceRound || liveStore.loadingStates.isAddingAdvanceRound"
+          :class="primaryButtonClass"
+          @click="handleAdvanceRound"
+        >
+          {{
+            liveStore.loadingStates.isAddingAdvanceRound
+              ? 'Advancing...'
+              : `Advance to ${liveStore.roundResult?.nextRound?.name}`
+          }}
+          <ArrowRight class="size-4 shrink-0" aria-hidden="true" />
+        </button>
+        <button
+          v-else-if="roundAction === 'declare'"
+          type="button"
+          :disabled="!canDeclareRound || liveStore.loadingStates.isAddingDeclaredWinners"
+          :class="primaryButtonClass"
+          @click="handleDeclareWinners"
+        >
+          <Trophy class="size-4 shrink-0" aria-hidden="true" />
+          {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
+        </button>
+      </div>
     </div>
   </BasePanel>
 </template>
 <script setup lang="ts">
-import JudgeSubmissions from '@/components/admin/live_event/judgeSubmissions.vue';
-import NotFoundOverlay from '@/components/admin/live_event/NotFoundOverlay.vue';
-import PlacementOrderResolution from '@/components/admin/live_event/placementOrderResolution.vue';
-import RankingsContestant from '@/components/admin/live_event/rankingsContestant.vue';
-import TieResolution from '@/components/admin/live_event/tieResolution.vue';
+import LiveEventJudgeSubmissions from '@/components/admin/liveEvent/LiveEventJudgeSubmissions.vue';
+import LiveEventNotFoundOverlay from '@/components/admin/liveEvent/LiveEventNotFoundOverlay.vue';
+import LiveEventPlacementOrderResolution from '@/components/admin/liveEvent/LiveEventPlacementOrderResolution.vue';
+import LiveEventRankingsTable from '@/components/admin/liveEvent/LiveEventRankingsTable.vue';
+import LiveEventTieResolution from '@/components/admin/liveEvent/LiveEventTieResolution.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
 import { useAuthStore } from '@/stores/auth/authStore';
 import { useLiveStore } from '@/stores/admin/adminLive/liveStore';
@@ -102,13 +89,24 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import html2canvas from 'html2canvas-pro';
 import printJS from 'print-js';
-import { Printer } from '@lucide/vue';
+import { ArrowRight, CircleAlert, Printer, Trophy } from '@lucide/vue';
+
+const actionButtonBase =
+  'inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black/50 sm:w-auto';
+const primaryButtonClass = `${actionButtonBase} bg-main-dark-brown text-white enabled:hover:bg-main-dark-brown/80 disabled:cursor-not-allowed disabled:opacity-50`;
+const secondaryButtonClass = `${actionButtonBase} border border-black/30 text-black/70 hover:bg-black/5`;
 
 const route = useRoute();
 const roundStore = useRoundStore();
 const liveStore = useLiveStore();
 const authStore = useAuthStore();
 const printTarget = ref<HTMLElement | null>(null);
+
+// html2canvas lays out its cloned page at this width, so the printout always uses
+// the desktop layout regardless of the current screen size or sidebar state.
+const PRINT_LAYOUT_WIDTH = 1280;
+const PRINT_MIN_CONTENT_WIDTH = '1024px';
+
 const handlePrint = async (): Promise<void> => {
   if (!printTarget.value) {
     return;
@@ -117,6 +115,17 @@ const handlePrint = async (): Promise<void> => {
   const canvas = await html2canvas(printTarget.value, {
     scale: 2,
     useCORS: true,
+    windowWidth: PRINT_LAYOUT_WIDTH,
+    // Capture from the top of the clone; its height differs from the live page,
+    // so the current scroll position may not exist there.
+    scrollX: 0,
+    scrollY: 0,
+    onclone: (_clonedDocument, clonedTarget) => {
+      // Grow to the tables' full width (many categories) instead of being cropped
+      // to the panel's visible width, with a consistent minimum for narrow tables.
+      clonedTarget.style.width = 'max-content';
+      clonedTarget.style.minWidth = PRINT_MIN_CONTENT_WIDTH;
+    },
   });
 
   const imageDataUrl = canvas.toDataURL('image/png');
@@ -147,6 +156,34 @@ const showDeclareSection = computed(() => {
     (liveStore.roundResult?.advancement.hasTie ?? false) ||
     Boolean(liveStore.roundResult?.placementTies?.length);
   return authStore.isChairman ? hasTie : !hasTie;
+});
+
+type RoundAction = 'advance' | 'advance-tie' | 'declare' | 'declare-tie' | null;
+
+// At most one of these applies at a time; checked in priority order so notices
+// and buttons can be laid out separately without changing who sees what.
+const roundAction = computed<RoundAction>(() => {
+  const result = liveStore.roundResult;
+  if (!result) {
+    return null;
+  }
+  if (result.nextRound && showAdvanceSection.value) {
+    return 'advance';
+  }
+  if (result.nextRound && authStore.isAdmin && result.advancement.hasTie) {
+    return 'advance-tie';
+  }
+  if (!result.winnersDeclaredAt && showDeclareSection.value) {
+    return 'declare';
+  }
+  if (
+    !result.winnersDeclaredAt &&
+    authStore.isAdmin &&
+    (result.advancement.hasTie || Boolean(result.placementTies?.length))
+  ) {
+    return 'declare-tie';
+  }
+  return null;
 });
 
 const activeRoundId = computed<number | undefined>(() => {

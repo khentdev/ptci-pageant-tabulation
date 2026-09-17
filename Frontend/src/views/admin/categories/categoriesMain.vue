@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useModalStore } from '@/stores/modals/modalStore';
 import { onMounted, ref } from 'vue';
-import CategoriesTable from '@/components/admin/categories/categoriesTable.vue';
+import CategoryTable from '@/components/admin/categories/CategoryTable.vue';
 import { useCategoryStore } from '@/stores/admin/adminSetup/category/categoryStore';
-import AddCategory from '@/components/admin/categories/addCategory.vue';
-import EditCategory from '@/components/admin/categories/editCategory.vue';
-import FieldsCategory from '@/components/admin/categories/fieldsCategory.vue';
+import CategoryAddModal from '@/components/admin/categories/CategoryAddModal.vue';
+import CategoryEditModal from '@/components/admin/categories/CategoryEditModal.vue';
+import CategoryFieldsModal from '@/components/admin/categories/CategoryFieldsModal.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
 
 const modalStore = useModalStore();
@@ -35,9 +35,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AddCategory :showModal="modalStore.isAddCategoryVisible" />
-  <EditCategory :showModal="modalStore.isEditCategoryVisible" :categoryId="selectedCategoryId" />
-  <FieldsCategory
+  <CategoryAddModal :showModal="modalStore.isAddCategoryVisible" />
+  <CategoryEditModal
+    :showModal="modalStore.isEditCategoryVisible"
+    :categoryId="selectedCategoryId"
+  />
+  <CategoryFieldsModal
     :showModal="modalStore.isFieldCategoryVisible"
     :categoryId="selectedFieldsCategoryId"
   />
@@ -51,7 +54,7 @@ onMounted(async () => {
     :onRetry="categoryStore.getCategoryList"
     @add="modalStore.toggleAddCategory()"
   >
-    <CategoriesTable
+    <CategoryTable
       :items="categoryStore.categoryList"
       @edit="openEditCategory"
       @delete="handleDelete"

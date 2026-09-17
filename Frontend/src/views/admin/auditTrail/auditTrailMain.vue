@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BasePanel from '@/components/shared/BasePanel.vue';
-import EmptyState from '@/components/shared/EmptyState.vue';
-import AuditTrailTable from '@/components/admin/auditTrail/auditTrailTable.vue';
+import BaseEmptyState from '@/components/shared/BaseEmptyState.vue';
+import AuditTrailTable from '@/components/admin/auditTrail/AuditTrailTable.vue';
 import { useAuditTrailStore } from '@/stores/admin/auditTrail/auditTrailStore';
 import { History } from '@lucide/vue';
 import { onMounted } from 'vue';
@@ -22,7 +22,7 @@ onMounted(async () => {
     errorDescription="We couldn't load the audit trail. Please try again."
     :onRetry="auditTrailStore.getAuditLogs"
   >
-    <EmptyState
+    <BaseEmptyState
       v-if="auditTrailStore.auditLogs.length === 0"
       :icon="History"
       title="No audit entries yet"

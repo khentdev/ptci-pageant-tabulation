@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import BaseSessionOverlay from './components/System/BaseSessionOverlay.vue';
-import VToast from './components/Toast/VToast.vue';
+import SessionOverlay from './components/system/SessionOverlay.vue';
+import AppToast from './components/toast/AppToast.vue';
 </script>
 
 <template>
   <router-view v-slot="{ Component }">
-    <VToast />
-    <BaseSessionOverlay>
+    <AppToast />
+    <SessionOverlay>
       <component :is="Component" />
-    </BaseSessionOverlay>
+    </SessionOverlay>
   </router-view>
 </template>

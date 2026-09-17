@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import RoundsTable from '@/components/admin/rounds/roundsTable.vue';
+import RoundTable from '@/components/admin/rounds/RoundTable.vue';
 import { useModalStore } from '@/stores/modals/modalStore';
-import AddRounds from '@/components/admin/rounds/addRounds.vue';
-import EditRounds from '@/components/admin/rounds/editRounds.vue';
+import RoundAddModal from '@/components/admin/rounds/RoundAddModal.vue';
+import RoundEditModal from '@/components/admin/rounds/RoundEditModal.vue';
 import BasePanel from '@/components/shared/BasePanel.vue';
-import EmptyState from '@/components/shared/EmptyState.vue';
+import BaseEmptyState from '@/components/shared/BaseEmptyState.vue';
 import { useRoundStore } from '@/stores/admin/adminSetup/rounds/roundStore';
 import { Layers } from '@lucide/vue';
 import { onMounted } from 'vue';
@@ -28,8 +28,8 @@ const handleDelete = async (id: number) => {
 </script>
 
 <template>
-  <AddRounds :showModal="modalStore.isAddRoundsVisible"></AddRounds>
-  <EditRounds :showModal="modalStore.isEditRoundsVisible"></EditRounds>
+  <RoundAddModal :showModal="modalStore.isAddRoundsVisible"></RoundAddModal>
+  <RoundEditModal :showModal="modalStore.isEditRoundsVisible"></RoundEditModal>
   <BasePanel
     title="Round Management"
     addButtonLabel="Add Rounds"
@@ -40,7 +40,7 @@ const handleDelete = async (id: number) => {
     :onRetry="roundStore.getRound"
     @add="modalStore.toggleAddRoundsModal()"
   >
-    <EmptyState
+    <BaseEmptyState
       v-if="roundStore.roundList.length === 0"
       :icon="Layers"
       title="No rounds yet"
@@ -48,11 +48,11 @@ const handleDelete = async (id: number) => {
       actionLabel="Add Rounds"
       @action="modalStore.toggleAddRoundsModal()"
     />
-    <RoundsTable
+    <RoundTable
       v-else
       :items="roundStore.roundList"
       @edit="handleEdit"
       @delete="handleDelete"
-    ></RoundsTable>
+    ></RoundTable>
   </BasePanel>
 </template>
