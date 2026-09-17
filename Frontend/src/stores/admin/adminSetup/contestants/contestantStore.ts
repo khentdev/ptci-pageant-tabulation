@@ -79,14 +79,14 @@ export const useContestantStore = defineStore('contestantStore', () => {
     }
   };
 
-  const addContestant = async (contestantInput: AddContestantInput): Promise<boolean> => {
+  const addContestant = async (contestantInput: AddContestantInput,selectedGenderFilter?: Gender): Promise<boolean> => {
     if (loadingStates.isAddingContestants) {
       return false;
     }
     loadingStates.isAddingContestants = true;
     try {
       const res = await contestantService.addContestant(contestantInput);
-      await getContestants();
+      await getContestants(selectedGenderFilter);
       toast.success(res.message);
       return true;
     } catch (error) {
