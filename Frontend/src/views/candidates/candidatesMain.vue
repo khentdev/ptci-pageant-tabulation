@@ -26,7 +26,7 @@ watch(
       filterValue.toLowerCase() !== 'female'
     ) {
       selectedGenderFilter.value = undefined;
-      router.replace({ query: { filter: undefined } });
+      await router.replace({ query: { filter: undefined } });
     } else {
       selectedGenderFilter.value = filterValue;
     }
@@ -37,25 +37,29 @@ watch(
 
 <template>
   <NavMain></NavMain>
-  <div class="font-poppins relative flex min-h-screen w-full flex-col items-start overflow-hidden">
-    <div class="flex w-full flex-col">
-      <div class="bg-bg1 absolute inset-0 -z-5 scale-105 bg-cover bg-no-repeat blur-sm"></div>
+  <div class="font-poppins relative flex min-h-screen w-full flex-col items-start">
+    <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div class="bg-bg1 absolute inset-0 scale-105 bg-cover bg-no-repeat blur-sm"></div>
     </div>
-    <div class="flex min-h-screen w-full flex-col gap-6 p-8 drop-shadow-sm drop-shadow-black/10">
-      <div class="flex w-full gap-4 px-6">
-        <button
-          v-for="gender in candidateStore.genderFilterButtons"
-          :key="gender.label"
-          :class="{ 'bg-main-dark-brown text-white': selectedGenderFilter === gender.value }"
-          @click="setSelectedGender(gender.value)"
-          class="cursor-pointer rounded-md border border-black/40 px-6 py-2"
+    <div class="relative flex min-h-screen w-full flex-col gap-6 p-2 md:p-8">
+      <header class="sticky top-20 z-10 -mx-2 flex px-2 md:-mx-8 md:px-8">
+        <div
+          class="bg-main-light-brown flex w-full gap-2 rounded-lg border border-black/15 px-2 py-2 drop-shadow-sm drop-shadow-black/10"
         >
-          {{ gender.label }}
-        </button>
-      </div>
+          <button
+            v-for="gender in candidateStore.genderFilterButtons"
+            :key="gender.label"
+            :class="{ 'bg-main-dark-brown text-white': selectedGenderFilter === gender.value }"
+            @click="setSelectedGender(gender.value)"
+            class="cursor-pointer rounded-md border border-black/40 px-6 py-2"
+          >
+            {{ gender.label }}
+          </button>
+        </div>
+      </header>
 
       <div
-        class="bg-main-light-brown grid h-[calc(100vh-1rem)] w-full grid-cols-1 gap-2 overflow-y-auto rounded-lg border border-black/15 p-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:gap-9 2xl:p-8"
+        class="bg-main-light-brown grid w-full grid-cols-1 gap-2 rounded-lg border border-black/15 p-2 drop-shadow-sm drop-shadow-black/10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:gap-9 2xl:p-8"
       >
         <BaseMale v-if="route.query.filter === 'MALE'"></BaseMale>
         <BaseFemales v-else-if="route.query.filter === 'FEMALE'"></BaseFemales>
