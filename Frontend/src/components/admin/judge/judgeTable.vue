@@ -31,7 +31,7 @@
             </button>
             <button
               @click="emit('delete', judge.id)"
-              class="bg-main-dark-brown hover:bg-main-dark-brown/70 h-10 cursor-pointer rounded-xl border border-black/1 px-6 text-white"
+              class="h-10 cursor-pointer rounded-xl border border-black/1 bg-red-900 px-6 text-white hover:bg-red-900/70"
             >
               Delete
             </button>

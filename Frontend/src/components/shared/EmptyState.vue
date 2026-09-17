@@ -62,7 +62,7 @@ const emit = defineEmits<{
       <router-link
         v-if="actionLabel && to"
         :to="to"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full rounded-xl p-4 text-sm font-semibold text-white transition-colors"
+        class="bg-main-dark-brown hover:bg-main-dark-brown/80 w-full rounded-xl p-4 text-sm font-semibold text-white transition-colors"
       >
         {{ actionLabel }}
       </router-link>
@@ -70,7 +70,7 @@ const emit = defineEmits<{
         v-else-if="actionLabel"
         type="button"
         @click="emit('action')"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 w-full cursor-pointer rounded-xl p-4 text-sm font-semibold text-white"
+        class="bg-main-dark-brown hover:bg-main-dark-brown/80 w-full cursor-pointer rounded-xl p-4 text-sm font-semibold text-white"
       >
         {{ actionLabel }}
       </button>

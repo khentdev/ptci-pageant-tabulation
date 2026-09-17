@@ -28,6 +28,7 @@
               "
               v-model="liveStore.selectedContestantIds"
             />
+
             <label :for="`contestant-${contestant.id}`" class="w-full">{{ contestant.name }}</label>
             <div class="flex w-full justify-end">
               <p class="font-bold">{{ contestant.overallScore }}</p>
@@ -58,8 +59,7 @@ const GENDERS = ['FEMALE', 'MALE'] as const;
 const liveStore = useLiveStore();
 const authStore = useAuthStore();
 
-const genderLabel = (gender: (typeof GENDERS)[number]) =>
-  gender === 'FEMALE' ? 'Female' : 'Male';
+const genderLabel = (gender: (typeof GENDERS)[number]) => (gender === 'FEMALE' ? 'Female' : 'Male');
 
 const selectedCount = computed(() => liveStore.selectedContestantIds.length);
 

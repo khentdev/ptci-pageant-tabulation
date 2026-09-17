@@ -24,10 +24,10 @@
     >
       {{ advanceReasonText }}
     </div>
-     <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end px-4">
+    <div v-if="authStore.isAdmin" class="mt-4 flex items-center justify-end px-4">
       <button
         @click="handlePrint"
-        class="bg-slate-700 hover:bg-slate-800 flex gap-2 rounded-lg border border-black/10 px-6 py-3 font-semibold text-white"
+        class="flex gap-2 rounded-lg border border-black/10 bg-slate-700 px-6 py-3 font-semibold text-white hover:bg-slate-800"
       >
         <Printer></Printer>Print
       </button>
@@ -69,7 +69,7 @@
       <button
         :disabled="!canDeclareRound || liveStore.loadingStates.isAddingDeclaredWinners"
         @click="handleDeclareWinners"
-        class="bg-jungle-green-800 hover:bg-jungle-green-900 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
+        class="bg-main-dark-brown hover:bg-main-dark-brown/80 disabled:bg-jungle-green-800/50 flex h-10 items-center gap-2 rounded-xl p-4 text-xs text-white disabled:cursor-not-allowed sm:h-15 sm:text-base"
       >
         {{ liveStore.loadingStates.isAddingDeclaredWinners ? 'Declaring...' : 'Declare Winners' }}
       </button>
@@ -157,9 +157,7 @@ const activeRoundId = computed<number | undefined>(() => {
 
 const isRoundIdInvalid = computed(() => activeRoundId.value === undefined);
 
-const isRoundNotFound = computed(
-  () => isRoundIdInvalid.value || liveStore.isLiveEventNotFound,
-);
+const isRoundNotFound = computed(() => isRoundIdInvalid.value || liveStore.isLiveEventNotFound);
 
 const canAdvanceRound = computed(() => {
   if (

@@ -43,7 +43,7 @@
             v-if="!judgeScoringStore.categoryScoresList?.isSubmitted"
             @click="handleSubmit"
             :disabled="judgeScoringStore.loadingStates.isSubmittingCategoryScores"
-            class="bg-jungle-green-800 hover:bg-jungle-green-900 flex h-10 cursor-pointer items-center gap-2 rounded-lg px-6 py-4 text-xs text-white transition disabled:opacity-50 sm:h-15 sm:text-base"
+            class="bg-main-dark-brown hover:bg-main-dark-brown-900 flex h-10 cursor-pointer items-center gap-2 rounded-lg px-6 py-4 text-xs text-white transition disabled:opacity-50 sm:h-15 sm:text-base"
           >
             {{
               judgeScoringStore.loadingStates.isSubmittingCategoryScores

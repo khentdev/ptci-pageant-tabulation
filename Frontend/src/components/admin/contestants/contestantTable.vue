@@ -27,7 +27,7 @@
             </button>
             <button
               @click="emit('delete', contestant.id)"
-              class="bg-main-dark-brown h-10 cursor-pointer rounded-xl border border-black/10 px-6 text-white hover:bg-main-dark-brown/70"
+              class="bg-red-900 h-10 cursor-pointer rounded-xl border border-black/10 px-6 text-white hover:bg-red-900/70"
             >
               Delete
             </button>

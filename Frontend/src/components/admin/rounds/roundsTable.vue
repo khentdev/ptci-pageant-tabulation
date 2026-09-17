@@ -24,7 +24,7 @@
               Edit</button
             ><button
               @click="emit('delete', item.id)"
-              class="bg-main-dark-brown hover:bg-main-dark-brown/70 h-10 cursor-pointer rounded-xl border border-black/10 px-6 text-white"
+              class="bg-red-900 hover:bg-red-900/70 h-10 cursor-pointer rounded-xl border border-black/10 px-6 text-white"
             >
               Delete
             </button>
