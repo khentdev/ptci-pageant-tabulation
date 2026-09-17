@@ -32,22 +32,22 @@ const handleErrorImages = (canNumber: string) => {
 
     <div class="my-8 flex w-full items-center px-4">
       <div class="flex w-full flex-col justify-center gap-4">
-        <p class="font-serif text-xl font-bold italic sm:text-2xl">{{ can.canNumber }}</p>
-        <div class="w-full text-sm xl:h-12">
+        <p class="font-lora text-xl font-bold italic sm:text-2xl">{{ can.canNumber }}</p>
+        <div class="w-full text-sm xl:h-10">
           <p class="text-lg font-medium text-black/90">{{ can.canName }}</p>
         </div>
 
-        <div class="flex w-full items-center justify-center gap-2 text-center text-xs">
+        <div class="flex w-full items-center justify-center gap-3 text-center text-xs">
           <p
-            class="bg-main-dark-brown flex w-full items-center justify-center rounded-2xl border border-black/15 px-4 py-1 text-white/90 lg:h-10"
-          >
-            {{ can.canTeamName }}
-          </p>
-
-          <p
-            class="bg-main-dark-brown flex w-full items-center justify-center rounded-2xl border border-black/15 px-4 py-1 text-white/90 lg:h-10"
+            class="bg-main-dark-brown flex w-full items-center justify-center rounded-2xl border border-black/15 px-4 py-1 font-semibold text-white/90 drop-shadow-md drop-shadow-black/15 lg:h-8"
           >
             {{ can.canCourse }}
+          </p>
+          <p
+            :class="`${can.canTeamColor === '#000000' ? 'bg-black text-white' : ''} ${can.canTeamColor === '#ffffff' ? 'bg-white text-black' : ''} ${can.canTeamColor === '#c27aff' ? 'bg-team-purple text-white' : ''} ${can.canTeamColor === '#05df72' ? 'bg-team-green text-black' : ''} ${can.canTeamColor === '#ff6467' ? 'bg-team-red text-white' : ''}`"
+            class="flex w-full items-center justify-center rounded-2xl border border-black/15 px-4 py-1 font-semibold drop-shadow-md drop-shadow-black/15 lg:h-8"
+          >
+            {{ can.canTeamName }}
           </p>
         </div>
 

@@ -13,4 +13,6 @@ export type CandidatesItems = {
   canTeamLogo: string | Component;
   canTeamName: string;
   canCourse: string;
+  canTeamColor: string;
+  canGender: Gender | undefined;
 };
